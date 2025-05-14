@@ -5,7 +5,7 @@
     dark
     app
   >
-    <v-app-bar-title>Markdown Editor with Mermaid</v-app-bar-title>
+    <v-app-bar-title>Markdown editor with Mermaid support for diagrams</v-app-bar-title>
   </v-app-bar>
 
   <MarkdownEditor />

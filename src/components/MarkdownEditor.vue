@@ -1,123 +1,37 @@
-<template>
-  <v-container fluid class="pa-0 markdown-editor-container" style="min-height: 100%">
-    <v-row no-gutters class="fill-height">      <!-- Editor Pane -->      <v-col cols="12" md="6" class="fill-height d-flex flex-column">
-        <v-sheet class="fill-height pa-2 d-flex flex-column editor-pane" color="surface-variant" rounded="0">          <v-toolbar density="compact" color="surface-variant" class="mb-2">
-            <v-tooltip location="bottom" text="New Document">
-              <template #activator="{ props }">
-                <v-btn v-bind="props" icon @click="clearDocument">
-                  <v-icon>mdi-file-outline</v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-            
-            <v-divider vertical class="mx-2" />
-            
-            <v-tooltip location="bottom" text="Bold">
-              <template #activator="{ props }">
-                <v-btn v-bind="props" icon @click="handleFormat('bold', getSelectionData())">
-                  <v-icon>mdi-format-bold</v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-            
-            <v-tooltip location="bottom" text="Italic">
-              <template #activator="{ props }">
-                <v-btn v-bind="props" icon @click="handleFormat('italic', getSelectionData())">
-                  <v-icon>mdi-format-italic</v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-            
-            <v-tooltip location="bottom" text="Heading">
-              <template #activator="{ props }">
-                <v-btn v-bind="props" icon @click="handleFormat('heading', getSelectionData())">
-                  <v-icon>mdi-format-header-1</v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-            
-            <v-divider vertical class="mx-2" />
-              <v-tooltip location="bottom" text="Bulleted List">
-              <template #activator="{ props }">
-                <v-btn v-bind="props" icon @click="handleFormat('bulletList', getSelectionData())">
-                  <v-icon>mdi-format-list-bulleted</v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-            
-            <v-tooltip location="bottom" text="Numbered List">
-              <template #activator="{ props }">
-                <v-btn v-bind="props" icon @click="handleFormat('numberList', getSelectionData())">
-                  <v-icon>mdi-format-list-numbered</v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-            
-            <v-divider vertical class="mx-2" />
-            
-            <v-tooltip location="bottom" text="Link">
-              <template #activator="{ props }">
-                <v-btn v-bind="props" icon @click="handleFormat('link', getSelectionData())">
-                  <v-icon>mdi-link</v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-            
-            <v-tooltip location="bottom" text="Image">
-              <template #activator="{ props }">
-                <v-btn v-bind="props" icon @click="handleFormat('image', getSelectionData())">
-                  <v-icon>mdi-image</v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-            
-            <v-tooltip location="bottom" text="Code Block">
-              <template #activator="{ props }">
-                <v-btn v-bind="props" icon @click="handleFormat('codeBlock', getSelectionData())">
-                  <v-icon>mdi-code-tags</v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-              <v-tooltip location="bottom" text="Mermaid Diagram">
-              <template #activator="{ props }">
-                <v-btn v-bind="props" icon @click="handleFormat('mermaid', getSelectionData())">
-                  <v-icon>mdi-chart-timeline-variant</v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-            
-            <v-spacer></v-spacer>
-            
-            <v-tooltip location="bottom" :text="fullscreen ? 'Exit Fullscreen' : 'Fullscreen'">
-              <template #activator="{ props }">
-                <v-btn v-bind="props" icon @click="toggleFullscreen">
-                  <v-icon>{{ fullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen' }}</v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-          </v-toolbar>          <v-textarea
-            v-model="markdownText"
-            class="markdown-input flex-grow-1"
-            hide-details
-            variant="outlined"
-            color="primary"
-            bg-color="surface"
-            placeholder="Type your markdown here..."
-            no-resize
-            auto-grow
-            row-height="18"
-            :rows="20"
-            ref="textareaRef"
-            @scroll="handleEditorScroll"
-          ></v-textarea>
-        </v-sheet>
-      </v-col>      <!-- Preview Pane -->
-      <v-col cols="12" md="6" class="fill-height d-flex flex-column">
-        <v-sheet class="fill-height preview-pane pa-4 overflow-auto" color="background" rounded="0" ref="previewPane" @scroll="handlePreviewScroll">
-          <div ref="previewContainer" class="markdown-content"></div>
-        </v-sheet>
-      </v-col>
-    </v-row>
+<template>  <v-container fluid class="pa-0 markdown-editor-container">
+    <!-- Main scroll container wrapping both panes -->
+    <div class="main-scroll-container" ref="mainScrollContainer">
+      <div class="pane-container">
+        <!-- Editor Pane -->
+        <div class="editor-container" :style="{ width: editorWidthPercent + '%' }">
+          <v-sheet class="pa-0 editor-pane h-100" rounded="0">
+            <textarea
+              v-model="markdownText"
+              class="markdown-input"
+              placeholder="Type your markdown here..."
+              ref="textareaRef"
+            ></textarea>
+          </v-sheet>
+        </div>
+        
+        <!-- Draggable Divider -->
+        <div 
+          class="divider" 
+          @mousedown="startDrag" 
+          @touchstart.prevent="startDrag"
+          title="Drag to resize"
+        >
+          <div class="divider-handle"></div>
+        </div>
+        
+        <!-- Preview Pane -->
+        <div class="preview-container" :style="{ width: (100 - editorWidthPercent) + '%' }">
+          <v-sheet class="preview-pane h-100" rounded="0" ref="previewPane">
+            <div ref="previewContainer" class="markdown-content"></div>
+          </v-sheet>
+        </div>
+      </div>
+    </div>
     
     <!-- Responsive button for mobile view -->
     <v-btn
@@ -131,9 +45,8 @@
       @click="toggleMobileView"
     >
       <v-icon>{{ showPreview ? 'mdi-pencil' : 'mdi-eye' }}</v-icon>
-    </v-btn>
-      <!-- Footer with buttons -->
-    <v-footer app absolute class="px-4 py-2" color="surface-variant">
+    </v-btn>    <!-- Footer with buttons -->
+    <v-footer app absolute class="px-4 py-2" color="primary">
       <v-btn
         icon
         variant="text"
@@ -327,6 +240,58 @@ md.use(markdownItMermaid);
 // References for DOM manipulation
 const previewContainer = ref<HTMLElement | null>(null);
 const previewPane = ref<HTMLElement | null>(null);
+const mainScrollContainer = ref<HTMLElement | null>(null);
+
+// Editor width percentage with default value of 50%
+const editorWidthPercent = ref(50);
+let isDragging = false;
+
+// Function to handle the start of a drag operation
+const startDrag = (e: MouseEvent | TouchEvent) => {
+  isDragging = true;
+  document.addEventListener('mousemove', handleDrag);
+  document.addEventListener('touchmove', handleDrag);
+  document.addEventListener('mouseup', stopDrag);
+  document.addEventListener('touchend', stopDrag);
+  document.body.style.userSelect = 'none'; // Prevent text selection while dragging
+};
+
+// Function to handle dragging the divider
+const handleDrag = (e: MouseEvent | TouchEvent) => {
+  if (!isDragging) return;
+  
+  // Get the container width
+  const containerRect = mainScrollContainer.value!.getBoundingClientRect();
+  const containerWidth = containerRect.width;
+  
+  // Get mouse/touch position
+  let clientX: number;
+  if ('touches' in e) {
+    // Touch event
+    clientX = e.touches[0].clientX;
+  } else {
+    // Mouse event
+    clientX = e.clientX;
+  }
+  
+  // Calculate editor width as percentage of container
+  const editorWidth = clientX - containerRect.left;
+  const percentage = Math.min(Math.max((editorWidth / containerWidth) * 100, 10), 90);
+  editorWidthPercent.value = percentage;
+  
+  // Store the width preference in localStorage
+  localStorage.setItem('mdit-editor-width', percentage.toString());
+};
+
+// Function to stop dragging
+const stopDrag = () => {
+  isDragging = false;
+  document.removeEventListener('mousemove', handleDrag);
+  document.removeEventListener('touchmove', handleDrag);
+  document.removeEventListener('mouseup', stopDrag);
+  document.removeEventListener('touchend', stopDrag);
+  document.body.style.userSelect = ''; // Restore text selection
+};
 
 // Default markdown text with examples
 const markdownText = ref(`# Markdown Editor with Mermaid
@@ -915,7 +880,25 @@ onMounted(() => {
   loadFromLocalStorage();
   renderMarkdown();
   
-  // Add keyboard shortcut listener
+  // Load saved editor width if available
+  const savedWidth = localStorage.getItem('mdit-editor-width');
+  if (savedWidth) {
+    editorWidthPercent.value = Number(savedWidth);
+  }
+  
+  // Prevent mousewheel in textarea from blocking main container scrolling
+  if (textareaRef.value) {
+    textareaRef.value.addEventListener('wheel', (e: WheelEvent) => {
+      // Let the main container handle the scroll
+      if (mainScrollContainer.value) {
+        mainScrollContainer.value.scrollTop += e.deltaY;
+      }
+      // Prevent default to avoid textarea scroll
+      e.preventDefault();
+    });
+  }
+  
+  // Set up keyboard shortcut listener
   document.addEventListener('keydown', handleKeyboardShortcut);
   
   // Add before unload event to warn user about unsaved changes
@@ -926,6 +909,12 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeyboardShortcut);
   window.removeEventListener('beforeunload', beforeUnloadHandler);
+  
+  // Clean up drag event listeners
+  document.removeEventListener('mousemove', handleDrag);
+  document.removeEventListener('touchmove', handleDrag);
+  document.removeEventListener('mouseup', stopDrag);
+  document.removeEventListener('touchend', stopDrag);
   
   // Clear auto-save interval if set
   if (autoSaveInterval.value) {
@@ -1093,26 +1082,13 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
 };
 
 /**
- * Handle scroll synchronization between editor and preview panes
+ * Handle scroll events on the main container that contains both editor and preview
+ * 
+ * This single scroll event will control the scrolling for the entire page
  */
-const handleEditorScroll = () => {
-  if (!textareaRef.value || !previewPane.value) return;
-  
-  const editorScrollTop = textareaRef.value.scrollTop;
-  const editorScrollHeight = textareaRef.value.scrollHeight - textareaRef.value.clientHeight;
-  const scrollRatio = editorScrollTop / editorScrollHeight;
-  
-  previewPane.value.scrollTop = scrollRatio * (previewPane.value.scrollHeight - previewPane.value.clientHeight);
-};
-
-const handlePreviewScroll = () => {
-  if (!textareaRef.value || !previewPane.value) return;
-  
-  const previewScrollTop = previewPane.value.scrollTop;
-  const previewScrollHeight = previewPane.value.scrollHeight - previewPane.value.clientHeight;
-  const scrollRatio = previewScrollTop / previewScrollHeight;
-  
-  textareaRef.value.scrollTop = scrollRatio * (textareaRef.value.scrollHeight - textareaRef.value.clientHeight);
+const handleMainScroll = () => {
+  // This function is now the only scroll handler we need,
+  // as we have a single scrollable container for both panes
 };
 </script>
 
@@ -1121,6 +1097,60 @@ const handlePreviewScroll = () => {
   font-family: monospace;
   font-size: 1rem;
   line-height: 1.6;
+}
+
+/* Pane container and divider styles */
+.pane-container {
+  display: flex;
+  flex-direction: row;
+  height: auto; /* Changed from 100% to auto to allow content to define height */
+  min-height: 100%;
+  position: relative;
+}
+
+.editor-container, .preview-container {
+  height: auto; /* Changed from 100% to auto to allow content to define height */
+  min-height: 100%;
+  overflow: visible; /* Changed from hidden to visible to allow content to flow */
+  transition: width 0.1s ease;
+}
+
+.divider {
+  width: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: col-resize;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.divider:hover, .divider:active {
+  background: #041C42; /* Dark blue matching the app bar */
+}
+
+.divider-handle {
+  width: 2px;
+  height: 36px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 1px;
+}
+
+.divider:hover .divider-handle {
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.editor-pane,
+.preview-pane {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-pane {
+  border-left: none;
 }
 
 .preview-pane {
@@ -1263,5 +1293,98 @@ const handlePreviewScroll = () => {
 
 .fullscreen-mode .v-textarea textarea {
   font-size: 1.1rem;
+}
+
+.editor-pane {
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.markdown-input {
+  font-family: 'Courier New', monospace;
+  resize: none !important;
+  overflow-y: hidden !important; /* Changed from auto to hidden to prevent individual scrollbar */
+  padding: 16px !important;
+  line-height: 1.6 !important;
+  height: 100% !important;
+}
+
+.preview-pane {
+  padding: 16px !important;
+  height: 100%;
+}
+
+.markdown-editor-container {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main scroll container styling */
+.main-scroll-container {
+  height: 100%;
+  overflow-y: auto;
+  flex: 1;
+  position: relative;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Editor and Preview styles */
+.editor-pane, .preview-pane {
+  height: 100%;
+  padding: 16px;
+  overflow: hidden;
+}
+
+/* Editor pane specific styling - lighter shade of black */
+.editor-pane {
+  background-color: #1e1e1e !important; /* Lighter black */
+}
+
+/* Preview pane specific styling - deep black */
+.preview-pane {
+  background-color: #121212 !important; /* Deeper black */
+}
+
+/* Textarea styling */
+.markdown-input {
+  font-family: 'Courier New', monospace;
+  width: 100%;
+  height: 100% !important;
+  border: none;
+  background-color: transparent;
+  resize: none;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  outline: none;
+}
+
+/* Markdown content area */
+.markdown-content {
+  padding-bottom: 30vh; /* Add some padding to ensure content can be scrolled fully */
+  max-width: 100%; /* Ensure content doesn't overflow horizontally */
+  overflow-wrap: break-word; /* Break long words to prevent horizontal overflow */
+  word-break: break-word;
+}
+
+/* Ensure consistent scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
 </style>

@@ -13,5 +13,6 @@ declare module 'vue' {
     MermaidRenderer: typeof import('./components/MermaidRenderer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SettingsDialog: typeof import('./components/SettingsDialog.vue')['default']
   }
 }

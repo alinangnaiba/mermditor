@@ -1,6 +1,5 @@
-<template>
-  <v-card flat color="surface-variant" class="toolbar-container">
-    <v-toolbar density="compact" color="surface-variant">
+<template>  <v-card flat color="primary" class="toolbar-container">
+    <v-toolbar density="compact" color="primary">
       <v-tooltip location="bottom" text="Bold">
         <template #activator="{ props }">
           <v-btn v-bind="props" icon @click="applyFormat('bold')">

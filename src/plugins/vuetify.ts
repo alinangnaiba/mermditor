@@ -18,7 +18,7 @@ export default createVuetify({
     themes: {
       dark: {
         colors: {
-          primary: '#41B883', // Vue green
+          primary: '#041C42', // 75% darker blue (25% darker than previous)
           secondary: '#34495E', // Dark blue
           accent: '#82B1FF',
           error: '#FF5252',
