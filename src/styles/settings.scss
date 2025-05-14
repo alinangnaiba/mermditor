@@ -1,0 +1,49 @@
+/**
+ * src/styles/settings.scss
+ *
+ * Configures SASS variables and Vuetify overwrites
+ */
+
+// https://vuetifyjs.com/features/sass-variables/`
+// @use 'vuetify/settings' with (
+//   $color-pack: false
+// );
+
+/* Theme styling */
+:root {
+  /* Dark theme variables (default) */
+  --background-color: #121212;
+  --surface-color: #1e1e1e;
+  --surface-variant-color: #2a2a2a;
+  --text-color: rgba(255, 255, 255, 0.87);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --accent-color: #41B883;
+  --code-bg-color: rgba(255, 255, 255, 0.1);
+  --blockquote-bg-color: rgba(65, 184, 131, 0.1);
+}
+
+/* Light theme variables */
+html.light-theme {
+  --background-color: #f5f5f5;
+  --surface-color: #ffffff;
+  --surface-variant-color: #e5e5e5;
+  --text-color: rgba(0, 0, 0, 0.87);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --accent-color: #41B883;
+  --code-bg-color: rgba(0, 0, 0, 0.05);
+  --blockquote-bg-color: rgba(65, 184, 131, 0.1);
+}
+
+/* Applied theme classes */
+.v-application {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+}
+
+.v-sheet.bg-surface {
+  background-color: var(--surface-color) !important;
+}
+
+.v-sheet.surface-variant {
+  background-color: var(--surface-variant-color) !important;
+}
