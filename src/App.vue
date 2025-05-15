@@ -1,6 +1,6 @@
 <template>
   <div class="app-container bg-dark">
-    <router-view />
+    <router-view class="flex-grow" />
   </div>
 </template>
 
@@ -17,6 +17,14 @@ html, body {
 
 :root {
   --md-editor-height: 100vh;
+  --accent-color: #3B82F6;
+}
+
+/* Allow route-specific style overrides */
+.app-container {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .fill-height {
