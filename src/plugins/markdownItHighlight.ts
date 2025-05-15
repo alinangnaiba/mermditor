@@ -13,12 +13,10 @@ export function markdownItHighlight(md: MarkdownIt) {
     const token = tokens[idx];
     const langName = token.info.trim();
     
-    // Skip highlighting for mermaid diagrams, they'll be handled by the mermaid plugin
     if (langName === 'mermaid') {
       return originalFence(tokens, idx, options, env, self);
     }
 
-    // Get the language if specified
     let highlighted;
     
     if (langName && hljs.getLanguage(langName)) {
@@ -29,7 +27,6 @@ export function markdownItHighlight(md: MarkdownIt) {
       }
     }
 
-    // Fallback to auto-detection or simple escaping
     if (!highlighted) {
       try {
         highlighted = hljs.highlightAuto(token.content).value;

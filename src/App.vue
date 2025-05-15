@@ -5,7 +5,6 @@
 </template>
 
 <script lang="ts" setup>
-// App.vue is the root component
 </script>
 
 <style>
