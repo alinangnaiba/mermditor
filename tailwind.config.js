@@ -5,9 +5,12 @@ export default {
   content: [
     "./index.html",
     "./src/**/*.{vue,js,ts,jsx,tsx}",
-  ],
-  theme: {
-    extend: {},
+  ],  theme: {
+    extend: {
+      colors: {
+        'deep-black': '#0a0a0a',
+      },
+    },
   },
   plugins: [
     typography,

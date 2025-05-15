@@ -24,16 +24,14 @@
         >
           <div class="divider-handle w-0.5 h-9 bg-white bg-opacity-30 rounded"></div>
         </div>
-        
-        <!-- Preview Pane -->
+          <!-- Preview Pane -->
         <div class="preview-container h-auto min-h-full transition-width duration-100" :style="{ width: (100 - editorWidthPercent) + '%' }">
-          <div class="h-full bg-dark p-4" ref="previewPane">
+          <div class="h-full bg-deep-black p-4" ref="previewPane">
             <div ref="previewContainer" class="markdown-content prose prose-invert max-w-none"></div>
           </div>
         </div>
       </div>
-    </div>
-      <!-- Footer with word count only -->    <div class="bg-dark py-2 px-4 flex items-center">
+    </div>      <!-- Footer with word count only -->    <div class="bg-deep-black py-2 px-4 flex items-center border-t border-gray-800">
       <!-- Word count -->
       <div class="text-sm text-gray-400">
         {{ wordCount }} words | {{ characterCount }} characters
@@ -746,7 +744,7 @@ const confirmAction = () => {
 
 /* Preview pane specific styling - deep black */
 .preview-pane {
-  background-color: #121212 !important; /* Deeper black */
+  background-color: #0a0a0a !important; /* Deep black */
 }
 
 /* Textarea styling */
