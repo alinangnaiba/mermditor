@@ -32,15 +32,9 @@ export function markdownItMermaid(md: MarkdownIt) {
         return `<div class="mermaid-error">Empty mermaid diagram</div>`;
       }
       
-      // Create a safer version of the code for the data attribute
-      // First escape any HTML in the code, then encodeURIComponent for the data attribute
       const safeCode = encodeURIComponent(code);
-          // Return a div that will be processed by the MermaidRenderer component
       return `<div class="mermaid-placeholder" data-mermaid-code="${safeCode}"></div>`;
     }
-
-    // Use the original renderer for all other code blocks
-    return originalFence(tokens, idx, options, env, self);
 
     // Use the original renderer for all other code blocks
     return originalFence(tokens, idx, options, env, self);

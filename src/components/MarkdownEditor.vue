@@ -5,16 +5,14 @@
       <div class="pane-container flex flex-row h-auto min-h-full">
         <!-- Editor Pane -->
         <div class="editor-container h-auto min-h-full transition-width duration-100" :style="{ width: editorWidthPercent + '%' }">
-          <div class="editor-pane h-full bg-dark-50 border-r border-opacity-10 border-white">
-            <textarea
+          <div class="editor-pane h-full bg-dark-50 border-r border-opacity-10 border-white">      <textarea
               v-model="markdownText"
-              class="w-full h-full outline-none resize-none bg-transparent p-4 font-mono text-base leading-relaxed"
+              class="w-full h-full outline-none resize-none bg-transparent p-4 font-mono text-sm leading-relaxed no-scrollbar"
               placeholder="Type your markdown here..."
               ref="textareaRef"
             ></textarea>
           </div>
         </div>
-        
         <!-- Draggable Divider -->
         <div 
           class="divider w-1.5 bg-opacity-5 bg-white hover:bg-blue-800 cursor-col-resize flex items-center justify-center" 
@@ -31,7 +29,8 @@
           </div>
         </div>
       </div>
-    </div>      <!-- Footer with word count only -->    <div class="bg-deep-black py-2 px-4 flex items-center border-t border-gray-800">
+    </div>      <!-- Footer with word count only -->    
+    <div class="bg-deep-black py-2 px-4 flex items-center border-t border-gray-800">
       <!-- Word count -->
       <div class="text-sm text-gray-400">
         {{ wordCount }} words | {{ characterCount }} characters
@@ -207,7 +206,7 @@ const renderMarkdown = async () => {
 };
 
 // Debounced version of renderMarkdown to prevent excessive renders during typing
-const debouncedRenderMarkdown = debounce(renderMarkdown, 100);
+const debouncedRenderMarkdown = debounce(renderMarkdown, 50);
 
 // For mobile view toggle
 const showPreview = ref(false);
@@ -218,41 +217,6 @@ const editorSettings = ref({
   theme: 'dark',
   autoSave: false
 });
-
-// Keep these refs for toast notifications but we won't display them
-const toastMessage = ref('');
-const toastColor = ref('');
-const showToast = ref(false);
-
-// For fullscreen mode (needed in toggleFullscreen)
-const fullscreen = ref(false);
-
-// For confirmation dialog (needed in showConfirm)
-const confirmDialogTitle = ref('');
-const confirmDialogMessage = ref('');
-const confirmCallback = ref<(() => void) | null>(null);
-const showConfirmDialog = ref(false);
-
-// Import file dialog functionality has been simplified and integrated directly
-
-// File import functionality has been removed
-
-// Print functionality has been removed
-
-// Settings toggle functionality has been removed
-
-/**
- * Apply theme based on settings
- */
-const applyTheme = () => {
-  const htmlEl = document.documentElement;
-  
-  if (editorSettings.value.theme === 'light') {
-    htmlEl.classList.add('light-theme');
-  } else {
-    htmlEl.classList.remove('light-theme');
-  }
-};
 
 // Auto-save interval reference
 const autoSaveInterval = ref<number | null>(null);
@@ -310,8 +274,7 @@ onMounted(() => {
   if (savedWidth) {
     editorWidthPercent.value = Number(savedWidth);
   }
-  
-  // Prevent mousewheel in textarea from blocking main container scrolling
+    // Prevent mousewheel in textarea from blocking main container scrolling
   if (textareaRef.value) {
     textareaRef.value.addEventListener('wheel', (e: WheelEvent) => {
       // Let the main container handle the scroll
@@ -320,6 +283,11 @@ onMounted(() => {
       }
       // Prevent default to avoid textarea scroll
       e.preventDefault();
+    });
+    
+    // Ensure the textarea doesn't scroll independently
+    textareaRef.value.addEventListener('scroll', (e: Event) => {
+      textareaRef.value!.scrollTop = 0;
     });
   }
   
@@ -333,7 +301,6 @@ onMounted(() => {
 // Remove event listeners on component unmount
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeyboardShortcut);
-  //window.removeEventListener('beforeunload', beforeUnloadHandler);
   
   // Clean up drag event listeners
   document.removeEventListener('mousemove', handleDrag);
@@ -352,15 +319,11 @@ watch(() => markdownText.value, () => {
   debouncedRenderMarkdown();
 });
 
-// Confirmation dialog functionality has been removed
-
-// Reference to the textarea element
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 
 // Word count computation
 const wordCount = computed(() => {
   if (!markdownText.value) return 0;
-  // Clean the text by removing special Markdown syntax
   const cleanText = markdownText.value
     .replace(/```[\s\S]*?```/g, '') // Remove code blocks
     .replace(/`[^`]*`/g, '') // Remove inline code
@@ -368,7 +331,6 @@ const wordCount = computed(() => {
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // Remove images
     .replace(/[#*_~`]/g, ''); // Remove markdown symbols
   
-  // Count words by splitting on whitespace and filtering out empty strings
   return cleanText
     .split(/\s+/)
     .filter(word => word.length > 0)
@@ -380,19 +342,6 @@ const characterCount = computed(() => {
   if (!markdownText.value) return 0;
   return markdownText.value.length;
 });
-
-/**
- * Get the current selection data from the textarea
- */
-const getSelectionData = () => {
-  if (!textareaRef.value) return { start: 0, end: 0, text: '' };
-  
-  const start = textareaRef.value.selectionStart;
-  const end = textareaRef.value.selectionEnd;
-  const selectedText = textareaRef.value.value.substring(start, end);
-  
-  return { start, end, text: selectedText };
-};
 
 /**
  * Format text based on the selected format type
@@ -461,41 +410,6 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
     textareaRef.value.setSelectionRange(newCursorPosition, newCursorPosition);
   });
 };
-
-/**
- * Handle scroll events on the main container that contains both editor and preview
- * 
- * This single scroll will control the scrolling for the entire page
- */
-const handleMainScroll = () => {
-  // This function is now the only scroll handler we need,
-  // as we have a single scrollable container for both panes
-};
-
-/**
- * Show a confirmation dialog with the given title, message, and action
- * Note: Dialog UI has been removed, but keeping function stub for compatibility
- */
-const showConfirm = (title: string, message: string, action: () => void) => {
-  // Execute action directly since we no longer show a confirmation dialog
-  action();
-};
-
-/**
- * Cancel the confirmation dialog 
- * Note: This is kept as a stub for compatibility
- */
-const cancelConfirmAction = () => {
-  // No-op since dialog has been removed
-};
-
-/**
- * Confirm and execute the action
- * Note: This is kept as a stub for compatibility
- */
-const confirmAction = () => {
-  // No-op since dialog has been removed
-};
 </script>
 
 <style scoped>
@@ -519,6 +433,16 @@ const confirmAction = () => {
   min-height: 100%;
   overflow: visible; /* Changed from hidden to visible to allow content to flow */
   transition: width 0.1s ease;
+}
+
+/* Specifically hide scrollbars in the editor container */
+.editor-container {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.editor-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
 }
 
 .divider {
@@ -594,7 +518,7 @@ const confirmAction = () => {
 }
 
 .markdown-content :deep(a) {
-  color: var(--accent-color, #41B883);
+  color: var(--accent-color, #3B82F6);
   text-decoration: none;
 }
 
@@ -614,8 +538,8 @@ const confirmAction = () => {
 
 .markdown-content :deep(blockquote) {
   padding: 0.5rem 1rem;
-  border-left: 4px solid var(--accent-color, #41B883);
-  background-color: var(--blockquote-bg-color, rgba(65, 184, 131, 0.1));
+  border-left: 4px solid var(--accent-color, #3B82F6);
+  background-color: var(--blockquote-bg-color, rgba(59, 130, 246, 0.1));
   margin-bottom: 1rem;
 }
 
@@ -703,10 +627,12 @@ const confirmAction = () => {
 .markdown-input {
   font-family: 'Courier New', monospace;
   resize: none !important;
-  overflow-y: hidden !important; /* Changed from auto to hidden to prevent individual scrollbar */
+  overflow-y: hidden !important; /* Hidden to prevent individual scrollbar */
   padding: 16px !important;
   line-height: 1.6 !important;
   height: 100% !important;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
 .preview-pane {
@@ -759,6 +685,17 @@ const confirmAction = () => {
   font-size: 1rem;
   line-height: 1.6;
   outline: none;
+  overflow: hidden !important;
+}
+
+/* Hide scrollbar in the textarea */
+.markdown-input::-webkit-scrollbar {
+  display: none;
+}
+
+textarea.markdown-input {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 /* Markdown content area */
@@ -786,5 +723,15 @@ const confirmAction = () => {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
+}
+
+/* Hide scrollbar for textarea while preserving functionality */
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
 </style>

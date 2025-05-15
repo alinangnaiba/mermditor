@@ -1,22 +1,81 @@
-<template>  <div class="header bg-gray-900 text-white py-2 px-4">
-    <h1 class="text-lg font-semibold flex items-center">
-      <img src="@/assets/logo.png" alt="MerMDitor Logo" class="h-6 mr-2 pt-1" />
-      MerMDitor: Markdown editor with Mermaid syntax support
-    </h1>
+<template>
+  <div class="min-h-screen bg-gray-900 text-white">
+    <!-- Header -->
+    <header class="py-4 px-6 border-b border-gray-800">
+      <div class="container mx-auto flex justify-between items-center">        <div class="flex items-center">
+          <img src="@/assets/logo.png" alt="MerMDitor Logo" class="h-8 mr-3" />
+          <h1 class="text-xl font-bold">MerMDitor</h1>
+        </div>
+        <nav class="flex items-center gap-4">
+          <RouterLink to="/cheatsheet" class="text-gray-300 hover:text-white">
+            Cheat Sheet
+          </RouterLink>
+          <RouterLink to="/editor" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium">
+            Open Editor
+          </RouterLink>
+        </nav>
+      </div>
+    </header>
+    
+    <!-- Hero Section -->
+    <section class="py-20 flex flex-col items-center justify-center">
+      <div class="container mx-auto text-center px-4">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-4xl md:text-6xl font-bold mb-6">
+            MerMDitor: Markdown editor with Mermaid syntax support
+          </h2>
+          <p class="text-xl text-gray-300 mb-12 leading-relaxed">
+            A sleek, modern Markdown editor that lets you create beautiful documentation, 
+            including diagrams and flowcharts with Mermaid syntax. MerMDitor (mer-med-it-or) is
+            perfect for developers, technical writers, and anyone who needs to document complex ideas visually.
+          </p>
+          <RouterLink to="/editor" class="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium text-lg">
+            Start Writing Now
+          </RouterLink>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Features Section -->
+    <section class="py-16 bg-gray-800">
+      <div class="container mx-auto px-4">
+        <h3 class="text-2xl font-semibold text-center mb-12">Key Features</h3>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="bg-gray-900 p-6 rounded-lg">
+            <h4 class="text-xl font-medium mb-3">Markdown Support</h4>
+            <p class="text-gray-300">Full support for GitHub-flavored Markdown with syntax highlighting for code blocks.</p>
+          </div>
+          
+          <div class="bg-gray-900 p-6 rounded-lg">
+            <h4 class="text-xl font-medium mb-3">Mermaid Diagrams</h4>
+            <p class="text-gray-300">Create flowcharts, sequence diagrams, class diagrams, and more with Mermaid syntax.</p>
+          </div>
+          
+          <div class="bg-gray-900 p-6 rounded-lg">
+            <h4 class="text-xl font-medium mb-3">Live Preview</h4>
+            <p class="text-gray-300">See your markdown and diagrams rendered in real-time as you type.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="py-8 border-t border-gray-800">
+      <div class="container mx-auto px-4 text-center text-gray-400">
+        <p>© 2025 MerMDitor. Built with Vue.js and Tailwind CSS.</p>
+      </div>
+    </footer>
   </div>
-
-  <MarkdownEditor />
 </template>
 
 <script lang="ts" setup>
-import MarkdownEditor from '@/components/MarkdownEditor.vue';
+import { RouterLink } from 'vue-router';
 </script>
 
 <style>
 html, body {
-  height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
 }
 </style>
