@@ -220,21 +220,8 @@ const saveToLocalStorage = debounce((content: string) => {
   lastSaved.value = timeString;
 }, 1000);
 
-// For mobile view toggle
-const showPreview = ref(false);
-
-// For editor settings
-const editorSettings = ref({
-  fontSize: 16,
-  theme: 'dark',
-  autoSave: true
-});
-
 // Auto-save indicator
 const lastSaved = ref<string>('');
-
-// Auto-save interval reference
-const autoSaveInterval = ref<number | null>(null);
 
 /**
  * Handle keyboard shortcuts
@@ -284,30 +271,21 @@ onMounted(() => {
   setupMermaid();
   renderMarkdown();
   
-  // Load saved editor width if available
-  const savedWidth = localStorage.getItem('mermd-editor-width');
-  if (savedWidth) {
-    editorWidthPercent.value = Number(savedWidth);
-  }
-  
   // Set initial lastSaved value if we loaded content from localStorage
   if (localStorage.getItem('mermd-content')) {
     const now = new Date();
     const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     lastSaved.value = timeString;
   }
-    // Prevent mousewheel in textarea from blocking main container scrolling
   if (textareaRef.value) {
     textareaRef.value.addEventListener('wheel', (e: WheelEvent) => {
       // Let the main container handle the scroll
       if (mainScrollContainer.value) {
         mainScrollContainer.value.scrollTop += e.deltaY;
       }
-      // Prevent default to avoid textarea scroll
       e.preventDefault();
     });
     
-    // Ensure the textarea doesn't scroll independently
     textareaRef.value.addEventListener('scroll', (e: Event) => {
       textareaRef.value!.scrollTop = 0;
     });
@@ -315,9 +293,6 @@ onMounted(() => {
   
   // Set up keyboard shortcut listener
   document.addEventListener('keydown', handleKeyboardShortcut);
-  
-  // Add before unload event to warn user about unsaved changes
-  //window.addEventListener('beforeunload', beforeUnloadHandler);
 });
 
 // Remove event listeners on component unmount
@@ -329,11 +304,6 @@ onBeforeUnmount(() => {
   document.removeEventListener('touchmove', handleDrag);
   document.removeEventListener('mouseup', stopDrag);
   document.removeEventListener('touchend', stopDrag);
-  
-  // Clear auto-save interval if set
-  if (autoSaveInterval.value) {
-    clearInterval(autoSaveInterval.value);
-  }
 });
 
 // Watch for changes in markdown text and re-render
@@ -423,10 +393,8 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
   const value = textareaRef.value.value;
   const newText = value.substring(0, start) + formattedText + value.substring(end);
   
-  // Update the model
   markdownText.value = newText;
   
-  // Focus back to textarea and set cursor position after update
   nextTick(() => {
     if (!textareaRef.value) return;
     
@@ -448,26 +416,25 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
 .pane-container {
   display: flex;
   flex-direction: row;
-  height: auto; /* Changed from 100% to auto to allow content to define height */
+  height: auto;
   min-height: 100%;
   position: relative;
 }
 
 .editor-container, .preview-container {
-  height: auto; /* Changed from 100% to auto to allow content to define height */
+  height: auto;
   min-height: 100%;
-  overflow: visible; /* Changed from hidden to visible to allow content to flow */
+  overflow: visible;
   transition: width 0.1s ease;
 }
 
-/* Specifically hide scrollbars in the editor container */
 .editor-container {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .editor-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, and Opera */
+  display: none;
 }
 
 .divider {
@@ -482,7 +449,7 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
 }
 
 .divider:hover, .divider:active {
-  background: #041C42; /* Dark blue matching the app bar */
+  background: #041C42;
 }
 
 .divider-handle {
@@ -513,7 +480,6 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
 }
 
 .markdown-content {
-  /* Base styling for markdown content */
   font-family: 'Roboto', sans-serif;
   line-height: 1.6;
   color: var(--text-color, rgba(255, 255, 255, 0.87));
@@ -617,7 +583,6 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
   margin: 1.5rem 0;
 }
 
-/* Responsive adjustments */
 @media (max-width: 959px) {
   .preview-pane {
     border-left: none !important;
@@ -652,12 +617,12 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
 .markdown-input {
   font-family: 'Courier New', monospace;
   resize: none !important;
-  overflow-y: hidden !important; /* Hidden to prevent individual scrollbar */
+  overflow-y: hidden !important;
   padding: 16px !important;
   line-height: 1.6 !important;
   height: 100% !important;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .preview-pane {
@@ -672,33 +637,28 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
   flex-direction: column;
 }
 
-/* Main scroll container styling */
 .main-scroll-container {
   height: 100%;
   overflow-y: auto;
   flex: 1;
   position: relative;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
+  overflow-x: hidden;
 }
 
-/* Editor and Preview styles */
 .editor-pane, .preview-pane {
   height: 100%;
   padding: 16px;
   overflow: hidden;
 }
 
-/* Editor pane specific styling - lighter shade of black */
 .editor-pane {
-  background-color: #1e1e1e !important; /* Lighter black */
+  background-color: #1e1e1e !important;
 }
 
-/* Preview pane specific styling - deep black */
 .preview-pane {
-  background-color: #0a0a0a !important; /* Deep black */
+  background-color: #0a0a0a !important;
 }
 
-/* Textarea styling */
 .markdown-input {
   font-family: 'Courier New', monospace;
   width: 100%;
@@ -713,7 +673,6 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
   overflow: hidden !important;
 }
 
-/* Hide scrollbar in the textarea */
 .markdown-input::-webkit-scrollbar {
   display: none;
 }
@@ -723,15 +682,13 @@ textarea.markdown-input {
   -ms-overflow-style: none;
 }
 
-/* Markdown content area */
 .markdown-content {
-  padding-bottom: 30vh; /* Add some padding to ensure content can be scrolled fully */
-  max-width: 100%; /* Ensure content doesn't overflow horizontally */
-  overflow-wrap: break-word; /* Break long words to prevent horizontal overflow */
+  padding-bottom: 30vh;
+  max-width: 100%;
+  overflow-wrap: break-word;
   word-break: break-word;
 }
 
-/* Ensure consistent scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -750,13 +707,12 @@ textarea.markdown-input {
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* Hide scrollbar for textarea while preserving functionality */
 .no-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer and Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
+  display: none;
 }
 </style>

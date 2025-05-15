@@ -25,9 +25,7 @@ export function markdownItMermaid(md: MarkdownIt) {
     const token = tokens[idx];
     const code = token.content.trim();
     
-    // Check if this is a mermaid code block
     if (token.info.trim() === 'mermaid') {
-      // Make sure the code is valid and complete
       if (!code || code.length === 0) {
         return `<div class="mermaid-error">Empty mermaid diagram</div>`;
       }
@@ -36,7 +34,6 @@ export function markdownItMermaid(md: MarkdownIt) {
       return `<div class="mermaid-placeholder" data-mermaid-code="${safeCode}"></div>`;
     }
 
-    // Use the original renderer for all other code blocks
     return originalFence(tokens, idx, options, env, self);
   };
 }

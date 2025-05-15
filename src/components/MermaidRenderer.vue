@@ -26,7 +26,6 @@ const uniqueMermaidId = `mermaid-diagram-${props.idSuffix}`;
 const renderMermaidDiagram = async () => {
   if (mermaidContainer.value && props.code) {
     try {
-      // Clear previous diagram before rendering a new one
       mermaidContainer.value.innerHTML = '<div class="mermaid-loading">Rendering diagram...</div>';
       await nextTick(); // Wait for DOM update
 

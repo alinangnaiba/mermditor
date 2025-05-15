@@ -41,5 +41,5 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-  },  // No CSS preprocessors needed now that we've removed Vuetify
+  },
 })
