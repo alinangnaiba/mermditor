@@ -1,6 +1,8 @@
-<template>
-  <div class="header bg-gray-900 text-white py-2 px-4">
-    <h1 class="text-lg font-semibold">MerMDitor: Markdown editor with Mermaid syntax support</h1>
+<template>  <div class="header bg-gray-900 text-white py-2 px-4">
+    <h1 class="text-lg font-semibold flex items-center">
+      <img src="@/assets/logo.png" alt="MerMDitor Logo" class="h-6 mr-2 pt-1" />
+      MerMDitor: Markdown editor with Mermaid syntax support
+    </h1>
   </div>
 
   <MarkdownEditor />
