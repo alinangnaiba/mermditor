@@ -1,12 +1,7 @@
 <template>
-  <v-app-bar
-    density="compact"
-    color="primary"
-    dark
-    app
-  >
-    <v-app-bar-title>Markdown editor with Mermaid support for diagrams</v-app-bar-title>
-  </v-app-bar>
+  <div class="header bg-gray-900 text-white py-2 px-4">
+    <h1 class="text-lg font-semibold">MerMDitor: Markdown editor with Mermaid syntax support</h1>
+  </div>
 
   <MarkdownEditor />
 </template>

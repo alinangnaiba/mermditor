@@ -1,9 +1,7 @@
 <template>
-  <v-app theme="dark">
-    <v-main class="fill-height">
-      <router-view />
-    </v-main>
-  </v-app>
+  <div class="app-container bg-dark">
+    <router-view />
+  </div>
 </template>
 
 <script lang="ts" setup>

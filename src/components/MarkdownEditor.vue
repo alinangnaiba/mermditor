@@ -1,215 +1,47 @@
-<template>  <v-container fluid class="pa-0 markdown-editor-container">
+<template>
+  <div class="markdown-editor-container h-screen w-full flex flex-col">
     <!-- Main scroll container wrapping both panes -->
-    <div class="main-scroll-container" ref="mainScrollContainer">
-      <div class="pane-container">
+    <div class="main-scroll-container flex-1 overflow-y-auto" ref="mainScrollContainer">
+      <div class="pane-container flex flex-row h-auto min-h-full">
         <!-- Editor Pane -->
-        <div class="editor-container" :style="{ width: editorWidthPercent + '%' }">
-          <v-sheet class="pa-0 editor-pane h-100" rounded="0">
+        <div class="editor-container h-auto min-h-full transition-width duration-100" :style="{ width: editorWidthPercent + '%' }">
+          <div class="editor-pane h-full bg-dark-50 border-r border-opacity-10 border-white">
             <textarea
               v-model="markdownText"
-              class="markdown-input"
+              class="w-full h-full outline-none resize-none bg-transparent p-4 font-mono text-base leading-relaxed"
               placeholder="Type your markdown here..."
               ref="textareaRef"
             ></textarea>
-          </v-sheet>
+          </div>
         </div>
         
         <!-- Draggable Divider -->
         <div 
-          class="divider" 
+          class="divider w-1.5 bg-opacity-5 bg-white hover:bg-blue-800 cursor-col-resize flex items-center justify-center" 
           @mousedown="startDrag" 
           @touchstart.prevent="startDrag"
           title="Drag to resize"
         >
-          <div class="divider-handle"></div>
+          <div class="divider-handle w-0.5 h-9 bg-white bg-opacity-30 rounded"></div>
         </div>
         
         <!-- Preview Pane -->
-        <div class="preview-container" :style="{ width: (100 - editorWidthPercent) + '%' }">
-          <v-sheet class="preview-pane h-100" rounded="0" ref="previewPane">
-            <div ref="previewContainer" class="markdown-content"></div>
-          </v-sheet>
+        <div class="preview-container h-auto min-h-full transition-width duration-100" :style="{ width: (100 - editorWidthPercent) + '%' }">
+          <div class="h-full bg-dark p-4" ref="previewPane">
+            <div ref="previewContainer" class="markdown-content prose prose-invert max-w-none"></div>
+          </div>
         </div>
       </div>
     </div>
-    
-    <!-- Responsive button for mobile view -->
-    <v-btn
-      class="toggle-view-btn d-md-none"
-      icon
-      fab
-      fixed
-      bottom
-      right
-      color="primary"
-      @click="toggleMobileView"
-    >
-      <v-icon>{{ showPreview ? 'mdi-pencil' : 'mdi-eye' }}</v-icon>
-    </v-btn>    <!-- Footer with buttons -->
-    <v-footer app absolute class="px-4 py-2" color="primary">
-      <v-btn
-        icon
-        variant="text"
-        color="primary"
-        @click="showHelp = true"
-      >
-        <v-icon>mdi-help-circle-outline</v-icon>
-      </v-btn>
-        <v-menu>
-        <template v-slot:activator="{ props }">
-          <v-btn
-            icon
-            variant="text"
-            color="primary"
-            v-bind="props"
-          >
-            <v-icon>mdi-export-variant</v-icon>
-          </v-btn>
-        </template>
-        <v-list>
-          <v-list-item @click="exportAsMarkdown">
-            <v-list-item-title>Export as Markdown</v-list-item-title>
-          </v-list-item>
-          <v-list-item @click="exportAsHTML">
-            <v-list-item-title>Export as HTML</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
-      
-      <!-- Import button -->
-      <v-btn
-        icon
-        variant="text"
-        color="primary"
-        @click="importFile"
-      >
-        <v-icon>mdi-file-import</v-icon>
-        <input
-          type="file"
-          ref="fileInput"
-          accept=".md, .markdown, .txt"
-          style="display: none"
-          @change="handleFileImport"
-        />
-      </v-btn>
-      
-      <!-- Print button -->
-      <v-btn
-        icon
-        variant="text"
-        color="primary"
-        @click="printPreview"
-      >
-        <v-icon>mdi-printer</v-icon>
-      </v-btn>
-      
-      <v-btn
-        icon
-        variant="text"
-        color="primary"
-        @click="showSettings = true"
-      >
-        <v-icon>mdi-cog</v-icon>
-      </v-btn>
-      
-      <v-spacer></v-spacer>      <div class="d-flex align-center me-4">
-        <small class="text-caption">
-          {{ wordCount }} words | {{ characterCount }} characters
-          <span v-if="editorSettings.autoSave" class="ms-2">(Auto-save on)</span>
-        </small>
+      <!-- Footer with word count only -->    <div class="bg-dark py-2 px-4 flex items-center">
+      <!-- Word count -->
+      <div class="text-sm text-gray-400">
+        {{ wordCount }} words | {{ characterCount }} characters
+        <span v-if="editorSettings.autoSave" class="ml-2">(Auto-save on)</span>
       </div>
-      <v-btn
-        variant="elevated"
-        color="primary"
-        prepend-icon="mdi-content-save"
-        @click="saveToLocalStorage"
-      >
-        Save
-      </v-btn>
-    </v-footer>
-      <!-- Toast notification -->
-    <v-snackbar
-      v-model="showToast"
-      :color="toastColor"
-      :timeout="3000"
-      location="top"
-    >
-      {{ toastMessage }}
-      <template #actions>
-        <v-btn
-          variant="text"
-          @click="showToast = false"
-        >
-          Close
-        </v-btn>
-      </template>
-    </v-snackbar>
-      <!-- Help dialog -->
-    <v-dialog v-model="showHelp" max-width="500">
-      <v-card>
-        <v-card-title class="text-h5 pb-2">
-          Keyboard Shortcuts
-        </v-card-title>
-        <v-card-text>
-          <v-list density="compact" bg-color="transparent">
-            <v-list-item>
-              <v-list-item-title>Bold</v-list-item-title>
-              <v-list-item-subtitle>Ctrl+B</v-list-item-subtitle>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-title>Italic</v-list-item-title>
-              <v-list-item-subtitle>Ctrl+I</v-list-item-subtitle>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-title>Link</v-list-item-title>
-              <v-list-item-subtitle>Ctrl+K</v-list-item-subtitle>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-title>Heading</v-list-item-title>
-              <v-list-item-subtitle>Ctrl+Shift+1</v-list-item-subtitle>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-title>Save</v-list-item-title>
-              <v-list-item-subtitle>Ctrl+S</v-list-item-subtitle>
-            </v-list-item>
-          </v-list>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="primary"
-            variant="text"
-            @click="showHelp = false"
-          >
-            Close
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>    <!-- Settings dialog using the component -->
-    <SettingsDialog
-      :model-value="showSettings"
-      @update:model-value="showSettings = $event"
-      :initial-settings="editorSettings"
-      @save="handleSettingsSave"
-    />
-    
-    <!-- Confirmation dialog -->
-    <v-dialog v-model="showConfirmDialog" max-width="400">
-      <v-card>
-        <v-card-title class="text-h5 pb-1">
-          {{ confirmDialogTitle }}
-        </v-card-title>
-        <v-card-text>
-          {{ confirmDialogMessage }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="cancelConfirmAction">Cancel</v-btn>
-          <v-btn color="error" @click="confirmAction">Confirm</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-container>
+    </div>
+      <!-- No dialogs or toast notifications needed anymore -->
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -219,7 +51,6 @@ import { markdownItMermaid } from '@/plugins/markdownItMermaid';
 import { markdownItHighlight } from '@/plugins/markdownItHighlight';
 import { setupMermaid } from '@/plugins/mermaid';
 import MermaidRenderer from '@/components/MermaidRenderer.vue';
-import SettingsDialog from '@/components/SettingsDialog.vue';
 import { createApp } from 'vue';
 import debounce from 'lodash/debounce';
 import 'highlight.js/styles/atom-one-dark.css';
@@ -280,7 +111,7 @@ const handleDrag = (e: MouseEvent | TouchEvent) => {
   editorWidthPercent.value = percentage;
   
   // Store the width preference in localStorage
-  localStorage.setItem('mdit-editor-width', percentage.toString());
+  localStorage.setItem('mermd-editor-width', percentage.toString());
 };
 
 // Function to stop dragging
@@ -378,189 +209,39 @@ const renderMarkdown = async () => {
 };
 
 // Debounced version of renderMarkdown to prevent excessive renders during typing
-const debouncedRenderMarkdown = debounce(renderMarkdown, 500);
-
-// For notifications
-const showToast = ref(false);
-const toastMessage = ref('');
-const toastColor = ref('success');
-
-// For help dialog
-const showHelp = ref(false);
+const debouncedRenderMarkdown = debounce(renderMarkdown, 100);
 
 // For mobile view toggle
 const showPreview = ref(false);
 
-// For confirmation dialog
-const showConfirmDialog = ref(false);
-const confirmDialogTitle = ref('');
-const confirmDialogMessage = ref('');
-const confirmCallback = ref<(() => void) | null>(null);
-
-// For fullscreen mode
-const fullscreen = ref(false);
-
-// For settings dialog
-const showSettings = ref(false);
+// For editor settings
 const editorSettings = ref({
   fontSize: 16,
   theme: 'dark',
   autoSave: false
 });
 
-// File input reference
-const fileInput = ref<HTMLInputElement | null>(null);
+// Keep these refs for toast notifications but we won't display them
+const toastMessage = ref('');
+const toastColor = ref('');
+const showToast = ref(false);
 
-/**
- * Open file picker dialog
- */
-const importFile = () => {
-  if (fileInput.value) {
-    fileInput.value.click();
-  }
-};
+// For fullscreen mode (needed in toggleFullscreen)
+const fullscreen = ref(false);
 
-/**
- * Handle file import when user selects a file
- */
-const handleFileImport = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (!input.files || input.files.length === 0) return;
-  
-  const file = input.files[0];
-  const reader = new FileReader();
-  
-  reader.onload = () => {
-    if (typeof reader.result === 'string') {
-      markdownText.value = reader.result;
-      
-      // Show success notification
-      toastMessage.value = `Imported "${file.name}" successfully!`;
-      toastColor.value = 'success';
-      showToast.value = true;
-    }
-  };
-  
-  reader.onerror = () => {
-    toastMessage.value = 'Error reading file';
-    toastColor.value = 'error';
-    showToast.value = true;
-  };
-  
-  reader.readAsText(file);
-  
-  // Reset the input so the same file can be selected again
-  input.value = '';
-};
+// For confirmation dialog (needed in showConfirm)
+const confirmDialogTitle = ref('');
+const confirmDialogMessage = ref('');
+const confirmCallback = ref<(() => void) | null>(null);
+const showConfirmDialog = ref(false);
 
-/**
- * Print the current markdown preview
- */
-const printPreview = () => {
-  // Create a new window for printing
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) {
-    toastMessage.value = 'Popup blocked! Please allow popups and try again.';
-    toastColor.value = 'warning';
-    showToast.value = true;
-    return;
-  }
-  
-  // Get rendered HTML
-  const html = md.render(markdownText.value || '');
-  
-  // Create a full HTML document for printing
-  const printContent = [
-    '<!DOCTYPE html>',
-    '<html>',
-    '<head>',
-    '  <title>Print Preview</title>',
-    '  <meta charset="utf-8">',
-    '  <style>',
-    '    body {',
-    '      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;',
-    '      line-height: 1.6;',
-    '      margin: 2cm;',
-    '      color: #000;',
-    '    }',
-    '    pre { white-space: pre-wrap; }',
-    '    code { font-family: monospace; }',
-    '    h1, h2, h3, h4 { margin-top: 1em; }',
-    '    img { max-width: 100%; }',
-    '    a { color: #0366d6; }',
-    '    blockquote { border-left: 3px solid #ddd; padding-left: 1em; color: #666; }',
-    '    @media print {',
-    '      a { text-decoration: none; color: #000; }',
-    '      @page { margin: 2cm; }',
-    '    }',
-    '  </style>',
-    '  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"><\/script>',
-    '  <script>',
-    '    document.addEventListener("DOMContentLoaded", function() {',
-    '      mermaid.initialize({ theme: "default" });',
-    '      mermaid.init(undefined, document.querySelectorAll(".mermaid"));',
-    '      setTimeout(() => { window.print(); }, 1000);',
-    '    });',
-    '  <\/script>',
-    '</head>',
-    '<body>',
-    html,
-    '</body>',
-    '</html>'
-  ].join('\n');
-  
-  // Write the HTML to the new window and trigger print
-  printWindow.document.write(printContent);
-  printWindow.document.close();
-};
+// Import file dialog functionality has been simplified and integrated directly
 
-/**
- * Handle settings saved from the SettingsDialog component
- */
-const handleSettingsSave = (newSettings: {fontSize: number; theme: string; autoSave: boolean}) => {
-  // Update the editor settings
-  editorSettings.value = { ...newSettings };
-  
-  // Apply settings and save them
-  applyAndSaveSettings();
-};
+// File import functionality has been removed
 
-/**
- * Apply editor settings and save them to localStorage
- */
-const applyAndSaveSettings = () => {
-  // Apply font size to editor
-  if (textareaRef.value) {
-    textareaRef.value.style.fontSize = `${editorSettings.value.fontSize}px`;
-  }
-  
-  // Apply to preview container
-  if (previewContainer.value) {
-    previewContainer.value.style.fontSize = `${editorSettings.value.fontSize * 0.9}px`;
-  }
-  
-  // Save settings to localStorage
-  try {
-    localStorage.setItem('mdit-settings', JSON.stringify(editorSettings.value));
-    
-    toastMessage.value = 'Settings saved successfully!';
-    toastColor.value = 'success';
-    showToast.value = true;
-  } catch (error) {
-    console.error('Failed to save settings:', error);
-  }
-  
-  // Setup auto-save interval if enabled
-  if (editorSettings.value.autoSave && !autoSaveInterval.value) {
-    autoSaveInterval.value = window.setInterval(saveToLocalStorage, 30000); // Auto-save every 30 seconds
-  } else if (!editorSettings.value.autoSave && autoSaveInterval.value) {
-    clearInterval(autoSaveInterval.value);
-    autoSaveInterval.value = null;
-  }
-  
-  // Apply theme if it changed
-  applyTheme();
-};
+// Print functionality has been removed
+
+// Settings toggle functionality has been removed
 
 /**
  * Apply theme based on settings
@@ -575,259 +256,8 @@ const applyTheme = () => {
   }
 };
 
-/**
- * Load editor settings from localStorage
- */
-const loadSettings = () => {
-  try {
-    const savedSettings = localStorage.getItem('mdit-settings');
-    if (savedSettings) {
-      editorSettings.value = { ...editorSettings.value, ...JSON.parse(savedSettings) };
-      
-      // Apply font size immediately
-      if (textareaRef.value) {
-        textareaRef.value.style.fontSize = `${editorSettings.value.fontSize}px`;
-      }
-      
-      // Apply to preview container
-      if (previewContainer.value) {
-        previewContainer.value.style.fontSize = `${editorSettings.value.fontSize * 0.9}px`;
-      }
-      
-      // Setup auto-save if enabled
-      if (editorSettings.value.autoSave) {
-        autoSaveInterval.value = window.setInterval(saveToLocalStorage, 30000);
-      }
-      
-      // Apply theme
-      applyTheme();
-    }
-  } catch (error) {
-    console.error('Failed to load settings:', error);
-  }
-};
-
 // Auto-save interval reference
 const autoSaveInterval = ref<number | null>(null);
-
-/**
- * Save markdown content to localStorage
- */
-const saveToLocalStorage = () => {
-  try {
-    localStorage.setItem('mdit-content', markdownText.value);
-    // Show snackbar notification
-    toastMessage.value = 'Content saved successfully!';
-    toastColor.value = 'success';
-    showToast.value = true;
-  } catch (error) {
-    console.error('Failed to save to localStorage:', error);
-    toastMessage.value = 'Failed to save content';
-    toastColor.value = 'error';
-    showToast.value = true;
-  }
-};
-
-/**
- * Load markdown content from localStorage
- */
-const loadFromLocalStorage = () => {
-  try {
-    const savedContent = localStorage.getItem('mdit-content');
-    if (savedContent) {
-      markdownText.value = savedContent;
-    }
-  } catch (error) {
-    console.error('Failed to load from localStorage:', error);
-  }
-};
-
-/**
- * Toggle between edit and preview modes on mobile
- */
-const toggleMobileView = () => {
-  showPreview.value = !showPreview.value;
-  // Apply CSS classes to hide/show panels in mobile view
-  const editorPane = document.querySelector('.editor-pane');
-  const previewPane = document.querySelector('.preview-pane');
-  
-  if (editorPane && previewPane) {
-    if (showPreview.value) {
-      editorPane.classList.add('d-none', 'd-md-flex');
-      previewPane.classList.remove('d-none', 'd-md-flex');
-    } else {
-      previewPane.classList.add('d-none', 'd-md-flex');
-      editorPane.classList.remove('d-none', 'd-md-flex');
-    }
-  }
-};
-
-/**
- * Toggle fullscreen mode for the editor
- */
-const toggleFullscreen = () => {
-  fullscreen.value = !fullscreen.value;
-  
-  const container = document.querySelector('.markdown-editor-container');
-  if (!container) return;
-  
-  if (fullscreen.value) {
-    container.classList.add('fullscreen-mode');
-    document.body.style.overflow = 'hidden'; // Prevent scrolling
-  } else {
-    container.classList.remove('fullscreen-mode');
-    document.body.style.overflow = ''; // Restore scrolling
-  }
-};
-
-/**
- * Clear the document after confirmation
- */
-const clearDocument = () => {
-  if (!markdownText.value || markdownText.value.trim() === '') {
-    // If the document is already empty, no need for confirmation
-    resetDocument();
-    return;
-  }
-  
-  showConfirm(
-    'Clear Document',
-    'Are you sure you want to clear the current document? This action cannot be undone.',
-    resetDocument
-  );
-};
-
-/**
- * Reset the document to empty or template
- */
-const resetDocument = () => {
-  markdownText.value = '# New Document\n\n';
-  if (textareaRef.value) {
-    textareaRef.value.focus();
-  }
-  
-  toastMessage.value = 'Document cleared';
-  toastColor.value = 'info';
-  showToast.value = true;
-};
-
-/**
- * Export the current Markdown content as a .md file
- */
-const exportAsMarkdown = () => {
-  const fileName = 'document.md';
-  const content = markdownText.value;
-  
-  // Create a blob with the markdown content
-  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
-  
-  // Create a download link and trigger it
-  downloadFile(blob, fileName);
-  
-  // Show success notification
-  toastMessage.value = 'Markdown file exported successfully!';
-  toastColor.value = 'success';
-  showToast.value = true;
-};
-
-/**
- * Export the current content as an HTML file
- */
-const exportAsHTML = () => {
-  // Get the rendered HTML
-  const html = md.render(markdownText.value || '');
-    // Create a full HTML document with template literals - need to escape this for Vue's template parser
-  const fullHTML = [
-    '<!DOCTYPE html>',
-    '<html>',
-    '<head>',
-    '  <meta charset="UTF-8">',
-    '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
-    '  <title>Exported Markdown</title>',
-    '  <style>',
-    '    body {',
-    '      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", sans-serif;',
-    '      line-height: 1.6;',
-    '      max-width: 800px;',
-    '      margin: 0 auto;',
-    '      padding: 20px;',
-    '    }',
-    '    pre {',
-    '      background-color: #f5f5f5;',
-    '      padding: 15px;',
-    '      border-radius: 4px;',
-    '      overflow-x: auto;',
-    '    }',
-    '    code {',
-    '      font-family: Menlo, Monaco, Consolas, "Courier New", monospace;',
-    '    }',
-    '    blockquote {',
-    '      border-left: 4px solid #ccc;',
-    '      padding-left: 15px;',
-    '      margin-left: 0;',
-    '      color: #555;',
-    '    }',
-    '    img {',
-    '      max-width: 100%;',
-    '    }',
-    '    table {',
-    '      border-collapse: collapse;',
-    '      width: 100%;',
-    '    }',
-    '    th, td {',
-    '      border: 1px solid #ddd;',
-    '      padding: 8px;',
-    '    }',
-    '    th {',
-    '      background-color: #f2f2f2;',
-    '    }',
-    '  </style>',
-    '  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"><\/script>',
-    '  <script>',
-    '    document.addEventListener("DOMContentLoaded", function() {',
-    '      mermaid.initialize({ theme: "default" });',
-    '      mermaid.init(undefined, document.querySelectorAll(".mermaid"));',
-    '    });',
-    '  <\/script>',
-    '</head>',
-    '<body>',
-    html,
-    '</body>',
-    '</html>'
-  ].join('\n');
-
-  // Create a blob with the HTML content
-  const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
-  
-  // Create a download link and trigger it
-  downloadFile(blob, 'document.html');
-  
-  // Show success notification
-  toastMessage.value = 'HTML file exported successfully!';
-  toastColor.value = 'success';
-  showToast.value = true;
-};
-
-/**
- * Helper function to download a file
- */
-const downloadFile = (blob: Blob, fileName: string) => {
-  // Create a URL for the blob
-  const url = URL.createObjectURL(blob);
-  
-  // Create a temporary link element
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  
-  // Append to the document, click and clean up
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  // Release the URL
-  setTimeout(() => URL.revokeObjectURL(url), 100);
-};
 
 /**
  * Handle keyboard shortcuts
@@ -864,10 +294,9 @@ const handleKeyboardShortcut = (e: KeyboardEvent) => {
         handleFormat('heading', selection);
       }
       break;
-    case 's': // Save
-      e.preventDefault();
-      saveToLocalStorage();
-      break;
+    //case 's': // Save will revisit this functionality
+    //  e.preventDefault();
+    //  break;
     default:
       break;
   }
@@ -876,12 +305,10 @@ const handleKeyboardShortcut = (e: KeyboardEvent) => {
 // Initialize mermaid and render markdown when component is mounted
 onMounted(() => {
   setupMermaid();
-  loadSettings();  // Load settings first
-  loadFromLocalStorage();
   renderMarkdown();
   
   // Load saved editor width if available
-  const savedWidth = localStorage.getItem('mdit-editor-width');
+  const savedWidth = localStorage.getItem('mermd-editor-width');
   if (savedWidth) {
     editorWidthPercent.value = Number(savedWidth);
   }
@@ -902,13 +329,13 @@ onMounted(() => {
   document.addEventListener('keydown', handleKeyboardShortcut);
   
   // Add before unload event to warn user about unsaved changes
-  window.addEventListener('beforeunload', beforeUnloadHandler);
+  //window.addEventListener('beforeunload', beforeUnloadHandler);
 });
 
 // Remove event listeners on component unmount
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeyboardShortcut);
-  window.removeEventListener('beforeunload', beforeUnloadHandler);
+  //window.removeEventListener('beforeunload', beforeUnloadHandler);
   
   // Clean up drag event listeners
   document.removeEventListener('mousemove', handleDrag);
@@ -920,58 +347,14 @@ onBeforeUnmount(() => {
   if (autoSaveInterval.value) {
     clearInterval(autoSaveInterval.value);
   }
-  
-  // Exit fullscreen mode if active
-  if (fullscreen.value) {
-    document.body.style.overflow = '';
-    fullscreen.value = false;
-  }
 });
-
-// Handle before unload event to warn about unsaved changes
-const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
-  // Check if there's unsaved content
-  const savedContent = localStorage.getItem('mdit-content');
-  if (savedContent !== markdownText.value) {
-    // Standard way to show confirmation dialog before leaving page
-    e.preventDefault();
-    e.returnValue = '';
-  }
-};
 
 // Watch for changes in markdown text and re-render
 watch(() => markdownText.value, () => {
   debouncedRenderMarkdown();
 });
 
-/**
- * Show a confirmation dialog with the given title, message, and action
- */
-const showConfirm = (title: string, message: string, action: () => void) => {
-  confirmDialogTitle.value = title;
-  confirmDialogMessage.value = message;
-  confirmCallback.value = action;
-  showConfirmDialog.value = true;
-};
-
-/**
- * Cancel the confirmation dialog
- */
-const cancelConfirmAction = () => {
-  showConfirmDialog.value = false;
-  confirmCallback.value = null;
-};
-
-/**
- * Confirm and execute the action
- */
-const confirmAction = () => {
-  showConfirmDialog.value = false;
-  if (confirmCallback.value) {
-    confirmCallback.value();
-  }
-  confirmCallback.value = null;
-};
+// Confirmation dialog functionality has been removed
 
 // Reference to the textarea element
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
@@ -1084,11 +467,36 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
 /**
  * Handle scroll events on the main container that contains both editor and preview
  * 
- * This single scroll event will control the scrolling for the entire page
+ * This single scroll will control the scrolling for the entire page
  */
 const handleMainScroll = () => {
   // This function is now the only scroll handler we need,
   // as we have a single scrollable container for both panes
+};
+
+/**
+ * Show a confirmation dialog with the given title, message, and action
+ * Note: Dialog UI has been removed, but keeping function stub for compatibility
+ */
+const showConfirm = (title: string, message: string, action: () => void) => {
+  // Execute action directly since we no longer show a confirmation dialog
+  action();
+};
+
+/**
+ * Cancel the confirmation dialog 
+ * Note: This is kept as a stub for compatibility
+ */
+const cancelConfirmAction = () => {
+  // No-op since dialog has been removed
+};
+
+/**
+ * Confirm and execute the action
+ * Note: This is kept as a stub for compatibility
+ */
+const confirmAction = () => {
+  // No-op since dialog has been removed
 };
 </script>
 
@@ -1260,12 +668,6 @@ const handleMainScroll = () => {
   height: 1px;
   background-color: rgba(255, 255, 255, 0.2);
   margin: 1.5rem 0;
-}
-
-/* Mobile toggle button */
-.toggle-view-btn {
-  margin: 16px;
-  z-index: 10;
 }
 
 /* Responsive adjustments */

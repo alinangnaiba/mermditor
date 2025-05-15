@@ -13,8 +13,8 @@ import App from './App.vue'
 // Composables
 import { createApp } from 'vue'
 
-// Styles
-import 'unfonts.css'
+// Import Tailwind CSS
+import '@/styles/tailwind.css'
 
 const app = createApp(App)
 
