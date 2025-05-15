@@ -1,5 +1,5 @@
 <template>
-  <div class="markdown-editor-container h-screen w-full flex flex-col">
+  <div class="markdown-editor-container h-[calc(100vh-65px)] w-full flex flex-col">
     <!-- Main scroll container wrapping both panes -->
     <div class="main-scroll-container flex-1 overflow-y-auto" ref="mainScrollContainer">
       <div class="pane-container flex flex-row h-auto min-h-full">
@@ -29,12 +29,15 @@
           </div>
         </div>
       </div>
-    </div>      <!-- Footer with word count only -->    
-    <div class="bg-deep-black py-2 px-4 flex items-center border-t border-gray-800">
+    </div>      <!-- Footer with word count only -->      <div class="bg-deep-black py-2 px-4 flex items-center justify-between border-t border-gray-800">
       <!-- Word count -->
       <div class="text-sm text-gray-400">
         {{ wordCount }} words | {{ characterCount }} characters
-        <span v-if="editorSettings.autoSave" class="ml-2">(Auto-save on)</span>
+      </div>
+      <!-- Save status -->
+      <div class="text-sm text-gray-400">
+        <span v-if="lastSaved">Last saved: {{ lastSaved }}</span>
+        <span v-else>Changes saved automatically</span>
       </div>
     </div>
       <!-- No dialogs or toast notifications needed anymore -->
@@ -95,19 +98,15 @@ const handleDrag = (e: MouseEvent | TouchEvent) => {
   // Get mouse/touch position
   let clientX: number;
   if ('touches' in e) {
-    // Touch event
     clientX = e.touches[0].clientX;
   } else {
-    // Mouse event
     clientX = e.clientX;
   }
   
-  // Calculate editor width as percentage of container
   const editorWidth = clientX - containerRect.left;
   const percentage = Math.min(Math.max((editorWidth / containerWidth) * 100, 10), 90);
   editorWidthPercent.value = percentage;
   
-  // Store the width preference in localStorage
   localStorage.setItem('mermd-editor-width', percentage.toString());
 };
 
@@ -121,8 +120,8 @@ const stopDrag = () => {
   document.body.style.userSelect = ''; // Restore text selection
 };
 
-// Default markdown text with examples
-const markdownText = ref(`# Markdown Editor with Mermaid
+// Default markdown example content
+const defaultContent = `# Markdown Editor with Mermaid
 
 ## Basic Markdown
 
@@ -167,7 +166,10 @@ flowchart LR
     C -->|One| D[Result one]
     C -->|Two| E[Result two]
 \`\`\`
-`);
+`;
+
+// Initialize with saved content or default content
+const markdownText = ref(localStorage.getItem('mermd-content') || defaultContent);
 
 /**
  * Process markdown content and render it, including handling mermaid diagrams
@@ -208,6 +210,16 @@ const renderMarkdown = async () => {
 // Debounced version of renderMarkdown to prevent excessive renders during typing
 const debouncedRenderMarkdown = debounce(renderMarkdown, 50);
 
+// Debounced save function to prevent excessive writes to localStorage
+const saveToLocalStorage = debounce((content: string) => {
+  localStorage.setItem('mermd-content', content);
+  
+  // Update last saved timestamp
+  const now = new Date();
+  const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  lastSaved.value = timeString;
+}, 1000);
+
 // For mobile view toggle
 const showPreview = ref(false);
 
@@ -215,8 +227,11 @@ const showPreview = ref(false);
 const editorSettings = ref({
   fontSize: 16,
   theme: 'dark',
-  autoSave: false
+  autoSave: true
 });
+
+// Auto-save indicator
+const lastSaved = ref<string>('');
 
 // Auto-save interval reference
 const autoSaveInterval = ref<number | null>(null);
@@ -274,6 +289,13 @@ onMounted(() => {
   if (savedWidth) {
     editorWidthPercent.value = Number(savedWidth);
   }
+  
+  // Set initial lastSaved value if we loaded content from localStorage
+  if (localStorage.getItem('mermd-content')) {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    lastSaved.value = timeString;
+  }
     // Prevent mousewheel in textarea from blocking main container scrolling
   if (textareaRef.value) {
     textareaRef.value.addEventListener('wheel', (e: WheelEvent) => {
@@ -317,6 +339,9 @@ onBeforeUnmount(() => {
 // Watch for changes in markdown text and re-render
 watch(() => markdownText.value, () => {
   debouncedRenderMarkdown();
+  
+  // Save content to localStorage with debounce
+  saveToLocalStorage(markdownText.value || '');
 });
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null);

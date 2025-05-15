@@ -4,7 +4,7 @@
     <header class="py-4 px-6 border-b border-gray-800">
       <div class="container mx-auto flex justify-between items-center">        <div class="flex items-center">
           <img src="@/assets/logo.png" alt="MerMDitor Logo" class="h-8 mr-3" />
-          <h1 class="text-xl font-bold">MerMDitor</h1>
+          <!-- <h1 class="text-xl font-bold">MerMDitor</h1> -->
         </div>
         <nav class="flex items-center gap-4">
           <RouterLink to="/cheatsheet" class="text-gray-300 hover:text-white">
@@ -19,14 +19,15 @@
     
     <!-- Hero Section -->
     <section class="py-20 flex flex-col items-center justify-center">
-      <div class="container mx-auto text-center px-4">
-        <div class="max-w-3xl mx-auto">
-          <h2 class="text-4xl md:text-6xl font-bold mb-6">
-            MerMDitor: Markdown editor with Mermaid syntax support
+      <div class="container mx-auto text-center px-4">        <div class="max-w-3xl mx-auto">
+          <h2 class="text-8xl md:text-4xl font-bold mb-6 flex items-center justify-center">
+            <img src="@/assets/logo.png" alt="MerMDitor Logo" class="h-12 mr-3" />
+            merMDitor
           </h2>
+          <p class="text-3xl text-blue-300 mb-6">Markdown editor with Mermaid syntax support</p>
           <p class="text-xl text-gray-300 mb-12 leading-relaxed">
             A sleek, modern Markdown editor that lets you create beautiful documentation, 
-            including diagrams and flowcharts with Mermaid syntax. MerMDitor (mer-med-it-or) is
+            including diagrams and flowcharts with Mermaid syntax. MmrMDitor (mer-med-it-or) is
             perfect for developers, technical writers, and anyone who needs to document complex ideas visually.
           </p>
           <RouterLink to="/editor" class="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium text-lg">
@@ -63,7 +64,7 @@
     <!-- Footer -->
     <footer class="py-8 border-t border-gray-800">
       <div class="container mx-auto px-4 text-center text-gray-400">
-        <p>© 2025 MerMDitor. Built with Vue.js and Tailwind CSS.</p>
+        <p>© 2025 MerMDitor</p>
       </div>
     </footer>
   </div>

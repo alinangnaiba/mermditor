@@ -7,7 +7,7 @@
           <RouterLink to="/" class="flex items-center hover:opacity-80 transition-opacity">
             <img src="@/assets/logo.png" alt="MerMDitor Logo" class="h-8 mr-3" />
           </RouterLink>
-          <h1 class="text-xl font-bold">MerMDitor</h1>
+          <h1 class="text-xl font-bold">merMDitor</h1>
         </div>
         <nav class="flex items-center gap-4">
           <RouterLink to="/editor" class="text-gray-300 hover:text-white">
@@ -798,7 +798,6 @@ import { setupMermaid } from '@/plugins/mermaid';
 // Active tab state (markdown, mermaid, shortcuts)
 const activeTab = ref('markdown');
 
-// Initialize mermaid when component mounts
 onMounted(() => {
   setupMermaid();
 });
