@@ -24,7 +24,7 @@
             <img src="@/assets/logo.png" alt="MerMDitor Logo" class="h-12 mr-3" />
             merMDitor
           </h2>
-          <p class="text-3xl text-blue-300 mb-6">Markdown editor with Mermaid syntax support</p>
+          <p class="text-3xl text-gray-300 mb-6">Markdown editor with <a href="https://mermaid.js.org/" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline">Mermaid</a> syntax support</p>
           <p class="text-xl text-gray-300 mb-12 leading-relaxed">
             A sleek, modern Markdown editor that lets you create beautiful documentation, 
             including diagrams and flowcharts with Mermaid syntax. MmrMDitor (mer-med-it-or) is
