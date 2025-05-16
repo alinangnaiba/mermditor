@@ -26,6 +26,12 @@ html, body {
   overflow: hidden;
 }
 
+/* For pages that need full-height layout with fixed header and footer */
+.h-screen {
+  height: 100vh;
+  height: 100dvh; /* Using dynamic viewport height for mobile browsers */
+}
+
 /* Base styles for pre tags */
 pre {
   font-family: 'Courier New', monospace;
@@ -105,10 +111,11 @@ html, body {
   font-family: 'Roboto', sans-serif;
   line-height: 1.6;
   color: var(--text-color);
-  padding-bottom: 30vh;
   max-width: 100%;
   overflow-wrap: break-word;
   word-break: break-word;
+  /* Ensure proper spacing at the bottom without requiring excessive scrolling */
+  padding-bottom: 2rem;
 }
 
 /* ------ Markdown Content Styling ------ */

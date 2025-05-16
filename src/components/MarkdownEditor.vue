@@ -1,46 +1,52 @@
 <template>
-  <div class="markdown-editor-container h-[calc(100vh-65px)] w-full flex flex-col">
-    <!-- Main scroll container wrapping both panes -->
-    <div class="main-scroll-container flex-1 overflow-y-auto" ref="mainScrollContainer">
-      <div class="pane-container flex flex-row h-auto min-h-full">
-        <!-- Editor Pane -->
-        <div class="editor-container h-auto min-h-full transition-width duration-100" :style="{ width: editorWidthPercent + '%' }">
-          <div class="editor-pane h-full bg-dark-50 border-r border-opacity-10 border-white">      <textarea
-              v-model="markdownText"
-              class="w-full h-full outline-none resize-none bg-transparent p-4 font-mono text-sm leading-relaxed no-scrollbar"
-              placeholder="Type your markdown here..."
-              ref="textareaRef"
-            ></textarea>
+  <div class="markdown-editor-container h-full w-full flex flex-col">
+    <!-- Main pane container with single scroll -->
+    <div class="flex-1 flex flex-col min-h-0">
+      <div class="main-scroll-container flex-1 overflow-y-auto w-full" ref="mainScrollContainer" @scroll="handleScroll">
+        <div class="pane-container flex flex-row w-full min-h-full">
+          <!-- Editor Pane -->
+          <div class="editor-container transition-width duration-100 flex flex-col" :style="{ width: editorWidthPercent + '%' }">
+            <div class="editor-pane border-r border-opacity-10 border-white bg-dark-50">
+              <textarea
+                v-model="markdownText"
+                class="w-full outline-none resize-none bg-transparent p-4 font-mono text-sm leading-relaxed no-scrollbar"
+                placeholder="Type your markdown here..."
+                ref="textareaRef"
+                @input="autoResizeTextarea"
+              ></textarea>
+            </div>
           </div>
-        </div>
-        <!-- Draggable Divider -->
-        <div 
-          class="divider w-1.5 bg-opacity-5 bg-white hover:bg-blue-800 cursor-col-resize flex items-center justify-center" 
-          @mousedown="startDrag" 
-          @touchstart.prevent="startDrag"
-          title="Drag to resize"
-        >
-          <div class="divider-handle w-0.5 h-9 bg-white bg-opacity-30 rounded"></div>
-        </div>
+          
+          <!-- Draggable Divider -->
+          <div 
+            class="divider w-1.5 bg-opacity-5 bg-white hover:bg-blue-800 cursor-col-resize flex items-center justify-center" 
+            @mousedown="startDrag" 
+            @touchstart.prevent="startDrag"
+            title="Drag to resize"
+          >
+            <div class="divider-handle w-0.5 h-9 bg-white bg-opacity-30 rounded"></div>
+          </div>
+          
           <!-- Preview Pane -->
-        <div class="preview-container h-auto min-h-full transition-width duration-100" :style="{ width: (100 - editorWidthPercent) + '%' }">
-          <div class="h-full bg-deep-black p-4" ref="previewPane">
-            <div ref="previewContainer" class="markdown-content prose prose-invert max-w-none"></div>
+          <div class="preview-container transition-width duration-100 flex flex-col" :style="{ width: (100 - editorWidthPercent) + '%' }">
+            <div class="preview-pane-content bg-deep-black" ref="previewPane">
+              <div ref="previewContainer" class="markdown-content prose prose-invert max-w-none p-4 h-full"></div>
+            </div>
           </div>
         </div>
       </div>
-    </div>      <!-- Footer with word count only -->      <div class="bg-deep-black py-2 px-4 flex items-center justify-between border-t border-gray-800">
-      <!-- Word count -->
+    </div>
+    
+    <!-- Footer with word count -->
+    <div class="bg-deep-black py-2 px-4 flex items-center justify-between border-t border-gray-800 flex-shrink-0">
       <div class="text-sm text-gray-400">
         {{ wordCount }} words | {{ characterCount }} characters
       </div>
-      <!-- Save status -->
       <div class="text-sm text-gray-400">
         <span v-if="lastSaved">Last saved: {{ lastSaved }}</span>
         <span v-else>Changes saved automatically</span>
       </div>
     </div>
-      <!-- No dialogs or toast notifications needed anymore -->
   </div>
 </template>
 
@@ -60,7 +66,7 @@ const md = new MarkdownIt({
   html: true,
   linkify: true,
   typographer: true,
-  breaks: false,
+  breaks: false, // CommonMark standard, set to true for GFM line breaks
   highlight: null // Disable built-in highlighting as we'll use our custom plugin
 });
 
@@ -68,59 +74,54 @@ const md = new MarkdownIt({
 md.use(markdownItHighlight);
 md.use(markdownItMermaid);
 
-// References for DOM manipulation
-const previewContainer = ref<HTMLElement | null>(null);
-const previewPane = ref<HTMLElement | null>(null);
+const textareaRef = ref<HTMLTextAreaElement | null>(null);
+const previewPane = ref<HTMLElement | null>(null); // Ref for preview-pane-content
 const mainScrollContainer = ref<HTMLElement | null>(null);
+const previewContainer = ref<HTMLElement | null>(null); // Ref for the inner markdown rendering div
 
-// Editor width percentage with default value of 50%
 const editorWidthPercent = ref(50);
 let isDragging = false;
 
-// Function to handle the start of a drag operation
 const startDrag = (e: MouseEvent | TouchEvent) => {
   isDragging = true;
   document.addEventListener('mousemove', handleDrag);
-  document.addEventListener('touchmove', handleDrag);
+  document.addEventListener('touchmove', handleDrag, { passive: false }); // passive:false for touchmove
   document.addEventListener('mouseup', stopDrag);
   document.addEventListener('touchend', stopDrag);
-  document.body.style.userSelect = 'none'; // Prevent text selection while dragging
+  document.body.style.userSelect = 'none';
 };
 
-// Function to handle dragging the divider
 const handleDrag = (e: MouseEvent | TouchEvent) => {
-  if (!isDragging) return;
+  if (!isDragging || !mainScrollContainer.value) return;
   
-  // Get the container width
-  const containerRect = mainScrollContainer.value!.getBoundingClientRect();
+  e.preventDefault(); // Prevent page scroll during drag, especially on touch
+
+  const containerRect = mainScrollContainer.value.getBoundingClientRect();
   const containerWidth = containerRect.width;
   
-  // Get mouse/touch position
   let clientX: number;
-  if ('touches' in e) {
-    clientX = e.touches[0].clientX;
+  if (e.type.startsWith('touch')) {
+    clientX = (e as TouchEvent).touches[0].clientX;
   } else {
-    clientX = e.clientX;
+    clientX = (e as MouseEvent).clientX;
   }
   
   const editorWidth = clientX - containerRect.left;
-  const percentage = Math.min(Math.max((editorWidth / containerWidth) * 100, 10), 90);
+  const percentage = Math.min(Math.max((editorWidth / containerWidth) * 100, 10), 90); // Min 10%, Max 90%
   editorWidthPercent.value = percentage;
-  
-  localStorage.setItem('mermd-editor-width', percentage.toString());
 };
 
-// Function to stop dragging
 const stopDrag = () => {
+  if (!isDragging) return;
   isDragging = false;
   document.removeEventListener('mousemove', handleDrag);
   document.removeEventListener('touchmove', handleDrag);
   document.removeEventListener('mouseup', stopDrag);
   document.removeEventListener('touchend', stopDrag);
-  document.body.style.userSelect = ''; // Restore text selection
+  document.body.style.userSelect = '';
+  localStorage.setItem('mermd-editor-width', editorWidthPercent.value.toString()); // Save width on drag end
 };
 
-// Default markdown example content
 const defaultContent = `# Markdown Editor with Mermaid
 
 ## Basic Markdown
@@ -168,164 +169,130 @@ flowchart LR
 \`\`\`
 `;
 
-// Initialize with saved content or default content
-const markdownText = ref(localStorage.getItem('mermd-content') || defaultContent);
+const markdownText = ref(''); // Initialize empty, will be set in onMounted
 
-/**
- * Process markdown content and render it, including handling mermaid diagrams
- */
+let mermaidRenderTimeoutId: ReturnType<typeof setTimeout> | undefined;
+
 const renderMarkdown = async () => {
   if (!previewContainer.value) return;
   
-  // Render markdown to HTML
   const html = md.render(markdownText.value || '');
   previewContainer.value.innerHTML = html;
   
-  // Wait for DOM to update
-  await nextTick();
+  await nextTick(); // Wait for initial HTML to be in DOM
   
-  // Find all mermaid placeholders and render them
   const mermaidPlaceholders = previewContainer.value.querySelectorAll('.mermaid-placeholder');
   
   mermaidPlaceholders.forEach((placeholder, index) => {
     const mermaidCode = decodeURIComponent(placeholder.getAttribute('data-mermaid-code') || '');
-    
-    // Skip if no code is found
     if (!mermaidCode) return;
     
-    // Create a container for the mermaid diagram
     const container = document.createElement('div');
     placeholder.replaceWith(container);
     
-    // Mount the MermaidRenderer component
     const app = createApp(MermaidRenderer, {
       code: mermaidCode,
       idSuffix: `${index}-${Date.now()}`
     });
-    
     app.mount(container);
   });
+
+  // After processing and attempting to mount all diagrams, schedule a resize.
+  // This gives Mermaid diagrams a bit of time to render before height is calculated.
+  if (mermaidRenderTimeoutId) clearTimeout(mermaidRenderTimeoutId);
+  mermaidRenderTimeoutId = setTimeout(async () => {
+    await autoResizeTextarea();
+  }, 200); // Adjust delay if needed (e.g., 200-300ms)
 };
 
-// Debounced version of renderMarkdown to prevent excessive renders during typing
-const debouncedRenderMarkdown = debounce(renderMarkdown, 50);
+const debouncedRenderMarkdown = debounce(renderMarkdown, 150); // Adjusted debounce time
 
-// Debounced save function to prevent excessive writes to localStorage
+const lastSaved = ref<string>('');
 const saveToLocalStorage = debounce((content: string) => {
   localStorage.setItem('mermd-content', content);
-  
-  // Update last saved timestamp
   const now = new Date();
-  const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  lastSaved.value = timeString;
-}, 1000);
+  lastSaved.value = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}, 500);
 
-// Auto-save indicator
-const lastSaved = ref<string>('');
 
-/**
- * Handle keyboard shortcuts
- */
-const handleKeyboardShortcut = (e: KeyboardEvent) => {
-  // Only proceed if Ctrl key (or Command key on Mac) is pressed
-  if (!(e.ctrlKey || e.metaKey)) return;
-  
-  const key = e.key.toLowerCase();
-  
-  // Get current selection
-  if (!textareaRef.value) return;
-  const start = textareaRef.value.selectionStart;
-  const end = textareaRef.value.selectionEnd;
-  const selectedText = textareaRef.value.value.substring(start, end);
-  const selection = { start, end, text: selectedText };
-  
-  switch (key) {
-    case 'b': // Bold
-      e.preventDefault();
-      handleFormat('bold', selection);
-      break;
-    case 'i': // Italic
-      e.preventDefault();
-      handleFormat('italic', selection);
-      break;
-    case 'k': // Link
-      e.preventDefault();
-      handleFormat('link', selection);
-      break;
-    case '1': // Heading
-      if (e.shiftKey) {
-        e.preventDefault();
-        handleFormat('heading', selection);
-      }
-      break;
-    //case 's': // Save will revisit this functionality
-    //  e.preventDefault();
-    //  break;
-    default:
-      break;
-  }
-};
-
-// Initialize mermaid and render markdown when component is mounted
-onMounted(() => {
+onMounted(async () => {
   setupMermaid();
-  renderMarkdown();
-  
-  // Set initial lastSaved value if we loaded content from localStorage
-  if (localStorage.getItem('mermd-content')) {
+
+  const savedContent = localStorage.getItem('mermd-content');
+  if (savedContent !== null) {
+    markdownText.value = savedContent;
     const now = new Date();
-    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    lastSaved.value = timeString;
-  }
-  if (textareaRef.value) {
-    textareaRef.value.addEventListener('wheel', (e: WheelEvent) => {
-      // Let the main container handle the scroll
-      if (mainScrollContainer.value) {
-        mainScrollContainer.value.scrollTop += e.deltaY;
-      }
-      e.preventDefault();
-    });
-    
-    textareaRef.value.addEventListener('scroll', (e: Event) => {
-      textareaRef.value!.scrollTop = 0;
-    });
+    lastSaved.value = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else {
+    markdownText.value = defaultContent;
   }
   
-  // Set up keyboard shortcut listener
+  await nextTick(); // Ensure markdownText ref update is processed before initial render
+  await renderMarkdown(); // renderMarkdown will now trigger autoResizeTextarea
+
   document.addEventListener('keydown', handleKeyboardShortcut);
+
+  const savedWidth = localStorage.getItem('mermd-editor-width');
+  if (savedWidth) {
+    editorWidthPercent.value = parseFloat(savedWidth);
+  }
+  
+  window.addEventListener('resize', autoResizeTextarea);
 });
 
-// Remove event listeners on component unmount
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeyboardShortcut);
-  
-  // Clean up drag event listeners
   document.removeEventListener('mousemove', handleDrag);
   document.removeEventListener('touchmove', handleDrag);
   document.removeEventListener('mouseup', stopDrag);
   document.removeEventListener('touchend', stopDrag);
+  window.removeEventListener('resize', autoResizeTextarea);
+  if (mermaidRenderTimeoutId) clearTimeout(mermaidRenderTimeoutId); // Clear timeout on unmount
 });
 
-// Watch for changes in markdown text and re-render
-watch(() => markdownText.value, () => {
-  debouncedRenderMarkdown();
-  
-  // Save content to localStorage with debounce
-  saveToLocalStorage(markdownText.value || '');
-});
+watch(() => markdownText.value, (newValue) => { // Removed async from watcher callback as it only calls sync + debounced
+  debouncedRenderMarkdown(); // This will call renderMarkdown, which now handles calling autoResizeTextarea.
+  saveToLocalStorage(newValue || '');
+  // No direct call to autoResizeTextarea here anymore.
+}, { immediate: false });
 
-const textareaRef = ref<HTMLTextAreaElement | null>(null);
+
+const autoResizeTextarea = async () => {
+  if (textareaRef.value && previewPane.value && mainScrollContainer.value && previewContainer.value) {
+    // Reset heights to auto to allow scrollHeight to be calculated correctly
+    textareaRef.value.style.height = 'auto';
+    previewPane.value.style.height = 'auto'; // This is the container for markdown-content
+
+    await nextTick(); // Wait for DOM to update with auto heights
+
+    const scrollContainerHeight = mainScrollContainer.value.clientHeight;
+    
+    const textareaScrollHeight = textareaRef.value.scrollHeight;
+    const previewContentScrollHeight = previewContainer.value.scrollHeight; // scrollHeight of the .markdown-content div
+    
+    const minPixelHeight = 80; // Minimum height for each pane's content
+    
+    const requiredTextareaHeight = Math.max(textareaScrollHeight, minPixelHeight);
+    const requiredPreviewHeight = Math.max(previewContentScrollHeight, minPixelHeight);
+    
+    const maxContentHeight = Math.max(requiredTextareaHeight, requiredPreviewHeight);
+    
+    const finalNewHeight = Math.max(maxContentHeight, scrollContainerHeight);
+
+    textareaRef.value.style.height = `${finalNewHeight}px`;
+    previewPane.value.style.height = `${finalNewHeight}px`; // Set height of .preview-pane-content
+  }
+};
 
 // Word count computation
 const wordCount = computed(() => {
   if (!markdownText.value) return 0;
   const cleanText = markdownText.value
-    .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-    .replace(/`[^`]*`/g, '') // Remove inline code
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // Replace links with just their text
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // Remove images
-    .replace(/[#*_~`]/g, ''); // Remove markdown symbols
-  
+    .replace(/```[\s\S]*?```/g, '') 
+    .replace(/`[^`]*`/g, '') 
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') 
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '') 
+    .replace(/[#*_~`]/g, ''); 
   return cleanText
     .split(/\s+/)
     .filter(word => word.length > 0)
@@ -334,96 +301,154 @@ const wordCount = computed(() => {
 
 // Character count computation
 const characterCount = computed(() => {
-  if (!markdownText.value) return 0;
   return markdownText.value.length;
 });
 
-/**
- * Format text based on the selected format type
- */
-const handleFormat = (formatType: string, selection: { start: number; end: number; text: string }) => {
-  if (!textareaRef.value) return;
-  
-  const { start, end, text } = selection;
+// Handle scroll synchronization (placeholder, actual sync might be complex)
+const handleScroll = (e: Event) => {
+  // This function is called when mainScrollContainer is scrolled.
+  // If direct synchronization between editor scroll and preview scroll is needed
+  // (beyond what a shared height provides), logic would go here.
+  // For now, autoResizeTextarea ensures both panes are tall enough for their content,
+  // and the single scrollbar scrolls this shared height.
+};
+
+
+const handleKeyboardShortcut = (e: KeyboardEvent) => {
+  if (!(e.ctrlKey || e.metaKey) || !textareaRef.value) return;
+  const key = e.key.toLowerCase();
+  const { selectionStart: start, selectionEnd: end } = textareaRef.value;
+  const selectedText = textareaRef.value.value.substring(start, end);
+  const selection = { start, end, text: selectedText };
+
   let formattedText = '';
-  let cursorOffset = 0;
-  
-  switch (formatType) {
-    case 'bold':
-      formattedText = `**${text || 'bold text'}**`;
-      cursorOffset = text ? 0 : -2;
+  let cursorOffsetStart = 0; // Relative to start of formattedText
+  let cursorOffsetEnd = 0;   // Relative to end of formattedText (or same as start for no selection)
+
+  switch (key) {
+    case 'b': // Bold
+      e.preventDefault();
+      formattedText = `**${selectedText || 'bold text'}**`;
+      cursorOffsetStart = 2;
+      cursorOffsetEnd = selectedText ? formattedText.length - 2 : 2;
       break;
-    case 'italic':
-      formattedText = `*${text || 'italic text'}*`;
-      cursorOffset = text ? 0 : -1;
+    case 'i': // Italic
+      e.preventDefault();
+      formattedText = `*${selectedText || 'italic text'}*`;
+      cursorOffsetStart = 1;
+      cursorOffsetEnd = selectedText ? formattedText.length - 1 : 1;
       break;
-    case 'heading':
-      formattedText = `\n# ${text || 'Heading'}\n`;
-      cursorOffset = text ? 0 : -1;
-      break;
-    case 'bulletList':
-      formattedText = text ? text.split('\n').map(line => `- ${line}`).join('\n') : '- List item';
-      cursorOffset = text ? 0 : 0;
-      break;
-    case 'numberList':
-      formattedText = text ? text.split('\n').map((line, i) => `${i + 1}. ${line}`).join('\n') : '1. List item';
-      cursorOffset = text ? 0 : 0;
-      break;
-    case 'link':
-      formattedText = text ? `[${text}](url)` : '[link text](url)';
-      cursorOffset = text ? -1 : -6;
-      break;
-    case 'image':
-      formattedText = `![${text || 'alt text'}](image-url)`;
-      cursorOffset = text ? -1 : -11;
-      break;
-    case 'codeBlock':
-      formattedText = `\n\`\`\`\n${text || '// code block'}\n\`\`\`\n`;
-      cursorOffset = text ? 0 : -5;
-      break;
-    case 'mermaid':
-      formattedText = `\n\`\`\`mermaid\n${text || 'graph TD\n    A[Start] --> B[End]'}\n\`\`\`\n`;
-      cursorOffset = text ? 0 : -5;
-      break;
+    // Add other cases for k (link), 1 (heading) etc.
     default:
-      return;
+      return; // Exit if no shortcut matched
   }
-  
-  // Get current text and insert the formatted text
+
   const value = textareaRef.value.value;
-  const newText = value.substring(0, start) + formattedText + value.substring(end);
-  
-  markdownText.value = newText;
-  
+  markdownText.value = value.substring(0, start) + formattedText + value.substring(end);
+
   nextTick(() => {
     if (!textareaRef.value) return;
-    
     textareaRef.value.focus();
-    const newCursorPosition = start + formattedText.length + cursorOffset;
-    textareaRef.value.setSelectionRange(newCursorPosition, newCursorPosition);
+    const newCursorPosStart = start + cursorOffsetStart;
+    const newCursorPosEnd = start + cursorOffsetEnd;
+    textareaRef.value.setSelectionRange(newCursorPosStart, newCursorPosEnd);
   });
 };
 </script>
 
 <style scoped>
-/* Component-specific styles - Those that are unique to MarkdownEditor */
+/* Component-specific styles */
 
-/* Pane container and divider styles */
 .pane-container {
   display: flex;
   flex-direction: row;
-  height: auto;
-  min-height: 100%;
   position: relative;
+  width: 100%;
+  /* min-h-full class handles minimum height */
+  /* height: auto; by default, children determine height beyond min-h-full */
 }
 
 .editor-container, .preview-container {
-  height: auto;
-  min-height: 100%;
-  overflow: visible;
   transition: width 0.1s ease;
+  /* overflow: hidden; /* Horizontal overflow is handled by width */
+  display: flex; 
+  flex-direction: column; 
+  /* height is determined by child pane's height which is set by JS or wraps content */
 }
 
+/* Styles for the direct parent of textarea */
+.editor-pane {
+  border-right: 1px solid rgba(0, 0, 0, 0.1); /* var(--border-color-translucent) or similar */
+  position: relative;
+  background-color: var(--background-dark);
+  display: flex; 
+  flex-direction: column;
+  /* Height is determined by textarea's dynamic height */
+}
+
+/* Styles for the direct parent of the rendered markdown output */
+.preview-pane-content { 
+  border-left: 1px solid var(--border-color);
+  background-color: var(--background-darker);
+  overflow: hidden; /* This pane should not scroll; main-scroll-container does */
+  /* Height is set dynamically by autoResizeTextarea to match editor-pane */
+}
+
+/* The actual div where markdown HTML is rendered */
+.markdown-content {
+  /* p-4 class provides padding */
+  /* prose prose-invert max-w-none classes provide styling */
+  height: 100%; /* Fill the parent (.preview-pane-content) whose height is set by JS */
+  /* overflow: hidden; /* Content should not overflow if heights are synced and this fills parent */
+}
+
+
+textarea {
+  font-family: 'Courier New', monospace;
+  width: 100%; /* w-full class */
+  /* height is dynamically set by autoResizeTextarea */
+  border: none;
+  background-color: transparent; /* bg-transparent class */
+  resize: none; /* resize-none class */
+  padding: 16px; /* p-4 class */
+  font-size: 1rem; /* text-sm class (usually 0.875rem), consider if 1rem is intended */
+  line-height: 1.6; /* leading-relaxed class */
+  outline: none; /* outline-none class */
+  overflow-y: hidden; /* Textarea itself should not scroll vertically */
+  position: relative; /* For z-index or other positioning contexts if ever needed */
+  z-index: 2; /* If needed for layering */
+}
+
+.markdown-editor-container {
+  height: 100%; /* h-full class */
+  display: flex; /* flex class */
+  flex-direction: column; /* flex-col class */
+  overflow: hidden; /* Prevent this container itself from showing scrollbars if children are managed */
+}
+
+.main-scroll-container {
+  scrollbar-width: auto;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  position: relative; /* For positioning context if needed */
+  /* flex-1 and overflow-y-auto classes handle its behavior */
+}
+
+.main-scroll-container::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.main-scroll-container::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.main-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 6px;
+  border: 2px solid rgba(0, 0, 0, 0.2); /* Consider var(--scrollbar-track) for border for better theme integration */
+}
+
+/* Divider styles - unchanged */
 .divider {
   width: 6px;
   background: rgba(255, 255, 255, 0.05);
@@ -433,10 +458,11 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .divider:hover, .divider:active {
-  background: #041C42;
+  background: #041C42; /* Consider using CSS variables if this color needs theming */
 }
 
 .divider-handle {
@@ -450,69 +476,17 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
   background-color: rgba(255, 255, 255, 0.6);
 }
 
-.editor-pane,
-.preview-pane {
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
 
-.preview-pane {
-  border-left: 1px solid var(--border-color);
-}
-
-/* Editor specific styling */
-.editor-pane {
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
-  position: relative;
-  background-color: #1e1e1e !important;
-}
-
-.preview-pane {
-  padding: 16px !important;
-  height: 100%;
-  background-color: #0a0a0a !important;
-}
-
-.markdown-input {
-  font-family: 'Courier New', monospace;
-  width: 100%;
-  height: 100% !important;
-  border: none;
-  background-color: transparent;
-  resize: none !important;
-  padding: 16px !important;
-  font-size: 1rem;
-  line-height: 1.6 !important;
-  outline: none;
-  overflow: hidden !important;
-}
-
-.markdown-editor-container {
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.main-scroll-container {
-  height: 100%;
-  overflow-y: auto;
-  flex: 1;
-  position: relative;
-  overflow-x: hidden;
-}
-
-/* Media query for mobile view */
+/* Media query for mobile view - unchanged */
 @media (max-width: 959px) {
-  .preview-pane {
+  .preview-pane-content { /* Adjusted selector to match new class name if it was .preview-pane */
     border-left: none !important;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
+  /* If .pane-container changes to flex-col on mobile, ensure editor/preview width is 100% */
 }
 
-/* Fullscreen mode styling */
+/* Fullscreen mode styling - unchanged */
 .fullscreen-mode {
   position: fixed !important;
   top: 0;
@@ -527,7 +501,7 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
   border-radius: 0 !important;
 }
 
-.fullscreen-mode .v-textarea textarea {
+.fullscreen-mode textarea {
   font-size: 1.1rem;
 }
 </style>

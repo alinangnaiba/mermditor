@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-900 text-white overflow-hidden">
-    <!-- Header -->
-    <header class="py-4 px-6 border-b border-gray-800">
+  <div class="flex flex-col h-screen bg-gray-900 text-white">
+    <!-- Header - Fixed height -->
+    <header class="py-4 px-6 border-b border-gray-800 flex-shrink-0">
       <div class="container mx-auto flex justify-between items-center">
         <div class="flex items-center">
           <RouterLink to="/" class="flex items-center hover:opacity-80 transition-opacity">
@@ -20,7 +20,10 @@
       </div>
     </header>
 
-    <MarkdownEditor />
+    <!-- Editor takes remaining space with flex-grow -->
+    <div class="flex-grow min-h-0">
+      <MarkdownEditor />
+    </div>
   </div>
 </template>
 
