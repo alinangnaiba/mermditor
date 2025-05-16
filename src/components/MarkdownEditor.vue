@@ -406,11 +406,7 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
 </script>
 
 <style scoped>
-.markdown-input {
-  font-family: monospace;
-  font-size: 1rem;
-  line-height: 1.6;
-}
+/* Component-specific styles - Those that are unique to MarkdownEditor */
 
 /* Pane container and divider styles */
 .pane-container {
@@ -426,15 +422,6 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
   min-height: 100%;
   overflow: visible;
   transition: width 0.1s ease;
-}
-
-.editor-container {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.editor-container::-webkit-scrollbar {
-  display: none;
 }
 
 .divider {
@@ -472,117 +459,52 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
 }
 
 .preview-pane {
-  border-left: none;
+  border-left: 1px solid var(--border-color);
+}
+
+/* Editor specific styling */
+.editor-pane {
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  position: relative;
+  background-color: #1e1e1e !important;
 }
 
 .preview-pane {
-  border-left: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  padding: 16px !important;
+  height: 100%;
+  background-color: #0a0a0a !important;
 }
 
-.markdown-content {
-  font-family: 'Roboto', sans-serif;
-  line-height: 1.6;
-  color: var(--text-color, rgba(255, 255, 255, 0.87));
-}
-
-.markdown-content :deep(h1),
-.markdown-content :deep(h2),
-.markdown-content :deep(h3),
-.markdown-content :deep(h4),
-.markdown-content :deep(h5),
-.markdown-content :deep(h6) {
-  margin-top: 1.5rem;
-  margin-bottom: 1rem;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-.markdown-content :deep(h1) { font-size: 2.25rem; }
-.markdown-content :deep(h2) { font-size: 1.75rem; }
-.markdown-content :deep(h3) { font-size: 1.5rem; }
-.markdown-content :deep(h4) { font-size: 1.25rem; }
-.markdown-content :deep(h5) { font-size: 1.1rem; }
-.markdown-content :deep(h6) { font-size: 1rem; }
-
-.markdown-content :deep(p) {
-  margin-bottom: 1rem;
-}
-
-.markdown-content :deep(a) {
-  color: var(--accent-color, #3B82F6);
-  text-decoration: none;
-}
-
-.markdown-content :deep(a:hover) {
-  text-decoration: underline;
-}
-
-.markdown-content :deep(ul), 
-.markdown-content :deep(ol) {
-  padding-left: 2rem;
-  margin-bottom: 1rem;
-}
-
-.markdown-content :deep(li) {
-  margin-bottom: 0.5rem;
-}
-
-.markdown-content :deep(blockquote) {
-  padding: 0.5rem 1rem;
-  border-left: 4px solid var(--accent-color, #3B82F6);
-  background-color: var(--blockquote-bg-color, rgba(59, 130, 246, 0.1));
-  margin-bottom: 1rem;
-}
-
-.markdown-content :deep(pre) {
-  background-color: #1e1e1e;
-  border-radius: 4px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  overflow-x: auto;
-}
-
-.markdown-content :deep(code) {
+.markdown-input {
   font-family: 'Courier New', monospace;
-  padding: 0.2rem 0.4rem;
-  background-color: var(--code-bg-color, rgba(255, 255, 255, 0.1));
-  border-radius: 3px;
-}
-
-.markdown-content :deep(pre code) {
-  padding: 0;
-  background-color: transparent;
-}
-
-.markdown-content :deep(table) {
   width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1rem;
+  height: 100% !important;
+  border: none;
+  background-color: transparent;
+  resize: none !important;
+  padding: 16px !important;
+  font-size: 1rem;
+  line-height: 1.6 !important;
+  outline: none;
+  overflow: hidden !important;
 }
 
-.markdown-content :deep(thead) {
-  background-color: rgba(255, 255, 255, 0.1);
+.markdown-editor-container {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.markdown-content :deep(th),
-.markdown-content :deep(td) {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 0.5rem;
-  text-align: left;
+.main-scroll-container {
+  height: 100%;
+  overflow-y: auto;
+  flex: 1;
+  position: relative;
+  overflow-x: hidden;
 }
 
-.markdown-content :deep(img) {
-  max-width: 100%;
-  height: auto;
-}
-
-.markdown-content :deep(hr) {
-  border: 0;
-  height: 1px;
-  background-color: rgba(255, 255, 255, 0.2);
-  margin: 1.5rem 0;
-}
-
+/* Media query for mobile view */
 @media (max-width: 959px) {
   .preview-pane {
     border-left: none !important;
@@ -607,112 +529,5 @@ const handleFormat = (formatType: string, selection: { start: number; end: numbe
 
 .fullscreen-mode .v-textarea textarea {
   font-size: 1.1rem;
-}
-
-.editor-pane {
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
-  position: relative;
-}
-
-.markdown-input {
-  font-family: 'Courier New', monospace;
-  resize: none !important;
-  overflow-y: hidden !important;
-  padding: 16px !important;
-  line-height: 1.6 !important;
-  height: 100% !important;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.preview-pane {
-  padding: 16px !important;
-  height: 100%;
-}
-
-.markdown-editor-container {
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.main-scroll-container {
-  height: 100%;
-  overflow-y: auto;
-  flex: 1;
-  position: relative;
-  overflow-x: hidden;
-}
-
-.editor-pane, .preview-pane {
-  height: 100%;
-  padding: 16px;
-  overflow: hidden;
-}
-
-.editor-pane {
-  background-color: #1e1e1e !important;
-}
-
-.preview-pane {
-  background-color: #0a0a0a !important;
-}
-
-.markdown-input {
-  font-family: 'Courier New', monospace;
-  width: 100%;
-  height: 100% !important;
-  border: none;
-  background-color: transparent;
-  resize: none;
-  padding: 0;
-  font-size: 1rem;
-  line-height: 1.6;
-  outline: none;
-  overflow: hidden !important;
-}
-
-.markdown-input::-webkit-scrollbar {
-  display: none;
-}
-
-textarea.markdown-input {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.markdown-content {
-  padding-bottom: 30vh;
-  max-width: 100%;
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
 }
 </style>

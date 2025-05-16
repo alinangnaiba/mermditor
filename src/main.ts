@@ -7,8 +7,9 @@ import App from './App.vue'
 // Composables
 import { createApp } from 'vue'
 
-// Import Tailwind CSS
+// Import Styles
 import '@/styles/tailwind.css'
+import '@/styles/global.css'
 
 const app = createApp(App)
 

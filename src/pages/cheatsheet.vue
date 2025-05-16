@@ -804,22 +804,8 @@ onMounted(() => {
 </script>
 
 <style>
-pre {
-  font-family: 'Courier New', monospace;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.router-link-active {
-  color: #3B82F6;
-  font-weight: 500;
-}
-
-/* Override any global overflow hidden styles for this page */
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+/* Override overflow for the cheatsheet page to allow scrolling */
+body {
   overflow-y: auto !important;
 }
 </style>

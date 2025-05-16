@@ -74,9 +74,4 @@
 import { RouterLink } from 'vue-router';
 </script>
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-}
-</style>
+<!-- Using global styles from global.css -->

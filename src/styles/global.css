@@ -1,0 +1,226 @@
+/* Global styles for MerMDitor application */
+
+/* ------ Variables ------ */
+:root {
+  --md-editor-height: 100vh;
+  --accent-color: #3B82F6;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --text-color: rgba(255, 255, 255, 0.87);
+  --code-bg-color: rgba(255, 255, 255, 0.1);
+  --blockquote-bg-color: rgba(59, 130, 246, 0.1);
+  --background-dark: #1e1e1e;
+  --background-darker: #0a0a0a;
+  --scrollbar-thumb: rgba(59, 130, 246, 0.5);
+  --scrollbar-track: rgba(0, 0, 0, 0.15);
+}
+
+/* ------ Base HTML Element Styling ------ */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  color: var(--text-color);
+  
+  /* Default for most pages - can be overridden in specific components */
+  overflow: hidden;
+}
+
+/* Base styles for pre tags */
+pre {
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Active navigation link styling */
+.router-link-active {
+  color: var(--accent-color);
+  font-weight: 500;
+}
+
+/* ------ Scrollbar styling ------ */
+/* For Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 6px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(96, 165, 250, 0.7); /* Lighter blue on hover (blue-400) */
+}
+
+/* For Firefox */
+html, body {
+  scrollbar-width: auto;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* ------ Utility Classes ------ */
+/* Hide scrollbars but maintain functionality */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Layout utility classes */
+.app-container {
+  min-height: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.fill-height {
+  height: 100%;
+}
+
+/* Page transition animations */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
+
+/* ------ Typography ------ */
+.markdown-content {
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  padding-bottom: 30vh;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ------ Markdown Content Styling ------ */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.markdown-content h1 { font-size: 2.25rem; }
+.markdown-content h2 { font-size: 1.75rem; }
+.markdown-content h3 { font-size: 1.5rem; }
+.markdown-content h4 { font-size: 1.25rem; }
+.markdown-content h5 { font-size: 1.1rem; }
+.markdown-content h6 { font-size: 1rem; }
+
+.markdown-content p {
+  margin-bottom: 1rem;
+}
+
+.markdown-content a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.markdown-content a:hover {
+  text-decoration: underline;
+}
+
+.markdown-content ul, 
+.markdown-content ol {
+  padding-left: 2rem;
+  margin-bottom: 1rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content blockquote {
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--accent-color);
+  background-color: var(--blockquote-bg-color);
+  margin-bottom: 1rem;
+}
+
+.markdown-content pre {
+  background-color: #1e1e1e;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.markdown-content code {
+  font-family: 'Courier New', monospace;
+  padding: 0.2rem 0.4rem;
+  background-color: var(--code-bg-color);
+  border-radius: 3px;
+}
+
+.markdown-content pre code {
+  padding: 0;
+  background-color: transparent;
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.markdown-content thead {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdown-content hr {
+  border: 0;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin: 1.5rem 0;
+}
+
+/* ------ Responsive Styles ------ */
+@media (max-width: 768px) {
+  .markdown-content h1 { font-size: 1.75rem; }
+  .markdown-content h2 { font-size: 1.5rem; }
+  .markdown-content h3 { font-size: 1.25rem; }
+  .markdown-content h4 { font-size: 1.1rem; }
+  .markdown-content h5 { font-size: 1rem; }
+  .markdown-content h6 { font-size: 0.9rem; }
+  
+  /* Smaller padding for mobile screens */
+  .markdown-content {
+    padding: 0.75rem;
+  }
+}
