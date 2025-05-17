@@ -5,12 +5,12 @@
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
           <pre class="text-gray-300">
-\`\`\`mermaid
+```mermaid
 graph TD
     A[Start] --> B{Is it?}
     B -->|Yes| C[OK]
     B -->|No| D[End]
-\`\`\`</pre>
+```</pre>
         </div>
         <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 mb-2">
           <MermaidRenderer :code="`graph TD\n    A[Start] --> B{Is it?}\n    B -->|Yes| C[OK]\n    B -->|No| D[End]`" />
@@ -25,10 +25,10 @@ graph TD
         <h4 class="text-lg font-medium mb-3 text-blue-300">Square Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
-            <pre class="text-gray-300">\`\`\`mermaid
+            <pre class="text-gray-300">```mermaid
 graph TD
     A[Square Node]
-\`\`\`</pre>
+```</pre>
           </div>
           <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
             <MermaidRenderer :code="`graph TD\n    A[Square Node]`" />
@@ -41,10 +41,10 @@ graph TD
         <h4 class="text-lg font-medium mb-3 text-blue-300">Rounded Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
-            <pre class="text-gray-300">\`\`\`mermaid
+            <pre class="text-gray-300">```mermaid
 graph TD
     B(Rounded Node)
-\`\`\`</pre>
+```</pre>
           </div>
           <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
             <MermaidRenderer :code="`graph TD\n    B(Rounded Node)`" />
@@ -57,10 +57,10 @@ graph TD
         <h4 class="text-lg font-medium mb-3 text-blue-300">Stadium Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
-            <pre class="text-gray-300">\`\`\`mermaid
+            <pre class="text-gray-300">```mermaid
 graph TD
     C([Stadium Node])
-\`\`\`</pre>
+```</pre>
           </div>
           <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
             <MermaidRenderer :code="`graph TD\n    C([Stadium Node])`" />
@@ -73,10 +73,10 @@ graph TD
         <h4 class="text-lg font-medium mb-3 text-blue-300">Subroutine Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
-            <pre class="text-gray-300">\`\`\`mermaid
+            <pre class="text-gray-300">```mermaid
 graph TD
     D[[Subroutine Node]]
-\`\`\`</pre>
+```</pre>
           </div>
           <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
             <MermaidRenderer :code="`graph TD\n    D[[Subroutine Node]]`" />
@@ -89,10 +89,10 @@ graph TD
         <h4 class="text-lg font-medium mb-3 text-blue-300">Database Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
-            <pre class="text-gray-300">\`\`\`mermaid
+            <pre class="text-gray-300">```mermaid
 graph TD
     E[(Database Node)]
-\`\`\`</pre>
+```</pre>
           </div>
           <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
             <MermaidRenderer :code="`graph TD\n    E[(Database Node)]`" />
@@ -105,10 +105,10 @@ graph TD
         <h4 class="text-lg font-medium mb-3 text-blue-300">Circle Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
-            <pre class="text-gray-300">\`\`\`mermaid
+            <pre class="text-gray-300">```mermaid
 graph TD
     F((Circle Node))
-\`\`\`</pre>
+```</pre>
           </div>
           <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
             <MermaidRenderer :code="`graph TD\n    F((Circle Node))`" />
@@ -121,10 +121,10 @@ graph TD
         <h4 class="text-lg font-medium mb-3 text-blue-300">Asymmetric Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
-            <pre class="text-gray-300">\`\`\`mermaid
+            <pre class="text-gray-300">```mermaid
 graph TD
     G>Asymmetric Node]
-\`\`\`</pre>
+```</pre>
           </div>
           <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
             <MermaidRenderer :code="`graph TD\n    G>Asymmetric Node]`" />
@@ -137,10 +137,10 @@ graph TD
         <h4 class="text-lg font-medium mb-3 text-blue-300">Rhombus Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
-            <pre class="text-gray-300">\`\`\`mermaid
+            <pre class="text-gray-300">```mermaid
 graph TD
     H{Rhombus Node}
-\`\`\`</pre>
+```</pre>
           </div>
           <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
             <MermaidRenderer :code="`graph TD\n    H{Rhombus Node}`" />
@@ -153,10 +153,10 @@ graph TD
         <h4 class="text-lg font-medium mb-3 text-blue-300">Parallelogram</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
-            <pre class="text-gray-300">\`\`\`mermaid
+            <pre class="text-gray-300">```mermaid
 graph TD
     J[/Parallelogram/]
-\`\`\`</pre>
+```</pre>
           </div>
           <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
             <MermaidRenderer :code="`graph TD\n    J[/Parallelogram/]`" />
@@ -169,14 +169,14 @@ graph TD
         <h4 class="text-lg font-medium mb-3 text-blue-300">Alternative Parallelogram</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
-            <pre class="text-gray-300">\`\`\`mermaid
+            <pre class="text-gray-300">```mermaid
 graph TD
-    K[\\Parallelogram alt\\]
-\`\`\`</pre>
+    K[\Parallelogram alt\]
+```</pre>
           </div>
           <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
-            <MermaidRenderer :code="`graph TD\n    K[\\Parallelogram alt\\]`" />
-            <div class="text-sm text-gray-500 mt-2">[\\Text\\] for alternative parallelogram</div>
+            <MermaidRenderer :code="`graph TD\n    K[\Parallelogram alt\]`" />
+            <div class="text-sm text-gray-500 mt-2">[\Text\] for alternative parallelogram</div>
           </div>
         </div>
       </div>
@@ -185,14 +185,14 @@ graph TD
         <h4 class="text-lg font-medium mb-3 text-blue-300">Trapezoid</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
-            <pre class="text-gray-300">\`\`\`mermaid
+            <pre class="text-gray-300">```mermaid
 graph TD
-    L[/Trapezoid\\]
-\`\`\`</pre>
+    L[/Trapezoid\]
+```</pre>
           </div>
           <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
-            <MermaidRenderer :code="`graph TD\n    L[/Trapezoid\\]`" />
-            <div class="text-sm text-gray-500 mt-2">[/Text\\] for trapezoid</div>
+            <MermaidRenderer :code="`graph TD\n    L[\/Trapezoid\\]`" />
+            <div class="text-sm text-gray-500 mt-2">[/Text\] for trapezoid</div>
           </div>
         </div>
       </div>
@@ -201,14 +201,14 @@ graph TD
         <h4 class="text-lg font-medium mb-3 text-blue-300">Alternative Trapezoid</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
-            <pre class="text-gray-300">\`\`\`mermaid
+            <pre class="text-gray-300">```mermaid
 graph TD
-    M[\\Trapezoid alt/]
-\`\`\`</pre>
+    M[\Trapezoid alt/]
+```</pre>
           </div>
           <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
-            <MermaidRenderer :code="`graph TD\n    M[\\Trapezoid alt/]`" />
-            <div class="text-sm text-gray-500 mt-2">[\\Text/] for alternative trapezoid</div>
+            <MermaidRenderer :code="`graph TD\n    M[\\Trapezoid alt\/]`" />
+            <div class="text-sm text-gray-500 mt-2">[\Text/] for alternative trapezoid</div>
           </div>
         </div>
       </div>
@@ -219,14 +219,14 @@ graph TD
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
           <pre class="text-gray-300">
-\`\`\`mermaid
+```mermaid
 sequenceDiagram
     participant Alice
     participant Bob
     Alice->>Bob: Hello Bob, how are you?
     Bob-->>Alice: I am good thanks!
     Alice->>Bob: Great!
-\`\`\`</pre>
+```</pre>
         </div>
         <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 mb-2">
           <MermaidRenderer :code="`sequenceDiagram\n    participant Alice\n    participant Bob\n    Alice->>Bob: Hello Bob, how are you?\n    Bob-->>Alice: I am good thanks!\n    Alice->>Bob: Great!`" />
@@ -239,7 +239,7 @@ sequenceDiagram
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
           <pre class="text-gray-300">
-\`\`\`mermaid
+```mermaid
 classDiagram
     Animal <|-- Duck
     Animal <|-- Fish
@@ -253,7 +253,7 @@ classDiagram
       +swim()
       +quack()
     }
-\`\`\`</pre>
+```</pre>
         </div>
         <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 mb-2">
           <MermaidRenderer :code="`classDiagram\n    Animal <|-- Duck\n    Animal <|-- Fish\n    Animal <|-- Zebra\n    Animal : +int age\n    Animal : +String gender\n    Animal: +isMammal()\n    Animal: +mate()\n    class Duck{\n      +String beakColor\n      +swim()\n      +quack()\n    }`" />
@@ -266,7 +266,7 @@ classDiagram
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
           <pre class="text-gray-300">
-\`\`\`mermaid
+```mermaid
 stateDiagram-v2
     [*] --> Still
     Still --> [*]
@@ -274,7 +274,7 @@ stateDiagram-v2
     Moving --> Still
     Moving --> Crash
     Crash --> [*]
-\`\`\`</pre>
+```</pre>
         </div>
         <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 mb-2">
           <MermaidRenderer :code="`stateDiagram-v2\n    [*] --> Still\n    Still --> [*]\n    Still --> Moving\n    Moving --> Still\n    Moving --> Crash\n    Crash --> [*]`" />
@@ -287,7 +287,7 @@ stateDiagram-v2
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
           <pre class="text-gray-300">
-\`\`\`mermaid
+```mermaid
 gantt
     title Project Timeline
     dateFormat  YYYY-MM-DD
@@ -296,7 +296,7 @@ gantt
     section Development
     Implementation   :a2, after a1, 45d
     Testing          :a3, after a2, 20d
-\`\`\`</pre>
+```</pre>
         </div>
         <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 mb-2">
           <MermaidRenderer :code="`gantt\n    title Project Timeline\n    dateFormat  YYYY-MM-DD\n    section Planning\n    Design           :a1, 2023-01-01, 30d\n    section Development\n    Implementation   :a2, after a1, 45d\n    Testing          :a3, after a2, 20d`" />
@@ -309,12 +309,12 @@ gantt
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
           <pre class="text-gray-300">
-\`\`\`mermaid
+```mermaid
 erDiagram
     CUSTOMER ||--o{ ORDER : places
     ORDER ||--|{ LINE-ITEM : contains
     CUSTOMER }|..|{ DELIVERY-ADDRESS : uses
-\`\`\`</pre>
+```</pre>
         </div>
         <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 mb-2">
           <MermaidRenderer :code="`erDiagram\n    CUSTOMER ||--o{ ORDER : places\n    ORDER ||--|{ LINE-ITEM : contains\n    CUSTOMER }|..|{ DELIVERY-ADDRESS : uses`" />
