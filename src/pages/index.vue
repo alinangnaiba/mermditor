@@ -81,7 +81,7 @@
           <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 flex flex-col items-center text-center">
             <!-- [ICON: Layout] -->
             <svg class="w-12 h-12 mb-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9h16M4 15h16M9 4v16M15 4v16"></path></svg>
-            <h4 class="text-xl font-medium mb-3">Intuitive & Smart Layout</h4>
+            <h4 class="text-xl font-medium mb-3">Intuitive Layout</h4>
             <p class="text-gray-300">A clean, minimalist design helps you stay focused. The smart layout provides essential tools without clutter, making your writing experience smooth and efficient.</p>
           </div>
           
