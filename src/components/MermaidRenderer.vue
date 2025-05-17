@@ -2,22 +2,22 @@
   <div class="mermaid-wrapper">
     <div class="mermaid-controls">
       <button @click="zoomIn" title="Zoom In">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-          <path d="M9 7h3a.75.75 0 0 1 0 1.5H9v3a.75.75 0 0 1-1.5 0v-3h-3a.75.75 0 0 1 0-1.5h3v-3A.75.75 0 0 1 9 4v3Z"></path>
-          <path d="M5.5 14a6.25 6.25 0 1 1 3.845-1.154.75.75 0 1 0 .925 1.18A7.752 7.752 0 1 0 5.5 15.5a7.69 7.69 0 0 0 4.445-1.396.75.75 0 1 0-.854-1.235A6.195 6.195 0 0 1 5.5 14Z"></path>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
+          <path d="M3.75 7.5a.75.75 0 0 1 .75-.75h2.25V4.5a.75.75 0 0 1 1.5 0v2.25h2.25a.75.75 0 0 1 0 1.5H8.25v2.25a.75.75 0 0 1-1.5 0V8.25H4.5a.75.75 0 0 1-.75-.75Z"/>
+          <path d="M7.5 0a7.5 7.5 0 0 1 5.807 12.247l2.473 2.473a.749.749 0 1 1-1.06 1.06l-2.473-2.473A7.5 7.5 0 1 1 7.5 0Zm-6 7.5a6 6 0 1 0 12 0 6 6 0 0 0-12 0Z"/>
         </svg>
         <span>Zoom In</span>
       </button>
-      <button @click="resetZoomPan" title="Reset">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+      <button @click="reset" title="Reset">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
           <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
         </svg>
         <span>Reset</span>
       </button>
       <button @click="zoomOut" title="Zoom Out">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-          <path d="M3.75 7.5a.75.75 0 0 0 0 1.5h8.5a.75.75 0 0 0 0-1.5h-8.5Z"></path>
-          <path d="M5.5 14a6.25 6.25 0 1 1 3.845-1.154.75.75 0 1 0 .925 1.18A7.752 7.752 0 1 0 5.5 15.5a7.69 7.69 0 0 0 4.445-1.396.75.75 0 1 0-.854-1.235A6.195 6.195 0 0 1 5.5 14Z"></path>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
+          <path d="M4.5 6.75h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/>
+          <path d="M0 7.5a7.5 7.5 0 1 1 13.307 4.747l2.473 2.473a.749.749 0 1 1-1.06 1.06l-2.473-2.473A7.5 7.5 0 0 1 0 7.5Zm7.5-6a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z"/>
         </svg>
         <span>Zoom Out</span>
       </button>
@@ -72,7 +72,7 @@ const zoomOut = () => {
   scale.value = Math.max(scale.value / 1.2, 0.2); // Min zoom 0.2x
 };
 
-const resetZoomPan = () => {
+const reset = () => {
   scale.value = 1;
   pan.value = { x: 0, y: 0 };
 };
@@ -126,7 +126,7 @@ onMounted(async () => {
 
 watch(() => props.code, async () => {
   // Reset zoom/pan when code changes, as the diagram might be different
-  resetZoomPan();
+  reset();
   await renderMermaidDiagram();
 }, { immediate: false });
 </script>
@@ -134,8 +134,8 @@ watch(() => props.code, async () => {
 <style scoped>
 .mermaid-wrapper {
   position: relative;
-  overflow: hidden; /* Important for panning to work correctly */
-  border: 1px solid #ccc; /* Optional: for visual clarity */
+  overflow: hidden;
+  border: none;
   border-radius: 4px;
 }
 
@@ -163,8 +163,8 @@ watch(() => props.code, async () => {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
 }
 
 .mermaid-controls button:hover {
@@ -173,14 +173,13 @@ watch(() => props.code, async () => {
 }
 
 .mermaid-controls button svg {
-  /* Icons are decorative, hide from screen readers */
   pointer-events: none;
-  /* Ensure SVG inherits the button's color property for its stroke/fill if not explicitly set */
-  fill: currentColor; 
+  fill: currentColor;
+  display: block;
+  margin: auto;
 }
 
 .mermaid-controls button span {
-  /* Visually hide text but keep for screen readers */
   position: absolute;
   width: 1px;
   height: 1px;
@@ -194,13 +193,10 @@ watch(() => props.code, async () => {
 
 .mermaid-diagram-container {
   width: 100%;
-  /* padding: 8px 0; remove padding to allow edge-to-edge diagram for panning */
-  display: flex; /* Helps center the SVG if it's smaller than container */
+  display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 150px; /* Ensure a minimum height */
-  background-color: #2d2d2d; /* Dark background for the diagram area */
-  /* Transition is now handled by diagramStyle to avoid conflict during panning */
+  min-height: 150px;
 }
 
 .mermaid-error {

@@ -2,7 +2,7 @@
   <div class="markdown-editor-container h-full w-full flex flex-col">
     <!-- Main pane container with single scroll -->
     <div class="flex-1 flex flex-col min-h-0">
-      <div class="main-scroll-container flex-1 overflow-y-auto w-full" ref="mainScrollContainer" @scroll="handleScroll">
+      <div class="main-scroll-container flex-1 overflow-y-auto w-full" ref="mainScrollContainer">
         <div class="pane-container flex flex-row w-full min-h-full">
           <!-- Editor Pane -->
           <div class="editor-container transition-width duration-100 flex flex-col" :style="{ width: editorWidthPercent + '%' }">
@@ -255,7 +255,7 @@ watch(() => markdownText.value, (newValue) => { // Removed async from watcher ca
   debouncedRenderMarkdown();
   saveToLocalStorage(newValue || '');
   // No direct call to autoResizeTextarea here anymore.
-}, { immediate: false });
+}, { immediate: true });
 
 
 const autoResizeTextarea = async () => {
@@ -304,14 +304,6 @@ const wordCount = computed(() => {
 const characterCount = computed(() => {
   return markdownText.value.length;
 });
-
-// Handle scroll synchronization (placeholder, actual sync might be complex)
-const handleScroll = (e: Event) => {
-  // If direct synchronization between editor scroll and preview scroll is needed
-  // (beyond what a shared height provides), logic would go here.
-  // For now, autoResizeTextarea ensures both panes are tall enough for their content,
-  // and the single scrollbar scrolls this shared height.
-};
 
 
 const handleKeyboardShortcut = (e: KeyboardEvent) => {
@@ -364,16 +356,12 @@ const handleKeyboardShortcut = (e: KeyboardEvent) => {
   flex-direction: row;
   position: relative;
   width: 100%;
-  /* min-h-full class handles minimum height */
-  /* height: auto; by default, children determine height beyond min-h-full */
 }
 
 .editor-container, .preview-container {
   transition: width 0.1s ease;
-  /* overflow: hidden; /* Horizontal overflow is handled by width */
   display: flex; 
   flex-direction: column; 
-  /* height is determined by child pane's height which is set by JS or wraps content */
 }
 
 /* Styles for the direct parent of textarea */
@@ -383,7 +371,6 @@ const handleKeyboardShortcut = (e: KeyboardEvent) => {
   background-color: var(--background-dark);
   display: flex; 
   flex-direction: column;
-  /* Height is determined by textarea's dynamic height */
 }
 
 /* Styles for the direct parent of the rendered markdown output */
@@ -391,46 +378,40 @@ const handleKeyboardShortcut = (e: KeyboardEvent) => {
   border-left: 1px solid var(--border-color);
   background-color: var(--background-darker);
   overflow: hidden; /* This pane should not scroll; main-scroll-container does */
-  /* Height is set dynamically by autoResizeTextarea to match editor-pane */
 }
 
 /* The actual div where markdown HTML is rendered */
 .markdown-content {
-  /* p-4 class provides padding */
-  /* prose prose-invert max-w-none classes provide styling */
-  height: 100%; /* Fill the parent (.preview-pane-content) whose height is set by JS */
-  /* overflow: hidden; /* Content should not overflow if heights are synced and this fills parent */
+  height: 100%; 
 }
 
 
 textarea {
   font-family: 'Courier New', monospace;
-  width: 100%; /* w-full class */
-  /* height is dynamically set by autoResizeTextarea */
+  width: 100%; 
   border: none;
-  background-color: transparent; /* bg-transparent class */
-  resize: none; /* resize-none class */
-  padding: 16px; /* p-4 class */
+  background-color: transparent; 
+  resize: none; 
+  padding: 16px; 
   font-size: 1rem; /* text-sm class (usually 0.875rem), consider if 1rem is intended */
-  line-height: 1.6; /* leading-relaxed class */
-  outline: none; /* outline-none class */
+  line-height: 1.6; 
+  outline: none; 
   overflow-y: hidden; /* Textarea itself should not scroll vertically */
-  position: relative; /* For z-index or other positioning contexts if ever needed */
-  z-index: 2; /* If needed for layering */
+  position: relative; 
+  z-index: 2; 
 }
 
 .markdown-editor-container {
-  height: 100%; /* h-full class */
-  display: flex; /* flex class */
-  flex-direction: column; /* flex-col class */
+  height: 100%; 
+  display: flex; 
+  flex-direction: column; 
   overflow: hidden; /* Prevent this container itself from showing scrollbars if children are managed */
 }
 
 .main-scroll-container {
   scrollbar-width: auto;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-  position: relative; /* For positioning context if needed */
-  /* flex-1 and overflow-y-auto classes handle its behavior */
+  position: relative; 
 }
 
 .main-scroll-container::-webkit-scrollbar {
@@ -479,7 +460,7 @@ textarea {
 
 /* Media query for mobile view */
 @media (max-width: 768px) {
-  .preview-pane-content { /* Adjusted selector to match new class name if it was .preview-pane */
+  .preview-pane-content { 
     border-left: none !important;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
