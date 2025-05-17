@@ -67,103 +67,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, nextTick, computed } from 'vue';
-import MarkdownIt from 'markdown-it';
-import { markdownItMermaid } from '@/plugins/markdownItMermaid';
-import { markdownItHighlight } from '@/plugins/markdownItHighlight';
+import { ref, onMounted, onBeforeUnmount, watch, computed, toRef } from 'vue'; // Removed nextTick, added toRef
 import { setupMermaid } from '@/plugins/mermaid';
-import MermaidRenderer from '@/components/MermaidRenderer.vue';
-import { createApp } from 'vue';
-import debounce from 'lodash/debounce';
 import 'highlight.js/styles/atom-one-dark.css';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+import { useMarkdownRenderer } from '@/composables/useMarkdownRenderer';
+import { usePaneResizer } from '@/composables/usePaneResizer';
+import { useTextareaSizing } from '@/composables/useTextareaSizing';
+import { useEditorStateAndPersistence } from '@/composables/useEditorStateAndPersistence'; // Added import
 
-// Helper function to check for potential URL-like strings
-const isPotentiallyUrlLike = (text: string): boolean => {
-  if (!text || text.trim() === '') return false;
-  if (/\s/.test(text)) return false; // No spaces allowed in simple domain/URL check for this purpose
-
-  // If it already starts with http:// or https://, consider it URL-like
-  if (/^https?:\/\//i.test(text)) {
-    return true;
+const props = defineProps({
+  initialMarkdown: {
+    type: String,
+    default: ''
   }
-
-  // Check for a common domain structure like domain.tld or sub.domain.tld
-  // This is a simplified check.
-  const domainStructureRegex = /^([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
-  return domainStructureRegex.test(text);
-};
-
-// Setup markdown parser with plugins
-const md = new MarkdownIt({
-  highlight: null // Disable built-in highlighting as we'll use our custom plugin
 });
-
-// Register the plugins - order matters: highlight first, then mermaid
-md.use(markdownItHighlight);
-md.use(markdownItMermaid);
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
-const previewPane = ref<HTMLElement | null>(null);
+const previewPane = ref<HTMLElement | null>(null); 
 const mainScrollContainer = ref<HTMLElement | null>(null);
-const previewContainer = ref<HTMLElement | null>(null);
-
-const editorWidthPercent = ref(50);
-const isEditorVisible = ref(true); // New state for editor visibility
-let isDragging = false;
-
-const previewWidthPercent = computed(() => {
-  return isEditorVisible.value ? (100 - editorWidthPercent.value) : 100;
-});
-
-const toggleEditorVisibility = () => {
-  isEditorVisible.value = !isEditorVisible.value;
-  // Optionally, save this preference to localStorage
-  localStorage.setItem('mermd-editor-visible', isEditorVisible.value.toString());
-  // Trigger resize to adjust layout
-  nextTick(() => {
-    autoResizeTextarea();
-  });
-};
-
-const startDrag = (e: MouseEvent | TouchEvent) => {
-  isDragging = true;
-  document.addEventListener('mousemove', handleDrag);
-  document.addEventListener('touchmove', handleDrag, { passive: false }); // passive:false for touchmove
-  document.addEventListener('mouseup', stopDrag);
-  document.addEventListener('touchend', stopDrag);
-  document.body.style.userSelect = 'none';
-};
-
-const handleDrag = (e: MouseEvent | TouchEvent) => {
-  if (!isDragging || !mainScrollContainer.value) return;
-  
-  e.preventDefault(); // Prevent page scroll during drag, especially on touch
-
-  const containerRect = mainScrollContainer.value.getBoundingClientRect();
-  const containerWidth = containerRect.width;
-  
-  let clientX: number;
-  if (e.type.startsWith('touch')) {
-    clientX = (e as TouchEvent).touches[0].clientX;
-  } else {
-    clientX = (e as MouseEvent).clientX;
-  }
-  
-  const editorWidth = clientX - containerRect.left;
-  const percentage = Math.min(Math.max((editorWidth / containerWidth) * 100, 10), 90); // Min 10%, Max 90%
-  editorWidthPercent.value = percentage;
-};
-
-const stopDrag = () => {
-  if (!isDragging) return;
-  isDragging = false;
-  document.removeEventListener('mousemove', handleDrag);
-  document.removeEventListener('touchmove', handleDrag);
-  document.removeEventListener('mouseup', stopDrag);
-  document.removeEventListener('touchend', stopDrag);
-  document.body.style.userSelect = '';
-  localStorage.setItem('mermd-editor-width', editorWidthPercent.value.toString()); // Save width on drag end
-};
+const previewContainer = ref<HTMLElement | null>(null); 
 
 const defaultContent = `# Markdown Editor with Mermaid
 
@@ -212,131 +135,44 @@ flowchart LR
 \`\`\`
 `;
 
-const props = defineProps({
-  initialMarkdown: {
-    type: String,
-    default: ''
-  }
-});
+// Composable for editor state and persistence
+const { 
+  markdownText, 
+  isEditorVisible, 
+  lastSaved, 
+  toggleEditorVisibility, 
+} = useEditorStateAndPersistence(
+  toRef(props, 'initialMarkdown'), 
+  defaultContent,
+  () => autoResizeTextarea() // Pass autoResizeTextarea as a callback
+);
 
-const markdownText = ref(''); // Initialize empty
+// Initialize the composable for pane resizing
+const { editorWidthPercent, previewWidthPercent, startDrag } = usePaneResizer(mainScrollContainer, isEditorVisible);
 
-let mermaidRenderTimeoutId: ReturnType<typeof setTimeout> | undefined;
+// Initialize the composable for textarea sizing
+const { autoResizeTextarea } = useTextareaSizing(textareaRef, previewPane, mainScrollContainer, previewContainer, isEditorVisible);
 
-const renderMarkdown = async () => {
-  if (!previewContainer.value) return;
-  
-  const html = md.render(markdownText.value || '');
-  previewContainer.value.innerHTML = html;
-  
-  await nextTick(); // Wait for initial HTML to be in DOM
-  
-  const mermaidPlaceholders = previewContainer.value.querySelectorAll('.mermaid-placeholder');
-  
-  mermaidPlaceholders.forEach((placeholder, index) => {
-    const mermaidCode = decodeURIComponent(placeholder.getAttribute('data-mermaid-code') || '');
-    if (!mermaidCode) return;
-    
-    const container = document.createElement('div');
-    placeholder.replaceWith(container);
-    
-    const app = createApp(MermaidRenderer, {
-      code: mermaidCode,
-      idSuffix: `${index}-${Date.now()}`
-    });
-    app.mount(container);
-  });
+// Initialize the composable for keyboard shortcuts
+const { handleKeyboardShortcut } = useKeyboardShortcuts(markdownText, textareaRef, autoResizeTextarea);
 
-  // After processing and attempting to mount all diagrams, schedule a resize.
-  // This gives Mermaid diagrams a bit of time to render before height is calculated.
-  if (mermaidRenderTimeoutId) clearTimeout(mermaidRenderTimeoutId);
-  mermaidRenderTimeoutId = setTimeout(async () => {
-    await autoResizeTextarea();
-  }, 200); // Adjust delay if needed (e.g., 200-300ms)
-};
+// Initialize the composable for Markdown rendering
+const { debouncedRenderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(markdownText, previewContainer, autoResizeTextarea);
 
-const debouncedRenderMarkdown = debounce(renderMarkdown, 150);
-
-const lastSaved = ref<string>('');
-const saveToLocalStorage = debounce((content: string) => {
-  localStorage.setItem('mermd-content', content);
-  const now = new Date();
-  lastSaved.value = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}, 500);
-
+watch(markdownText, () => {
+  debouncedRenderMarkdown();
+}, { immediate: true });
 
 onMounted(async () => {
   setupMermaid();
-
-  // Prioritize prop, then localStorage, then default content
-  if (props.initialMarkdown) {
-    markdownText.value = props.initialMarkdown;
-  } else {
-    const savedMarkdown = localStorage.getItem('mermd-markdown-input');
-    if (savedMarkdown) {
-      markdownText.value = savedMarkdown;
-    } else {
-      markdownText.value = defaultContent;
-    }
-  }
-
-  const savedWidth = localStorage.getItem('mermd-editor-width');
-  if (savedWidth) {
-    editorWidthPercent.value = parseFloat(savedWidth);
-  }
-  
-  const savedVisibility = localStorage.getItem('mermd-editor-visible');
-  if (savedVisibility !== null) {
-    isEditorVisible.value = savedVisibility === 'true';
-  }
-  
-  document.addEventListener('keydown', handleKeyboardShortcut); // Add the event listener
-  window.addEventListener('resize', autoResizeTextarea);
+  document.addEventListener('keydown', handleKeyboardShortcut);
+  autoResizeTextarea(); // Initial call after mount and state is loaded
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeyboardShortcut);
-  document.removeEventListener('mousemove', handleDrag);
-  document.removeEventListener('touchmove', handleDrag);
-  document.removeEventListener('mouseup', stopDrag);
-  document.removeEventListener('touchend', stopDrag);
-  window.removeEventListener('resize', autoResizeTextarea);
-  if (mermaidRenderTimeoutId) clearTimeout(mermaidRenderTimeoutId); // Clear timeout on unmount
+  cleanupMarkdownRenderer();
 });
-
-watch(() => markdownText.value, (newValue) => { // Removed async from watcher callback as it only calls sync + debounced
-  debouncedRenderMarkdown();
-  saveToLocalStorage(newValue || '');
-  // No direct call to autoResizeTextarea here anymore.
-}, { immediate: true });
-
-
-const autoResizeTextarea = async () => {
-  if (textareaRef.value && previewPane.value && mainScrollContainer.value && previewContainer.value) {
-    // Reset heights to auto to allow scrollHeight to be calculated correctly
-    textareaRef.value.style.height = 'auto';
-    previewPane.value.style.height = 'auto'; // This is the container for markdown-content
-
-    await nextTick(); // Wait for DOM to update with auto heights
-
-    const scrollContainerHeight = mainScrollContainer.value.clientHeight;
-    
-    const textareaScrollHeight = textareaRef.value.scrollHeight;
-    const previewContentScrollHeight = previewContainer.value.scrollHeight; // scrollHeight of the .markdown-content div
-    
-    const minPixelHeight = 80; // Minimum height for each pane's content
-    
-    const requiredTextareaHeight = Math.max(textareaScrollHeight, minPixelHeight);
-    const requiredPreviewHeight = Math.max(previewContentScrollHeight, minPixelHeight);
-    
-    const maxContentHeight = Math.max(requiredTextareaHeight, requiredPreviewHeight);
-    
-    const finalNewHeight = Math.max(maxContentHeight, scrollContainerHeight);
-
-    textareaRef.value.style.height = `${finalNewHeight}px`;
-    previewPane.value.style.height = `${finalNewHeight}px`; // Set height of .preview-pane-content
-  }
-};
 
 // Word count computation
 const wordCount = computed(() => {
@@ -357,181 +193,4 @@ const wordCount = computed(() => {
 const characterCount = computed(() => {
   return markdownText.value.length;
 });
-
-
-const handleKeyboardShortcut = (e: KeyboardEvent) => {
-  if (!(e.ctrlKey || e.metaKey) || !textareaRef.value) return;
-
-  const key = e.key.toLowerCase();
-  const textarea = textareaRef.value;
-  const { selectionStart: start, selectionEnd: end } = textarea;
-  const value = textarea.value;
-  const selectedText = value.substring(start, end);
-
-  let newTextValue: string = value;
-  let newSelectionStart: number = start;
-  let newSelectionEnd: number = end;
-  let textModified: boolean = false;
-  let preventDefault = false;
-
-  switch (key) {
-    case 'b': // Bold
-      {
-        preventDefault = true;
-        const prefix = '**';
-        const suffix = '**';
-        const placeholder = 'bold text';
-        
-        const isExactlyWrapped = selectedText.startsWith(prefix) &&
-                                 selectedText.endsWith(suffix) &&
-                                 selectedText.length >= prefix.length + suffix.length;
-        const textBeforeSelection = value.substring(0, start);
-        const textAfterSelection = value.substring(end);
-        const isEffectivelyWrapped = textBeforeSelection.endsWith(prefix) &&
-                                     textAfterSelection.startsWith(suffix);
-
-        if (isExactlyWrapped) {
-          const unwrappedText = selectedText.substring(prefix.length, selectedText.length - suffix.length);
-          newTextValue = value.substring(0, start) + unwrappedText + value.substring(end);
-          newSelectionStart = start;
-          newSelectionEnd = start + unwrappedText.length;
-        } else if (isEffectivelyWrapped) {
-          const textBeforePrefix = textBeforeSelection.substring(0, textBeforeSelection.length - prefix.length);
-          const textAfterSuffix = textAfterSelection.substring(suffix.length);
-          newTextValue = textBeforePrefix + selectedText + textAfterSuffix;
-          newSelectionStart = start - prefix.length;
-          newSelectionEnd = end - prefix.length;
-        } else {
-          const textToWrap = selectedText || placeholder;
-          const wrappedText = `${prefix}${textToWrap}${suffix}`;
-          newTextValue = value.substring(0, start) + wrappedText + value.substring(end);
-          newSelectionStart = start + prefix.length;
-          newSelectionEnd = start + prefix.length + textToWrap.length;
-        }
-        textModified = true;
-      }
-      break;
-    case 'i': // Italic
-      {
-        preventDefault = true;
-        const prefix = '*';
-        const suffix = '*';
-        const placeholder = 'italic text';
-
-        const isExactlyWrapped = selectedText.startsWith(prefix) &&
-                                 selectedText.endsWith(suffix) &&
-                                 selectedText.length >= prefix.length + suffix.length;
-        const textBeforeSelection = value.substring(0, start);
-        const textAfterSelection = value.substring(end);
-        const isEffectivelyWrapped = textBeforeSelection.endsWith(prefix) &&
-                                     textAfterSelection.startsWith(suffix);
-
-        if (isExactlyWrapped) {
-          const unwrappedText = selectedText.substring(prefix.length, selectedText.length - suffix.length);
-          newTextValue = value.substring(0, start) + unwrappedText + value.substring(end);
-          newSelectionStart = start;
-          newSelectionEnd = start + unwrappedText.length;
-        } else if (isEffectivelyWrapped) {
-          const textBeforePrefix = textBeforeSelection.substring(0, textBeforeSelection.length - prefix.length);
-          const textAfterSuffix = textAfterSelection.substring(suffix.length);
-          newTextValue = textBeforePrefix + selectedText + textAfterSuffix;
-          newSelectionStart = start - prefix.length;
-          newSelectionEnd = end - prefix.length;
-        } else {
-          const textToWrap = selectedText || placeholder;
-          const wrappedText = `${prefix}${textToWrap}${suffix}`;
-          newTextValue = value.substring(0, start) + wrappedText + value.substring(end);
-          newSelectionStart = start + prefix.length;
-          newSelectionEnd = start + prefix.length + textToWrap.length;
-        }
-        textModified = true;
-      }
-      break;
-    case 'k': // Link
-      {
-        preventDefault = true;
-        const linkTextPlaceholder = 'link text';
-        const urlPlaceholder = 'url';
-        // Regex to match a full markdown link: [text](url)
-        const fullLinkRegex = /^\[(.*?)\]\((.*?)\)$/;
-        const selectedAsFullLinkMatch = selectedText.match(fullLinkRegex);
-
-        if (selectedAsFullLinkMatch) {
-          const actualLinkText = selectedAsFullLinkMatch[1];
-          newTextValue = value.substring(0, start) + actualLinkText + value.substring(end);
-          newSelectionStart = start;
-          newSelectionEnd = start + actualLinkText.length;
-        } else {
-          let textToWrap = selectedText || linkTextPlaceholder;
-          let finalUrl = urlPlaceholder;
-
-          if (selectedText && selectedText.trim() !== '') {
-            if (isPotentiallyUrlLike(selectedText)) {
-              textToWrap = selectedText;
-              if (/^https?:\/\//i.test(selectedText)) {
-                finalUrl = selectedText;
-              } else {
-                finalUrl = 'http://' + selectedText;
-              }
-            }
-          }
-
-          const wrappedText = `[${textToWrap}](${finalUrl})`;
-          newTextValue = value.substring(0, start) + wrappedText + value.substring(end);
-          
-          newSelectionStart = start;
-          newSelectionEnd = start + wrappedText.length;
-        }
-        textModified = true;
-      }
-      break;    
-    case '1': // Heading 1
-      if (e.shiftKey) {
-        preventDefault = true;
-        const lineStartPos = value.lastIndexOf('\n', start - 1) + 1;
-        let actualLineEndPos = value.indexOf('\n', lineStartPos);
-        if (actualLineEndPos === -1) {
-            actualLineEndPos = value.length;
-        }
-        const currentLineContent = value.substring(lineStartPos, actualLineEndPos);
-
-        if (currentLineContent.startsWith('# ')) {
-          newTextValue = value.substring(0, lineStartPos) + currentLineContent.substring(2) + value.substring(actualLineEndPos);
-          newSelectionStart = Math.max(lineStartPos, start - 2);
-          newSelectionEnd = Math.max(lineStartPos, end - 2);
-        } else {
-          newTextValue = value.substring(0, lineStartPos) + '# ' + currentLineContent + value.substring(actualLineEndPos);
-          if (start === end && start >= lineStartPos && start <= actualLineEndPos) { // Cursor on the line, no selection
-            newSelectionStart = lineStartPos + 2; // Place cursor after '# '
-            newSelectionEnd = lineStartPos + 2;
-          } else { // Selection exists
-            newSelectionStart = start + 2;
-            newSelectionEnd = end + 2;
-          }
-        }
-        textModified = true;
-      } else {
-        return; // Not Ctrl+Shift+1
-      }
-      break;
-    default:
-      return; // Exit if no shortcut matched
-  }
-
-  if (preventDefault) {
-    e.preventDefault();
-  }
-
-  if (textModified) {
-    markdownText.value = newTextValue;
-    nextTick(() => {
-      if (textareaRef.value) {
-        textareaRef.value.selectionStart = newSelectionStart;
-        textareaRef.value.selectionEnd = newSelectionEnd;
-        textareaRef.value.focus();
-        autoResizeTextarea(); 
-      }
-    });
-  }
-};
 </script>

@@ -1,0 +1,62 @@
+import { nextTick, createApp, type Ref } from 'vue';
+import MarkdownIt from 'markdown-it';
+import { markdownItMermaid } from '@/plugins/markdownItMermaid';
+import { markdownItHighlight } from '@/plugins/markdownItHighlight';
+import MermaidRenderer from '@/components/MermaidRenderer.vue';
+import debounce from 'lodash/debounce';
+
+export function useMarkdownRenderer(
+  markdownText: Ref<string>,
+  previewContainerRef: Ref<HTMLElement | null>,
+  autoResizeTextarea: () => Promise<void>
+) {
+  const md = new MarkdownIt({
+    highlight: null, // Disable built-in highlighting
+  });
+
+  md.use(markdownItHighlight);
+  md.use(markdownItMermaid);
+
+  let mermaidRenderTimeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const renderMarkdown = async () => {
+    if (!previewContainerRef.value) return;
+
+    const html = md.render(markdownText.value || '');
+    previewContainerRef.value.innerHTML = html;
+
+    await nextTick();
+
+    const mermaidPlaceholders = previewContainerRef.value.querySelectorAll('.mermaid-placeholder');
+
+    mermaidPlaceholders.forEach((placeholder, index) => {
+      const mermaidCode = decodeURIComponent(placeholder.getAttribute('data-mermaid-code') || '');
+      if (!mermaidCode) return;
+
+      const container = document.createElement('div');
+      placeholder.replaceWith(container);
+
+      const app = createApp(MermaidRenderer, {
+        code: mermaidCode,
+        idSuffix: `${index}-${Date.now()}`,
+      });
+      app.mount(container);
+    });
+
+    if (mermaidRenderTimeoutId) clearTimeout(mermaidRenderTimeoutId);
+    mermaidRenderTimeoutId = setTimeout(async () => {
+      await autoResizeTextarea();
+    }, 200);
+  };
+
+  const debouncedRenderMarkdown = debounce(renderMarkdown, 150);
+
+  const cleanup = () => {
+    if (mermaidRenderTimeoutId) clearTimeout(mermaidRenderTimeoutId);
+  };
+
+  return {
+    debouncedRenderMarkdown,
+    cleanupMarkdownRenderer: cleanup,
+  };
+}
