@@ -68,7 +68,7 @@
             <!-- [ICON: Auto-Save] -->
             <svg class="w-12 h-12 mb-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
             <h4 class="text-xl font-medium mb-3">Auto-Save Functionality</h4>
-            <p class="text-gray-300">Never lose your work. merMDitor automatically saves your changes to your browser\'s local storage, so you can pick up right where you left off, even after closing the page.</p>
+            <p class="text-gray-300">Never lose your work. merMDitor automatically saves your changes to your browser's local storage, so you can pick up right where you left off, even after closing the page.</p>
           </div>
 
           <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 flex flex-col items-center text-center">
