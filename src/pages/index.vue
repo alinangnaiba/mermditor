@@ -103,17 +103,17 @@
         
         <div class="grid md:grid-cols-3 gap-8">
           <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
-            <h4 class="text-xl font-medium mb-3">For Students</h4>
+            <h4 class="text-xl font-medium mb-3">Students</h4>
             <p class="text-gray-300">Take clearer, more organized notes, create diagrams for assignments (e.g., process flows, data structures), and quickly draft reports or presentations with embedded visuals.</p>
           </div>
           
           <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
-            <h4 class="text-xl font-medium mb-3">For Developers</h4>
+            <h4 class="text-xl font-medium mb-3">Developers</h4>
             <p class="text-gray-300">Document code, APIs, and system architecture with ease. Create flowcharts and sequence diagrams to explain complex logic, or quickly sketch out database schemas and component interactions.</p>
           </div>
           
           <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
-            <h4 class="text-xl font-medium mb-3">For Technical Writers</h4>
+            <h4 class="text-xl font-medium mb-3">Technical Writers</h4>
             <p class="text-gray-300">Produce comprehensive user manuals and guides with integrated diagrams. Explain intricate processes and systems visually, and maintain documentation efficiently with a straightforward editor.</p>
           </div>
         </div>
