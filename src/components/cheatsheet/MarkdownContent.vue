@@ -144,12 +144,12 @@ Reference-style link:
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
           <pre class="text-gray-300">
-\`\`\`javascript
+```javascript
 // Code block with syntax highlighting
 function hello() {
   console.log("Hello world!");
 }
-\`\`\`
+```
 
     // Indented code block (4 spaces)
     function hello() {
