@@ -9,9 +9,12 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
+    MarkdownContent: typeof import('./components/cheatsheet/MarkdownContent.vue')['default']
     MarkdownEditor: typeof import('./components/MarkdownEditor.vue')['default']
+    MermaidContent: typeof import('./components/cheatsheet/MermaidContent.vue')['default']
     MermaidRenderer: typeof import('./components/MermaidRenderer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ShortcutsContent: typeof import('./components/cheatsheet/ShortcutsContent.vue')['default']
   }
 }
