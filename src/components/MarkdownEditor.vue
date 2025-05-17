@@ -274,6 +274,7 @@ onMounted(async () => {
     isEditorVisible.value = savedVisibility === 'true';
   }
   
+  document.addEventListener('keydown', handleKeyboardShortcut); // Add the event listener
   window.addEventListener('resize', autoResizeTextarea);
 });
 
