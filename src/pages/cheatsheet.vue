@@ -1,17 +1,17 @@
 <template>
-  <div class="h-screen bg-gray-900 text-white flex flex-col">
+  <div class="h-screen bg-slate-900 text-white flex flex-col">
     <!-- Header -->
-    <header class="py-4 px-6 border-b border-gray-800 flex-shrink-0">
+    <header class="py-4 px-6 border-b border-slate-800 flex-shrink-0">
       <div class="container mx-auto flex justify-between items-center">
         <div class="flex items-center">
           <RouterLink to="/" class="flex items-center hover:opacity-80 transition-opacity">
             <img src="@/assets/logo.png" alt="MerMDitor Logo" class="h-8 mr-2" />
-            <h1 class="text-xl font-semibold">merMDitor</h1>
+            <h1 class="text-xl font-semibold text-brand-blue">merMDitor</h1>
           </RouterLink>
         </div>
         <nav class="flex items-center space-x-4">
-          <RouterLink to="/editor" class="hover:text-blue-400">Editor</RouterLink>
-          <RouterLink to="/cheatsheet" class="text-blue-400 font-medium">Cheat Sheet</RouterLink>
+            <RouterLink to="/" class="text-slate-300 font-medium">Home</RouterLink>
+            <RouterLink to="/editor" class="hover:text-slate-300">Editor</RouterLink>
         </nav>
       </div>
     </header>
@@ -20,31 +20,43 @@
     <div class="flex-1 flex overflow-hidden">
       <!-- Sidebar Navigation -->
       <aside v-if="activeTab === 'markdown' || activeTab === 'mermaid'" 
-             class="w-64 bg-gray-850 p-6 overflow-y-auto flex-shrink-0 border-r border-gray-800">
+             class="w-64 bg-slate-800 p-6 overflow-y-auto flex-shrink-0 border-r border-slate-700">
         <nav class="space-y-4">
           <div v-if="activeTab === 'markdown'">
-            <h4 class="text-lg font-semibold mb-3 text-blue-300">Markdown Sections</h4>
+            <h4 class="text-lg font-semibold mb-3 text-slate-300">Markdown Sections</h4>
             <ul class="space-y-2">
-              <li><a @click.prevent="scrollToSection('headings')" href="#headings" :class="['hover:text-blue-400 block', activeSectionId === 'headings' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Headings</a></li>
-              <li><a @click.prevent="scrollToSection('text-formatting')" href="#text-formatting" :class="['hover:text-blue-400 block', activeSectionId === 'text-formatting' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Text Formatting</a></li>
-              <li><a @click.prevent="scrollToSection('lists')" href="#lists" :class="['hover:text-blue-400 block', activeSectionId === 'lists' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Lists</a></li>
-              <li><a @click.prevent="scrollToSection('links-images')" href="#links-images" :class="['hover:text-blue-400 block', activeSectionId === 'links-images' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Links & Images</a></li>
-              <li><a @click.prevent="scrollToSection('blockquotes')" href="#blockquotes" :class="['hover:text-blue-400 block', activeSectionId === 'blockquotes' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Blockquotes</a></li>
-              <li><a @click.prevent="scrollToSection('code-blocks')" href="#code-blocks" :class="['hover:text-blue-400 block', activeSectionId === 'code-blocks' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Code Blocks</a></li>
-              <li><a @click.prevent="scrollToSection('tables')" href="#tables" :class="['hover:text-blue-400 block', activeSectionId === 'tables' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Tables</a></li>
-              <li><a @click.prevent="scrollToSection('horizontal-rule')" href="#horizontal-rule" :class="['hover:text-blue-400 block', activeSectionId === 'horizontal-rule' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Horizontal Rule</a></li>
+              <li><a @click.prevent="scrollToSection('headings')" href="#headings" :class="['hover:text-slate-200 block', activeSectionId === 'headings' ? 'text-slate-200 font-semibold' : 'text-slate-400']">Headings</a></li>
+              <li><a @click.prevent="scrollToSection('text-formatting')" href="#text-formatting" :class="['hover:text-slate-200 block', activeSectionId === 'text-formatting' ? 'text-slate-200 font-semibold' : 'text-slate-400']">Text Formatting</a></li>
+              <li><a @click.prevent="scrollToSection('lists')" href="#lists" :class="['hover:text-slate-200 block', activeSectionId === 'lists' ? 'text-slate-200 font-semibold' : 'text-slate-400']">Lists</a></li>
+              <li><a @click.prevent="scrollToSection('links-images')" href="#links-images" :class="['hover:text-slate-200 block', activeSectionId === 'links-images' ? 'text-slate-200 font-semibold' : 'text-slate-400']">Links & Images</a></li>
+              <li><a @click.prevent="scrollToSection('blockquotes')" href="#blockquotes" :class="['hover:text-slate-200 block', activeSectionId === 'blockquotes' ? 'text-slate-200 font-semibold' : 'text-slate-400']">Blockquotes</a></li>
+              <li><a @click.prevent="scrollToSection('code-blocks')" href="#code-blocks" :class="['hover:text-slate-200 block', activeSectionId === 'code-blocks' ? 'text-slate-200 font-semibold' : 'text-slate-400']">Code Blocks</a></li>
+              <li><a @click.prevent="scrollToSection('tables')" href="#tables" :class="['hover:text-slate-200 block', activeSectionId === 'tables' ? 'text-slate-200 font-semibold' : 'text-slate-400']">Tables</a></li>
+              <li><a @click.prevent="scrollToSection('horizontal-rule')" href="#horizontal-rule" :class="['hover:text-slate-200 block', activeSectionId === 'horizontal-rule' ? 'text-slate-200 font-semibold' : 'text-slate-400']">Horizontal Rule</a></li>
             </ul>
           </div>
           <div v-if="activeTab === 'mermaid'">
-            <h4 class="text-lg font-semibold mb-3 text-blue-300">Mermaid Sections</h4>
+            <h4 class="text-lg font-semibold mb-3 text-slate-300">Mermaid Sections</h4>
             <ul class="space-y-2">
-              <li><a @click.prevent="scrollToSection('basic-flowchart')" href="#basic-flowchart" :class="['hover:text-blue-400 block', activeSectionId === 'basic-flowchart' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Basic Flowchart</a></li>
-              <li><a @click.prevent="scrollToSection('node-shapes')" href="#node-shapes" :class="['hover:text-blue-400 block', activeSectionId === 'node-shapes' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Node Shapes</a></li>
-              <li><a @click.prevent="scrollToSection('sequence-diagram')" href="#sequence-diagram" :class="['hover:text-blue-400 block', activeSectionId === 'sequence-diagram' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Sequence Diagram</a></li>
-              <li><a @click.prevent="scrollToSection('class-diagram')" href="#class-diagram" :class="['hover:text-blue-400 block', activeSectionId === 'class-diagram' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Class Diagram</a></li>
-              <li><a @click.prevent="scrollToSection('state-diagram')" href="#state-diagram" :class="['hover:text-blue-400 block', activeSectionId === 'state-diagram' ? 'text-blue-400 font-semibold' : 'text-gray-300']">State Diagram</a></li>
-              <li><a @click.prevent="scrollToSection('gantt-chart')" href="#gantt-chart" :class="['hover:text-blue-400 block', activeSectionId === 'gantt-chart' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Gantt Chart</a></li>
-              <li><a @click.prevent="scrollToSection('entity-relationship')" href="#entity-relationship" :class="['hover:text-blue-400 block', activeSectionId === 'entity-relationship' ? 'text-blue-400 font-semibold' : 'text-gray-300']">Entity Relationship</a></li>
+              <li><a @click.prevent="scrollToSection('basic-flowchart')" href="#basic-flowchart" :class="['hover:text-slate-200 block', isActiveSection('basic-flowchart') ? 'text-slate-200 font-semibold' : 'text-slate-400']">Basic Flowchart</a></li>
+              <li>
+                <a @click.prevent="toggleNodeShapesSubMenu(); scrollToSection('node-shapes')" href="#node-shapes" :class="['hover:text-slate-200 block', isActiveSection('node-shapes') || isNodeShapeSubMenuActive() ? 'text-slate-200 font-semibold' : 'text-slate-400']">
+                  Node Shapes
+                  <svg class="inline-block w-4 h-4 ml-1 transition-transform duration-200" :class="{ 'rotate-90': nodeShapesSubMenuOpen }" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
+                </a>
+                <ul v-if="nodeShapesSubMenuOpen" class="pl-4 mt-1 space-y-1">
+                  <li v-for="shape in nodeShapeSections" :key="shape.id">
+                    <a @click.prevent="scrollToSection(shape.id)" :href="'#' + shape.id" :class="['hover:text-slate-200 block text-sm', isActiveSection(shape.id) ? 'text-slate-200 font-semibold' : 'text-slate-400']">
+                      {{ shape.name }}
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li><a @click.prevent="scrollToSection('sequence-diagram')" href="#sequence-diagram" :class="['hover:text-slate-200 block', isActiveSection('sequence-diagram') ? 'text-slate-200 font-semibold' : 'text-slate-400']">Sequence Diagram</a></li>
+              <li><a @click.prevent="scrollToSection('class-diagram')" href="#class-diagram" :class="['hover:text-slate-200 block', isActiveSection('class-diagram') ? 'text-slate-200 font-semibold' : 'text-slate-400']">Class Diagram</a></li>
+              <li><a @click.prevent="scrollToSection('state-diagram')" href="#state-diagram" :class="['hover:text-slate-200 block', isActiveSection('state-diagram') ? 'text-slate-200 font-semibold' : 'text-slate-400']">State Diagram</a></li>
+              <li><a @click.prevent="scrollToSection('gantt-chart')" href="#gantt-chart" :class="['hover:text-slate-200 block', isActiveSection('gantt-chart') ? 'text-slate-200 font-semibold' : 'text-slate-400']">Gantt Chart</a></li>
+              <li><a @click.prevent="scrollToSection('entity-relationship')" href="#entity-relationship" :class="['hover:text-slate-200 block', isActiveSection('entity-relationship') ? 'text-slate-200 font-semibold' : 'text-slate-400']">Entity Relationship</a></li>
             </ul>
           </div>
         </nav>
@@ -54,21 +66,21 @@
       <div class="flex-1 overflow-y-auto" ref="contentArea" @scroll="handleScroll">
         <div class="container mx-auto py-8 px-4 pb-20">
           <!-- Tab Navigation -->
-          <div class="mb-8 sticky top-0 bg-gray-900 py-3 z-10 border-b border-gray-800">
+          <div class="mb-8 sticky top-0 bg-slate-900 py-3 z-10 border-b border-slate-800">
             <nav class="flex justify-center space-x-4" aria-label="Tabs">
               <button 
                 @click="activeTab = 'markdown'" 
-                :class="['py-2 px-4 font-medium rounded-md', activeTab === 'markdown' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:bg-gray-800 hover:text-blue-400']">
+                :class="['py-2 px-4 font-medium rounded-md', activeTab === 'markdown' ? 'text-slate-200 border-b-2 border-slate-400' : 'text-slate-400 hover:bg-slate-700 hover:text-slate-300']">
                 Markdown
               </button>
               <button 
                 @click="activeTab = 'mermaid'" 
-                :class="['py-2 px-4 font-medium rounded-md', activeTab === 'mermaid' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:bg-gray-800 hover:text-blue-400']">
+                :class="['py-2 px-4 font-medium rounded-md', activeTab === 'mermaid' ? 'text-slate-200 border-b-2 border-slate-400' : 'text-slate-400 hover:bg-slate-700 hover:text-slate-300']">
                 Mermaid
               </button>
               <button 
                 @click="activeTab = 'shortcuts'" 
-                :class="['py-2 px-4 font-medium rounded-md', activeTab === 'shortcuts' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:bg-gray-800 hover:text-blue-400']">
+                :class="['py-2 px-4 font-medium rounded-md', activeTab === 'shortcuts' ? 'text-slate-200 border-b-2 border-slate-400' : 'text-slate-400 hover:bg-slate-700 hover:text-slate-300']">
                 Shortcuts
               </button>
             </nav>
@@ -91,7 +103,7 @@
 
 <script lang="ts" setup>
 import { RouterLink } from 'vue-router';
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 import { setupMermaid } from '@/plugins/mermaid';
 import AppFooter from '@/components/AppFooter.vue';
 import MarkdownContent from '@/components/cheatsheet/MarkdownContent.vue';
@@ -102,12 +114,40 @@ const activeTab = ref('markdown');
 const contentArea = ref<HTMLElement | null>(null);
 const activeSectionId = ref<string | null>(null);
 const sectionIds = ref<string[]>([]);
+const nodeShapesSubMenuOpen = ref(false);
 
 const markdownSections = ['headings', 'text-formatting', 'lists', 'links-images', 'blockquotes', 'code-blocks', 'tables', 'horizontal-rule'];
-const mermaidSections = ['basic-flowchart', 'node-shapes', 'sequence-diagram', 'class-diagram', 'state-diagram', 'gantt-chart', 'entity-relationship'];
+const mermaidMainSections = ['basic-flowchart', 'node-shapes', 'sequence-diagram', 'class-diagram', 'state-diagram', 'gantt-chart', 'entity-relationship'];
+const nodeShapeSections = [
+  { id: 'node-shape-square', name: 'Square Node' },
+  { id: 'node-shape-rounded', name: 'Rounded Node' },
+  { id: 'node-shape-stadium', name: 'Stadium Node' },
+  { id: 'node-shape-subroutine', name: 'Subroutine Node' },
+  { id: 'node-shape-database', name: 'Database Node' },
+  { id: 'node-shape-circle', name: 'Circle Node' },
+  { id: 'node-shape-asymmetric', name: 'Asymmetric Node' },
+  { id: 'node-shape-rhombus', name: 'Rhombus Node' },
+  { id: 'node-shape-parallelogram', name: 'Parallelogram' },
+  { id: 'node-shape-alt-parallelogram', name: 'Alt. Parallelogram' },
+  { id: 'node-shape-trapezoid', name: 'Trapezoid' },
+  { id: 'node-shape-alt-trapezoid', name: 'Alt. Trapezoid' },
+];
+
+const isActiveSection = (sectionId: string) => {
+  return activeSectionId.value === sectionId;
+};
+
+const isNodeShapeSubMenuActive = () => {
+  return nodeShapeSections.some(shape => isActiveSection(shape.id));
+};
+
+const toggleNodeShapesSubMenu = () => {
+  nodeShapesSubMenuOpen.value = !nodeShapesSubMenuOpen.value;
+};
 
 watch(activeTab, async (newTab) => {
   activeSectionId.value = null; // Reset active section when tab changes
+  nodeShapesSubMenuOpen.value = false; // Close submenu when tab changes
   await nextTick(); // Wait for DOM to update with new tab content
   updateSectionIds();
   // Automatically set the first section as active if content area is available
@@ -123,7 +163,8 @@ const updateSectionIds = () => {
   if (activeTab.value === 'markdown') {
     sectionIds.value = markdownSections;
   } else if (activeTab.value === 'mermaid') {
-    sectionIds.value = mermaidSections;
+    const allMermaidSections = [...mermaidMainSections, ...nodeShapeSections.map(s => s.id)];
+    sectionIds.value = allMermaidSections;
   } else {
     sectionIds.value = [];
   }
@@ -131,10 +172,22 @@ const updateSectionIds = () => {
 
 const scrollToSection = async (sectionId: string) => {
   activeSectionId.value = sectionId; // Set active section immediately on click
+  
+  // If a sub-item of Node Shapes is clicked, ensure the parent menu item reflects this
+  if (nodeShapeSections.some(shape => shape.id === sectionId)) {
+    // Optionally, keep the submenu open or handle as preferred
+    // nodeShapesSubMenuOpen.value = true;
+  } else if (sectionId !== 'node-shapes') {
+    // If clicking a main section that is not 'node-shapes', close the submenu
+    nodeShapesSubMenuOpen.value = false;
+  }
+
   await nextTick(); 
   const sectionElement = document.getElementById(sectionId);
   if (sectionElement && contentArea.value) {
-    const topOffset = sectionElement.offsetTop - contentArea.value.offsetTop;
+    const stickyHeaderHeight = document.querySelector('.sticky.top-0')?.clientHeight || 0;
+    const topOffset = sectionElement.offsetTop - contentArea.value.offsetTop - stickyHeaderHeight;
+    
     contentArea.value.scrollTo({
       top: topOffset - 20, // Adjusted for sticky header/padding
       behavior: 'smooth'
@@ -147,8 +200,9 @@ const handleScroll = () => {
 
   const scrollPosition = contentArea.value.scrollTop;
   const containerOffsetTop = contentArea.value.offsetTop;
+  const stickyHeaderHeight = document.querySelector('.sticky.top-0')?.clientHeight || 0;
   // A threshold to make section active a bit before it hits the very top
-  const activationThreshold = containerOffsetTop + 50; 
+  const activationThreshold = containerOffsetTop + stickyHeaderHeight + 50; 
 
   let currentSection: string | null = null;
 
@@ -168,23 +222,42 @@ const handleScroll = () => {
   }
   
   // If scrolled to the very bottom, the last section should be active.
-  if (contentArea.value.scrollHeight - contentArea.value.scrollTop <= contentArea.value.clientHeight + 5) // +5 for buffer
-      currentSection = sectionIds.value[sectionIds.value.length -1];
-
-
+  if (contentArea.value.scrollHeight - contentArea.value.scrollTop <= contentArea.value.clientHeight + 5) {
+    const lastMainSection = mermaidMainSections[mermaidMainSections.length - 1];
+    const lastNodeShapeSection = nodeShapeSections[nodeShapeSections.length -1]?.id;
+    
+    // Prioritize last node shape if it's the actual last element in the scrollable content
+    const lastOverallSection = document.getElementById(lastNodeShapeSection || '') 
+      ? lastNodeShapeSection 
+      : lastMainSection;
+      
+    if (activeTab.value === 'mermaid') {
+        // Check if the last element in view is a node shape or a main mermaid section
+        const lastVisibleElementId = sectionIds.value.find(id => {
+            const el = document.getElementById(id);
+            if (!el || !contentArea.value) return false; // Added null check for contentArea.value
+            const rect = el.getBoundingClientRect();
+            return rect.bottom <= contentArea.value.getBoundingClientRect().bottom + 5;
+        });
+        if (lastVisibleElementId) currentSection = lastVisibleElementId;
+        else currentSection = lastOverallSection; 
+    } else {
+        currentSection = sectionIds.value[sectionIds.value.length -1];
+    }
+  }
 
   if (currentSection) {
     activeSectionId.value = currentSection;
+    // If the active section is a node shape, open the submenu
+    if (nodeShapeSections.some(shape => shape.id === currentSection)) {
+      nodeShapesSubMenuOpen.value = true;
+    }
   } else if (sectionIds.value.length > 0) {
     // If no section is "active" (e.g. scrolled above the first section),
     // default to the first section if scroll is near top.
-     if (scrollPosition < activationThreshold) {
-        activeSectionId.value = sectionIds.value[0];
-     } else {
-        activeSectionId.value = null;
-     }
-  } else {
-    activeSectionId.value = null;
+     if (scrollPosition < containerOffsetTop + 10) { // 10px buffer
+      activeSectionId.value = sectionIds.value[0];
+    }
   }
 };
 
@@ -193,9 +266,10 @@ onMounted(() => {
   updateSectionIds();
   if (contentArea.value) {
     contentArea.value.addEventListener('scroll', handleScroll);
-    // Initial check in case the page loads scrolled or with a specific section in view
-    handleScroll(); 
   }
+  // Initial check in case the content doesn't trigger a scroll event initially
+  // (e.g. if content is shorter than the viewport or already scrolled to a section via URL hash)
+  handleScroll(); 
 });
 
 onUnmounted(() => {
@@ -203,11 +277,9 @@ onUnmounted(() => {
     contentArea.value.removeEventListener('scroll', handleScroll);
   }
 });
+
 </script>
 
 <style scoped>
-.bg-gray-850 {
-  background-color: #1f2937; /* A slightly different shade from gray-800 or gray-900 for contrast */
-}
-/* Scoped styles for this component */
+/* Add any component-specific styles here */
 </style>

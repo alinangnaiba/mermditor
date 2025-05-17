@@ -1,12 +1,12 @@
 <template>
-  <div class="flex flex-col h-screen bg-gray-900 text-white">
+  <div class="flex flex-col h-screen bg-slate-900 text-white">
     <!-- Header - Fixed height -->
-    <header class="py-4 px-6 border-b border-gray-800 flex-shrink-0">
+    <header class="py-4 px-6 border-b border-slate-800 flex-shrink-0">
       <div class="container mx-auto flex justify-between items-center">
         <div class="flex items-center">
           <RouterLink to="/" class="flex items-center hover:opacity-80 transition-opacity">
             <img src="@/assets/logo.png" alt="MerMDitor Logo" class="h-8 mr-3" />
-            <h1 class="text-xl font-bold">merMDitor</h1>
+            <h1 class="text-xl font-bold text-brand-blue">merMDitor</h1>
           </RouterLink>
         </div>
         <nav class="flex items-center gap-4">
