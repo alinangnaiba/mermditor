@@ -12,6 +12,7 @@ export function useMarkdownRenderer(
 ) {
   const md = new MarkdownIt({
     highlight: null, // Disable built-in highlighting
+    breaks: true,
   });
 
   md.use(markdownItHighlight);
