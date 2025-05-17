@@ -59,6 +59,285 @@ function toggleWrapper(
   return { newTextValue, newSelectionStart, newSelectionEnd };
 }
 
+interface ShortcutHandlerParams {
+  value: string;
+  start: number;
+  end: number;
+  shiftKey: boolean;
+  altKey: boolean;
+  // Add other relevant params like e.shiftKey if needed by specific handlers
+}
+
+interface ShortcutHandlerResult {
+  newTextValue: string;
+  newSelectionStart: number;
+  newSelectionEnd: number;
+  textModified: boolean;
+  preventDefault: boolean; // Each handler can decide if it should prevent default
+}
+
+// --- Shortcut Handler Functions ---
+
+function handleBlockquote(
+  { value, start, end }: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  const lineStartIndex = value.lastIndexOf('\n', start - 1) + 1;
+  let currentLineEnd;
+
+  if (start === end) { // Empty selection: operate on the current line
+    currentLineEnd = value.indexOf('\n', start);
+    if (currentLineEnd === -1) { // Cursor is on the last line
+      currentLineEnd = value.length;
+    }
+  } else {
+    currentLineEnd = value.indexOf('\n', end - 1);
+    if (currentLineEnd === -1) { // Selection's last character is on the document's last line.
+      currentLineEnd = value.length;
+    }
+  }
+
+  const affectedText = value.substring(lineStartIndex, currentLineEnd);
+  const lines = affectedText.split('\n');
+  const allLinesAreBlockquotes = lines.every(line => line.startsWith('> ') || line.trim() === '');
+
+  let newLinesString = '';
+  if (allLinesAreBlockquotes) {
+    newLinesString = lines.map(line => {
+      if (line.startsWith('> ')) {
+        return line.substring(2);
+      } else if (line.startsWith('>')) { // Handle ">" without space, though less common
+        return line.substring(1);
+      }
+      return line;
+    }).join('\n');
+  } else {
+    newLinesString = lines.map(line => {
+      if (line.trim() !== '' || lines.length === 1) {
+        return '> ' + line;
+      }
+      return line;
+    }).join('\n');
+  }
+
+  const textAfterAffectedBlock = value.substring(currentLineEnd);
+  const newTextValue = value.substring(0, lineStartIndex) + newLinesString + textAfterAffectedBlock;
+
+  let newSelectionStart: number;
+  let newSelectionEnd: number;
+
+  if (start === end) { // Empty selection: adjust cursor
+    if (!allLinesAreBlockquotes) { // Added "> "
+      newSelectionStart = start + 2;
+      newSelectionEnd = newSelectionStart;
+    } else { // Removed "> " or ">"
+      const lineBeforeChange = value.substring(lineStartIndex, currentLineEnd);
+      if (lineBeforeChange.startsWith('> ')) {
+        newSelectionStart = Math.max(lineStartIndex, start - 2);
+      } else if (lineBeforeChange.startsWith('>')) {
+        newSelectionStart = Math.max(lineStartIndex, start - 1);
+      } else {
+        newSelectionStart = start; // Should not happen if allLinesAreBlockquotes was true for this line
+      }
+      newSelectionEnd = newSelectionStart;
+    }
+  } else { // Text was selected: select the modified block
+    newSelectionStart = lineStartIndex;
+    newSelectionEnd = lineStartIndex + newLinesString.length;
+  }
+
+  return { newTextValue, newSelectionStart, newSelectionEnd, textModified: true, preventDefault: true };
+}
+
+function handleBold(
+  { value, start, end }: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  const result = toggleWrapper(value, start, end, '**', '**', 'bold text');
+  return { ...result, textModified: true, preventDefault: true };
+}
+
+function handleFencedCodeBlock(
+  { value, start, end }: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  const currentSelectionText = value.substring(start, end);
+  const textBeforeSelection = value.substring(0, start);
+  const textAfterSelection = value.substring(end);
+  const langPlaceholder = 'language';
+  const fencedBlockRegex = /^(?:\r?\n)?```([^\r\n]*)\r?\n([\s\S]*?)\r?\n```(?:\r?\n)?$/;
+  const match = currentSelectionText.match(fencedBlockRegex);
+
+  let newTextValue: string;
+  let newSelectionStart: number;
+  let newSelectionEnd: number;
+
+  if (match) {
+    let internalContent = match[2];
+    if (internalContent === '\n') {
+      internalContent = '';
+    }
+    newTextValue = textBeforeSelection + internalContent + textAfterSelection;
+    newSelectionStart = start;
+    newSelectionEnd = start + internalContent.length;
+  } else {
+    const contentToWrap = currentSelectionText;
+    const needsNewlineBefore = start > 0 && value[start - 1] !== '\n';
+    const needsNewlineAfter = end < value.length && value[end] !== '\n';
+    let blockCoreContent: string;
+    if (contentToWrap) {
+      blockCoreContent = contentToWrap;
+    } else {
+      blockCoreContent = '\n';
+    }
+    const coreFencedMd = `\`\`\`${langPlaceholder}\n${blockCoreContent}\n\`\`\``;
+    const fullBlockToInsert = `${needsNewlineBefore ? '\n' : ''}${coreFencedMd}${needsNewlineAfter ? '\n' : ''}`;
+    newTextValue = textBeforeSelection + fullBlockToInsert + textAfterSelection;
+    newSelectionStart = start;
+    newSelectionEnd = start + fullBlockToInsert.length;
+  }
+  return { newTextValue, newSelectionStart, newSelectionEnd, textModified: true, preventDefault: true };
+}
+
+function handleHeading(
+  params: ShortcutHandlerParams,
+  level: number
+): ShortcutHandlerResult {
+  const { value, start, end } = params;
+  const lineStartIndex = value.lastIndexOf('\n', start - 1) + 1;
+  const lineEndIndex = value.indexOf('\n', end);
+  const currentLineEnd = lineEndIndex === -1 ? value.length : lineEndIndex;
+  const currentLine = value.substring(lineStartIndex, currentLineEnd);
+
+  let newTextValue: string;
+  let newSelectionStart: number;
+  let newSelectionEnd: number;
+
+  const prefix = '#'.repeat(level) + ' ';
+
+  // Check if current line already starts with any heading prefix
+  const headingMatch = currentLine.match(/^(#+) /);
+  if (headingMatch) {
+    const currentLevel = headingMatch[1].length;
+    if (currentLevel === level) {
+      // Remove current level heading
+      newTextValue = value.substring(0, lineStartIndex) + currentLine.substring(prefix.length) + value.substring(currentLineEnd);
+      newSelectionStart = start - prefix.length < lineStartIndex ? lineStartIndex : start - prefix.length;
+      newSelectionEnd = end - prefix.length < lineStartIndex ? lineStartIndex : end - prefix.length;
+    } else {
+      // Change to new level heading
+      const oldPrefixLength = currentLevel + 1; // # + space
+      newTextValue = value.substring(0, lineStartIndex) + prefix + currentLine.substring(oldPrefixLength) + value.substring(currentLineEnd);
+      const diff = prefix.length - oldPrefixLength;
+      newSelectionStart = start + diff;
+      newSelectionEnd = end + diff;
+    }
+  } else {
+    // Add new heading
+    newTextValue = value.substring(0, lineStartIndex) + prefix + currentLine + value.substring(currentLineEnd);
+    newSelectionStart = start + prefix.length;
+    newSelectionEnd = end + prefix.length;
+  }
+  return { newTextValue, newSelectionStart, newSelectionEnd, textModified: true, preventDefault: true };
+}
+
+function handleHeading1(
+  params: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  return handleHeading(params, 1);
+}
+
+function handleHeading2(
+  params: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  return handleHeading(params, 2);
+}
+
+function handleHeading3(
+  params: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  return handleHeading(params, 3);
+}
+
+function handleHeading4(
+  params: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  return handleHeading(params, 4);
+}
+
+function handleHeading5(
+  params: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  return handleHeading(params, 5);
+}
+
+function handleHeading6(
+  params: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  return handleHeading(params, 6);
+}
+
+function handleInlineCode(
+  { value, start, end }: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  const result = toggleWrapper(value, start, end, '`', '`', 'code');
+  return { ...result, textModified: true, preventDefault: true };
+}
+
+function handleItalic(
+  { value, start, end }: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  const result = toggleWrapper(value, start, end, '*', '*', 'italic text');
+  return { ...result, textModified: true, preventDefault: true };
+}
+
+function handleLink(
+  { value, start, end }: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  const selectedText = value.substring(start, end);
+  const linkTextPlaceholder = 'link text';
+  const urlPlaceholder = 'url';
+  const fullLinkRegex = /^\[(.*?)\]\((.*?)\)$/;
+  const selectedAsFullLinkMatch = selectedText.match(fullLinkRegex);
+
+  let newTextValue: string;
+  let newSelectionStart: number;
+  let newSelectionEnd: number;
+
+  if (selectedAsFullLinkMatch) {
+    const actualLinkText = selectedAsFullLinkMatch[1];
+    newTextValue = value.substring(0, start) + actualLinkText + value.substring(end);
+    newSelectionStart = start;
+    newSelectionEnd = start + actualLinkText.length;
+  } else {
+    let textToWrap = selectedText || linkTextPlaceholder;
+    let finalUrl = urlPlaceholder;
+
+    if (selectedText && selectedText.trim() !== '') {
+      if (isPotentiallyUrlLike(selectedText)) {
+        textToWrap = selectedText;
+        if (/^https?:\/\//i.test(selectedText)) {
+          finalUrl = selectedText;
+        } else {
+          finalUrl = 'http://' + selectedText;
+        }
+      }
+    }
+    const wrappedText = `[${textToWrap}](${finalUrl})`;
+    newTextValue = value.substring(0, start) + wrappedText + value.substring(end);
+    newSelectionStart = start;
+    newSelectionEnd = start + wrappedText.length;
+  }
+  return { newTextValue, newSelectionStart, newSelectionEnd, textModified: true, preventDefault: true };
+}
+
+function handleStrikethrough(
+  { value, start, end }: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  const result = toggleWrapper(value, start, end, '~~', '~~', 'strikethrough text');
+  return { ...result, textModified: true, preventDefault: true };
+}
+
+
+// --- Main Composable Function ---
+
 export function useKeyboardShortcuts(
   markdownText: Ref<string>,
   textareaRef: Ref<HTMLTextAreaElement | null>,
@@ -69,262 +348,71 @@ export function useKeyboardShortcuts(
 
     const key = e.key.toLowerCase();
     const textarea = textareaRef.value;
-    const { selectionStart: start, selectionEnd: end } = textarea;
-    const value = textarea.value;
-    // const selectedText = value.substring(start, end); // Moved inside toggleWrapper or specific handlers
+    const params: ShortcutHandlerParams = {
+      value: textarea.value,
+      start: textarea.selectionStart,
+      end: textarea.selectionEnd,
+      shiftKey: e.shiftKey,
+      altKey: e.altKey,
+    };
 
-    let newTextValue: string = value;
-    let newSelectionStart: number = start;
-    let newSelectionEnd: number = end;
-    let textModified: boolean = false;
-    let preventDefault = false;
+    let result: ShortcutHandlerResult | null = null;
 
     switch (key) {
-      case 'b': // Bold or Blockquote
-        if (e.shiftKey) { // Blockquote: Ctrl+Shift+B or Cmd+Shift+B
-          preventDefault = true;
-          textModified = true;
-
-          const lineStartIndex = value.lastIndexOf('\n', start - 1) + 1;
-          // Find the end of the last selected line
-          let currentLineEnd = value.indexOf('\n', end -1);
-          if (currentLineEnd === -1 || currentLineEnd < end) { // If no newline after selection end, or selection spans to last line
-            currentLineEnd = value.length;
-          }
-          // If the selection ends exactly at a newline, we want to include the line before it, not the line after
-          if (end > 0 && value[end-1] === '\n' && lineStartIndex < end) {
-             currentLineEnd = end -1;
-          }
-          // If selection is empty and at the start of a line, apply to that line
-          if (start === end && (start === 0 || value[start-1] === '\n')){
-            currentLineEnd = value.indexOf('\n', start);
-            if (currentLineEnd === -1) currentLineEnd = value.length;
-          }
-
-          const affectedText = value.substring(lineStartIndex, currentLineEnd);
-          const lines = affectedText.split('\n');
-          const allLinesAreBlockquotes = lines.every(line => line.startsWith('> ') || line.trim() === '');
-
-          let newLinesString = '';
-          let selectionStartOffset = 0;
-          let selectionEndOffset = 0;
-
-          if (allLinesAreBlockquotes) {
-            // Remove blockquote
-            newLinesString = lines.map(line => {
-              if (line.startsWith('> ')) {
-                selectionEndOffset -= 2;
-                if (lineStartIndex + newLinesString.length < start) selectionStartOffset -=2;
-                return line.substring(2);
-              } else if (line.startsWith('>')) { // Handle case >text without space
-                selectionEndOffset -= 1;
-                if (lineStartIndex + newLinesString.length < start) selectionStartOffset -=1;
-                return line.substring(1);
-              }
-              return line;
-            }).join('\n');
-          } else {
-            // Add blockquote
-            newLinesString = lines.map(line => {
-              // Only add blockquote to non-empty lines or if it's the only line
-              if (line.trim() !== '' || lines.length === 1) {
-                selectionEndOffset += 2;
-                if (lineStartIndex + newLinesString.length < start) selectionStartOffset +=2;
-                return '> ' + line;
-              }
-              return line;
-            }).join('\n');
-          }
-          
-          newTextValue = value.substring(0, lineStartIndex) + newLinesString + value.substring(currentLineEnd);
-          newSelectionStart = Math.max(lineStartIndex, start + selectionStartOffset);
-          newSelectionEnd = end + selectionEndOffset;
-          
-          // Adjust selection if it was empty and at the start of the line
-          if (start === end && (start === 0 || value[start-1] === '\n')){
-            if (!allLinesAreBlockquotes) { // if adding blockquote
-                 newSelectionStart = start + 2;
-                 newSelectionEnd = newSelectionStart;
-            } else { // if removing blockquote
-                const originalLine = value.substring(lineStartIndex, currentLineEnd);
-                if (originalLine.startsWith('> ')) newSelectionStart = Math.max(lineStartIndex, start-2);
-                else if (originalLine.startsWith('>')) newSelectionStart = Math.max(lineStartIndex, start-1);
-                else newSelectionStart = start;
-                newSelectionEnd = newSelectionStart;
-            }
-          }
-
-        } else { // Bold: Ctrl+B or Cmd+B
-          preventDefault = true;
-          const result = toggleWrapper(value, start, end, '**', '**', 'bold text');
-          newTextValue = result.newTextValue;
-          newSelectionStart = result.newSelectionStart;
-          newSelectionEnd = result.newSelectionEnd;
-          textModified = true;
-        }
+      case 'b':
+        result = e.shiftKey ? handleBlockquote(params) : handleBold(params);
         break;
-      case 'i': // Italic
-        {
-          preventDefault = true;
-          const result = toggleWrapper(value, start, end, '*', '*', 'italic text');
-          newTextValue = result.newTextValue;
-          newSelectionStart = result.newSelectionStart;
-          newSelectionEnd = result.newSelectionEnd;
-          textModified = true;
-        }
+      case 'i':
+        result = handleItalic(params);
         break;
-      case 'k': // Link
-        {
-          preventDefault = true;
-          const selectedText = value.substring(start, end);
-          const linkTextPlaceholder = 'link text';
-          const urlPlaceholder = 'url';
-          const fullLinkRegex = /^\[(.*?)\]\((.*?)\)$/;
-          const selectedAsFullLinkMatch = selectedText.match(fullLinkRegex);
-
-          if (selectedAsFullLinkMatch) {
-            const actualLinkText = selectedAsFullLinkMatch[1];
-            newTextValue = value.substring(0, start) + actualLinkText + value.substring(end);
-            newSelectionStart = start;
-            newSelectionEnd = start + actualLinkText.length;
-          } else {
-            let textToWrap = selectedText || linkTextPlaceholder;
-            let finalUrl = urlPlaceholder;
-
-            if (selectedText && selectedText.trim() !== '') {
-              if (isPotentiallyUrlLike(selectedText)) {
-                textToWrap = selectedText;
-                if (/^https?:\/\//i.test(selectedText)) {
-                  finalUrl = selectedText;
-                } else {
-                  finalUrl = 'http://' + selectedText;
-                }
-              } 
-            }
-            const wrappedText = `[${textToWrap}](${finalUrl})`;
-            newTextValue = value.substring(0, start) + wrappedText + value.substring(end);
-            
-            // Corrected selection to highlight the entire new link
-            newSelectionStart = start;
-            newSelectionEnd = start + wrappedText.length;
-          }
-          textModified = true;
-        }
+      case 'k':
+        result = handleLink(params);
         break;
-      case '!': // Heading 1
-        if (e.shiftKey) {
-          preventDefault = true;
-          const lineStartIndex = value.lastIndexOf('\\n', start - 1) + 1;
-          const lineEndIndex = value.indexOf('\\n', end);
-          const currentLineEnd = lineEndIndex === -1 ? value.length : lineEndIndex;
-          const currentLine = value.substring(lineStartIndex, currentLineEnd);
-
-          if (currentLine.startsWith('# ')) {
-            // Remove H1
-            newTextValue = value.substring(0, lineStartIndex) + currentLine.substring(2) + value.substring(currentLineEnd);
-            newSelectionStart = start - 2 < lineStartIndex ? lineStartIndex : start - 2;
-            newSelectionEnd = end - 2 < lineStartIndex ? lineStartIndex : end - 2;
-          } else {
-            // Add H1
-            newTextValue = value.substring(0, lineStartIndex) + '# ' + currentLine + value.substring(currentLineEnd);
-            newSelectionStart = start + 2;
-            newSelectionEnd = end + 2;
-          }
-          textModified = true;
-        }
+      case '!': // Heading 1 (Shift + 1)
+        if (e.shiftKey) result = handleHeading1(params);
         break;
-      case 'x': // Strikethrough
-        if (e.shiftKey) { // Assuming Ctrl+Shift+X or Cmd+Shift+X
-          preventDefault = true;
-          const result = toggleWrapper(value, start, end, '~~', '~~', 'strikethrough text');
-          newTextValue = result.newTextValue;
-          newSelectionStart = result.newSelectionStart;
-          newSelectionEnd = result.newSelectionEnd;
-          textModified = true;
-        }
+      case '@': // Heading 2 (Shift + 2)
+        if (e.shiftKey) result = handleHeading2(params);
         break;
-      case 'e': // Inline Code: Ctrl+E or Cmd+E
-        preventDefault = true;
-        {
-          const result = toggleWrapper(value, start, end, '`', '`', 'code');
-          newTextValue = result.newTextValue;
-          newSelectionStart = result.newSelectionStart;
-          newSelectionEnd = result.newSelectionEnd;
-          textModified = true;
-        }
+      case '#': // Heading 3 (Shift + 3)
+        if (e.shiftKey) result = handleHeading3(params);
         break;
-      case 'c': // Fenced Code Block: Ctrl+Shift+C or Cmd+Shift+C
-        if (e.shiftKey) {
-          const currentSelectionText = value.substring(start, end);
-          const textBeforeSelection = value.substring(0, start);
-          const textAfterSelection = value.substring(end);
-          const langPlaceholder = 'language';
-
-          const fencedBlockRegex = /^(?:\r?\n)?```([^\r\n]*)\r?\n([\s\S]*?)\r?\n```(?:\r?\n)?$/;
-          const match = currentSelectionText.match(fencedBlockRegex);
-
-          if (match) {
-            // Selection is a fenced block, so unwrap it
-            preventDefault = true;
-            textModified = true;
-            let internalContent = match[2]; 
-
-            if (internalContent === '\n') {
-              internalContent = '';
-            }
-
-            newTextValue = textBeforeSelection + internalContent + textAfterSelection;
-            newSelectionStart = start; 
-            newSelectionEnd = start + internalContent.length; 
-          } else {
-            // Selection is NOT a recognized fenced block, so create one
-            preventDefault = true;
-            textModified = true;
-            
-            const contentToWrap = currentSelectionText;
-
-            const needsNewlineBefore = start > 0 && value[start - 1] !== '\n';
-            const needsNewlineAfter = end < value.length && value[end] !== '\n';
-
-            let blockCoreContent: string;
-            if (contentToWrap) {
-              blockCoreContent = contentToWrap;
-            } else {
-              blockCoreContent = '\n'; // Placeholder for an empty block, cursor will be on this line
-            }
-
-            const coreFencedMd = `\`\`\`${langPlaceholder}\n${blockCoreContent}\n\`\`\``;
-            const fullBlockToInsert = `${needsNewlineBefore ? '\n' : ''}${coreFencedMd}${needsNewlineAfter ? '\n' : ''}`;
-            
-            newTextValue = textBeforeSelection + fullBlockToInsert + textAfterSelection;
-            
-            newSelectionStart = start; 
-            newSelectionEnd = start + fullBlockToInsert.length; 
-          }
-        }
+      case '$': // Heading 4 (Shift + 4)
+        if (e.shiftKey) result = handleHeading4(params);
+        break;
+      case '%': // Heading 5 (Shift + 5)
+        if (e.shiftKey) result = handleHeading5(params);
+        break;
+      case '^': // Heading 6 (Shift + 6)
+        if (e.shiftKey) result = handleHeading6(params);
+        break;
+      case 'x': // Strikethrough (Shift + X)
+        if (e.shiftKey) result = handleStrikethrough(params);
+        break;
+      case 'e': // Inline Code
+        result = handleInlineCode(params);
+        break;
+      case 'c': // Fenced Code Block (Shift + C)
+        if (e.shiftKey) result = handleFencedCodeBlock(params);
         break;
     }
 
-    if (preventDefault) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      markdownText.value = newTextValue;
-
+    if (result && result.textModified) {
+      markdownText.value = result.newTextValue;
       nextTick(() => {
-        // Ensure the textarea element still exists
-        // Vue might have already updated textareaRef.value.value due to markdownText.value change.
-        // Setting it again here ensures the value is what we expect before setting selection.
         if (textareaRef.value) {
-          textareaRef.value.value = newTextValue;
-          
-          textareaRef.value.selectionStart = newSelectionStart;
-          textareaRef.value.selectionEnd = newSelectionEnd;
-          
+          textareaRef.value.value = result!.newTextValue;
+          textareaRef.value.selectionStart = result!.newSelectionStart;
+          textareaRef.value.selectionEnd = result!.newSelectionEnd;
           textareaRef.value.focus();
           autoResizeTextarea();
         }
       });
+    }
+
+    if (result && result.preventDefault) {
+      e.preventDefault();
+      e.stopPropagation();
     }
   };
 
