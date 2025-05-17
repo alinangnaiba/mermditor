@@ -78,6 +78,18 @@ interface ShortcutHandlerResult {
 
 // --- Shortcut Handler Functions ---
 
+function getHeadingResultFromKey(params: ShortcutHandlerParams, lowerKey: string): ShortcutHandlerResult | null {
+  switch (lowerKey) {
+    case '!': return handleHeading(params, 1);
+    case '@': return handleHeading(params, 2);
+    case '#': return handleHeading(params, 3);
+    case '$': return handleHeading(params, 4);
+    case '%': return handleHeading(params, 5);
+    case '^': return handleHeading(params, 6);
+    default: return null; // Should not be reached if called from the correct context
+  }
+}
+
 function handleBlockquote(
   { value, start, end }: ShortcutHandlerParams
 ): ShortcutHandlerResult {
@@ -155,9 +167,6 @@ function handleBold(
   return { ...result, textModified: true, preventDefault: true };
 }
 
-/**
- * Helper function to handle tab indentation when only the cursor is present (no text selection)
- */
 function handleCursorTabIndent(
   value: string,
   start: number,
@@ -333,9 +342,6 @@ function handleStrikethrough(
   return { ...result, textModified: true, preventDefault: true };
 }
 
-/**
- * Helper function to handle tab indentation when text is selected
- */
 function handleSelectionTabIndent(
   value: string,
   start: number,
@@ -357,17 +363,13 @@ function handleSelectionTabIndent(
   let firstLineChange = 0;
 
   const modifiedLines = lines.map((line, index) => {
-    if (shiftKey) {
-      if (line.startsWith(tabCharacter)) {
-        if (index === 0) firstLineChange = -tabCharacter.length;
-        return line.substring(tabCharacter.length);
-      }
-    } else {
-      // Indent non-empty lines or if it's the only line (even if empty)
-      if (line.trim() !== '' || (lines.length === 1 && line.trim() === '')) {
-        if (index === 0) firstLineChange = tabCharacter.length;
-        return tabCharacter + line;
-      }
+    if (shiftKey && line.startsWith(tabCharacter)) {
+      if (index === 0) firstLineChange = -tabCharacter.length;
+      return line.substring(tabCharacter.length);
+    }
+    else if (!shiftKey && (line.trim() !== '' || (lines.length === 1 && line.trim() === ''))) {
+      if (index === 0) firstLineChange = tabCharacter.length;
+      return tabCharacter + line;
     }
     return line;
   });
@@ -393,9 +395,6 @@ function handleSelectionTabIndent(
   return { newTextValue, newSelectionStart, newSelectionEnd, textModified: true };
 }
 
-/**
- * Main function to handle tab and shift+tab for indentation
- */
 function handleTabIndent(
   { value, start, end, shiftKey }: ShortcutHandlerParams
 ): ShortcutHandlerResult {
@@ -419,12 +418,11 @@ export function useKeyboardShortcuts(
   const handleKeyboardShortcut = (e: KeyboardEvent) => {
     if (!textareaRef.value) return;
 
-    const key = e.key; // Use e.key directly for Tab, don't toLowerCase()
+    const key = e.key;
     const textarea = textareaRef.value;
     const { selectionStart: start, selectionEnd: end, value } = textarea;
     const { shiftKey, altKey, ctrlKey, metaKey } = e;
 
-    // Pass altKey to params, though not used by current handlers, it's good practice
     const params: ShortcutHandlerParams = { value, start, end, shiftKey, altKey };
     let result: ShortcutHandlerResult | null = null;
 
@@ -453,20 +451,13 @@ export function useKeyboardShortcuts(
         case 'x': // Strikethrough (Ctrl+Shift+X)
           if (shiftKey) result = handleStrikethrough(params);
           break;
-        case '!': //Headings (Ctrl+Shift+1-6)
+        case '!': 
         case '@':
         case '#':
         case '$':
         case '%':
         case '^':
-          if (shiftKey) {
-            if (lowerKey === '!') result = handleHeading(params, 1);
-            else if (lowerKey === '@') result = handleHeading(params, 2);
-            else if (lowerKey === '#') result = handleHeading(params, 3);
-            else if (lowerKey === '$') result = handleHeading(params, 4);
-            else if (lowerKey === '%') result = handleHeading(params, 5);
-            else if (lowerKey === '^') result = handleHeading(params, 6);
-          }
+          if (shiftKey) result = getHeadingResultFromKey(params, lowerKey);
           break;
       }
     }
