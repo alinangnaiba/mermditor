@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-10">
-    <div>
+    <div id="headings">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Headings</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
@@ -26,7 +26,7 @@
       <p class="text-sm text-gray-400 mt-2">Use hash symbols for headings. More hashes mean smaller headings.</p>
     </div>
       
-    <div>
+    <div id="text-formatting">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Text Formatting</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
@@ -49,7 +49,7 @@
       </div>
     </div>
       
-    <div>
+    <div id="lists">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Lists</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
@@ -88,7 +88,7 @@ Ordered List:
       </div>
     </div>
       
-    <div>
+    <div id="links-images">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Links & Images</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
@@ -111,7 +111,7 @@ Reference-style link:
       </div>
     </div>
       
-    <div>
+    <div id="blockquotes">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Blockquotes</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
@@ -139,7 +139,7 @@ Reference-style link:
       </div>
     </div>
       
-    <div>
+    <div id="code-blocks">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Code Blocks</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
@@ -170,7 +170,8 @@ function hello() {
         </div>
       </div>
     </div>
-        <div>
+        
+    <div id="tables">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Tables</h3>
       
       <div class="mb-5">
@@ -290,7 +291,7 @@ function hello() {
       </div>
     </div>
       
-    <div>
+    <div id="horizontal-rule">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Horizontal Rule</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">

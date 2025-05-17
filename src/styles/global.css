@@ -19,7 +19,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   color: var(--text-color);
   
   /* Default for most pages - can be overridden in specific components */
