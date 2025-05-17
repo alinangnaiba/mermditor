@@ -782,11 +782,7 @@ erDiagram
     </div>
     
     <!-- Footer -->
-    <footer class="py-4 border-t border-gray-800 flex-shrink-0 bg-gray-900">
-      <div class="container mx-auto px-4 text-center text-gray-400">
-        <p>© 2025 MerMDitor</p>
-      </div>
-    </footer>
+    <AppFooter />
   </div>
 </template>
 
@@ -795,6 +791,7 @@ import { RouterLink } from 'vue-router';
 import { ref, onMounted } from 'vue';
 import MermaidRenderer from '@/components/MermaidRenderer.vue';
 import { setupMermaid } from '@/plugins/mermaid';
+import AppFooter from '@/components/AppFooter.vue'; // Import the new footer component
 
 // Active tab state (markdown, mermaid, shortcuts)
 const activeTab = ref('markdown');
