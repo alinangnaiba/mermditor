@@ -80,8 +80,81 @@ export function useKeyboardShortcuts(
     let preventDefault = false;
 
     switch (key) {
-      case 'b': // Bold
-        {
+      case 'b': // Bold or Blockquote
+        if (e.shiftKey) { // Blockquote: Ctrl+Shift+B or Cmd+Shift+B
+          preventDefault = true;
+          textModified = true;
+
+          const lineStartIndex = value.lastIndexOf('\n', start - 1) + 1;
+          // Find the end of the last selected line
+          let currentLineEnd = value.indexOf('\n', end -1);
+          if (currentLineEnd === -1 || currentLineEnd < end) { // If no newline after selection end, or selection spans to last line
+            currentLineEnd = value.length;
+          }
+          // If the selection ends exactly at a newline, we want to include the line before it, not the line after
+          if (end > 0 && value[end-1] === '\n' && lineStartIndex < end) {
+             currentLineEnd = end -1;
+          }
+          // If selection is empty and at the start of a line, apply to that line
+          if (start === end && (start === 0 || value[start-1] === '\n')){
+            currentLineEnd = value.indexOf('\n', start);
+            if (currentLineEnd === -1) currentLineEnd = value.length;
+          }
+
+          const affectedText = value.substring(lineStartIndex, currentLineEnd);
+          const lines = affectedText.split('\n');
+          const allLinesAreBlockquotes = lines.every(line => line.startsWith('> ') || line.trim() === '');
+
+          let newLinesString = '';
+          let selectionStartOffset = 0;
+          let selectionEndOffset = 0;
+
+          if (allLinesAreBlockquotes) {
+            // Remove blockquote
+            newLinesString = lines.map(line => {
+              if (line.startsWith('> ')) {
+                selectionEndOffset -= 2;
+                if (lineStartIndex + newLinesString.length < start) selectionStartOffset -=2;
+                return line.substring(2);
+              } else if (line.startsWith('>')) { // Handle case >text without space
+                selectionEndOffset -= 1;
+                if (lineStartIndex + newLinesString.length < start) selectionStartOffset -=1;
+                return line.substring(1);
+              }
+              return line;
+            }).join('\n');
+          } else {
+            // Add blockquote
+            newLinesString = lines.map(line => {
+              // Only add blockquote to non-empty lines or if it's the only line
+              if (line.trim() !== '' || lines.length === 1) {
+                selectionEndOffset += 2;
+                if (lineStartIndex + newLinesString.length < start) selectionStartOffset +=2;
+                return '> ' + line;
+              }
+              return line;
+            }).join('\n');
+          }
+          
+          newTextValue = value.substring(0, lineStartIndex) + newLinesString + value.substring(currentLineEnd);
+          newSelectionStart = Math.max(lineStartIndex, start + selectionStartOffset);
+          newSelectionEnd = end + selectionEndOffset;
+          
+          // Adjust selection if it was empty and at the start of the line
+          if (start === end && (start === 0 || value[start-1] === '\n')){
+            if (!allLinesAreBlockquotes) { // if adding blockquote
+                 newSelectionStart = start + 2;
+                 newSelectionEnd = newSelectionStart;
+            } else { // if removing blockquote
+                const originalLine = value.substring(lineStartIndex, currentLineEnd);
+                if (originalLine.startsWith('> ')) newSelectionStart = Math.max(lineStartIndex, start-2);
+                else if (originalLine.startsWith('>')) newSelectionStart = Math.max(lineStartIndex, start-1);
+                else newSelectionStart = start;
+                newSelectionEnd = newSelectionStart;
+            }
+          }
+
+        } else { // Bold: Ctrl+B or Cmd+B
           preventDefault = true;
           const result = toggleWrapper(value, start, end, '**', '**', 'bold text');
           newTextValue = result.newTextValue;
@@ -138,51 +211,118 @@ export function useKeyboardShortcuts(
           textModified = true;
         }
         break;
-      case '1': // Heading 1
+      case '!': // Heading 1
         if (e.shiftKey) {
           preventDefault = true;
-          const lineStartPos = value.lastIndexOf('\n', start - 1) + 1;
-          let actualLineEndPos = value.indexOf('\n', lineStartPos);
-          if (actualLineEndPos === -1) {
-              actualLineEndPos = value.length;
-          }
-          const currentLineContent = value.substring(lineStartPos, actualLineEndPos);
+          const lineStartIndex = value.lastIndexOf('\\n', start - 1) + 1;
+          const lineEndIndex = value.indexOf('\\n', end);
+          const currentLineEnd = lineEndIndex === -1 ? value.length : lineEndIndex;
+          const currentLine = value.substring(lineStartIndex, currentLineEnd);
 
-          if (currentLineContent.startsWith('# ')) {
-            newTextValue = value.substring(0, lineStartPos) + currentLineContent.substring(2) + value.substring(actualLineEndPos);
-            newSelectionStart = Math.max(lineStartPos, start - 2);
-            newSelectionEnd = Math.max(lineStartPos, end - 2);
+          if (currentLine.startsWith('# ')) {
+            // Remove H1
+            newTextValue = value.substring(0, lineStartIndex) + currentLine.substring(2) + value.substring(currentLineEnd);
+            newSelectionStart = start - 2 < lineStartIndex ? lineStartIndex : start - 2;
+            newSelectionEnd = end - 2 < lineStartIndex ? lineStartIndex : end - 2;
           } else {
-            newTextValue = value.substring(0, lineStartPos) + '# ' + currentLineContent + value.substring(actualLineEndPos);
-            if (start === end && start >= lineStartPos && start <= actualLineEndPos) {
-              newSelectionStart = lineStartPos + 2;
-              newSelectionEnd = lineStartPos + 2;
-            } else {
-              newSelectionStart = start + 2;
-              newSelectionEnd = end + 2;
-            }
+            // Add H1
+            newTextValue = value.substring(0, lineStartIndex) + '# ' + currentLine + value.substring(currentLineEnd);
+            newSelectionStart = start + 2;
+            newSelectionEnd = end + 2;
           }
           textModified = true;
-        } else {
-          return; 
         }
         break;
-      default:
-        return;
+      case 'x': // Strikethrough
+        if (e.shiftKey) { // Assuming Ctrl+Shift+X or Cmd+Shift+X
+          preventDefault = true;
+          const result = toggleWrapper(value, start, end, '~~', '~~', 'strikethrough text');
+          newTextValue = result.newTextValue;
+          newSelectionStart = result.newSelectionStart;
+          newSelectionEnd = result.newSelectionEnd;
+          textModified = true;
+        }
+        break;
+      case 'e': // Inline Code: Ctrl+E or Cmd+E
+        preventDefault = true;
+        {
+          const result = toggleWrapper(value, start, end, '`', '`', 'code');
+          newTextValue = result.newTextValue;
+          newSelectionStart = result.newSelectionStart;
+          newSelectionEnd = result.newSelectionEnd;
+          textModified = true;
+        }
+        break;
+      case 'c': // Fenced Code Block: Ctrl+Shift+C or Cmd+Shift+C
+        if (e.shiftKey) {
+          const currentSelectionText = value.substring(start, end);
+          const textBeforeSelection = value.substring(0, start);
+          const textAfterSelection = value.substring(end);
+          const langPlaceholder = 'language';
+
+          const fencedBlockRegex = /^(?:\r?\n)?```([^\r\n]*)\r?\n([\s\S]*?)\r?\n```(?:\r?\n)?$/;
+          const match = currentSelectionText.match(fencedBlockRegex);
+
+          if (match) {
+            // Selection is a fenced block, so unwrap it
+            preventDefault = true;
+            textModified = true;
+            let internalContent = match[2]; 
+
+            if (internalContent === '\n') {
+              internalContent = '';
+            }
+
+            newTextValue = textBeforeSelection + internalContent + textAfterSelection;
+            newSelectionStart = start; 
+            newSelectionEnd = start + internalContent.length; 
+          } else {
+            // Selection is NOT a recognized fenced block, so create one
+            preventDefault = true;
+            textModified = true;
+            
+            const contentToWrap = currentSelectionText;
+
+            const needsNewlineBefore = start > 0 && value[start - 1] !== '\n';
+            const needsNewlineAfter = end < value.length && value[end] !== '\n';
+
+            let blockCoreContent: string;
+            if (contentToWrap) {
+              blockCoreContent = contentToWrap;
+            } else {
+              blockCoreContent = '\n'; // Placeholder for an empty block, cursor will be on this line
+            }
+
+            const coreFencedMd = `\`\`\`${langPlaceholder}\n${blockCoreContent}\n\`\`\``;
+            const fullBlockToInsert = `${needsNewlineBefore ? '\n' : ''}${coreFencedMd}${needsNewlineAfter ? '\n' : ''}`;
+            
+            newTextValue = textBeforeSelection + fullBlockToInsert + textAfterSelection;
+            
+            newSelectionStart = start; 
+            newSelectionEnd = start + fullBlockToInsert.length; 
+          }
+        }
+        break;
     }
 
     if (preventDefault) {
       e.preventDefault();
-    }
+      e.stopPropagation();
 
-    if (textModified) {
       markdownText.value = newTextValue;
+
       nextTick(() => {
+        // Ensure the textarea element still exists
+        // Vue might have already updated textareaRef.value.value due to markdownText.value change.
+        // Setting it again here ensures the value is what we expect before setting selection.
         if (textareaRef.value) {
+          textareaRef.value.value = newTextValue;
+          
           textareaRef.value.selectionStart = newSelectionStart;
           textareaRef.value.selectionEnd = newSelectionEnd;
+          
           textareaRef.value.focus();
-          autoResizeTextarea(); 
+          autoResizeTextarea();
         }
       });
     }
