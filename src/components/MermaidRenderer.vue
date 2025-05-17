@@ -146,16 +146,16 @@ watch(() => props.code, async () => {
   z-index: 10;
   display: flex;
   gap: 4px;
-  background-color: rgba(45, 45, 45, 0.7); /* Semi-transparent dark background */
+  background-color: rgba(45, 45, 45, 0.7);
   padding: 4px;
   border-radius: 6px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
 .mermaid-controls button {
-  background-color: transparent; /* No background */
-  border: none; /* No border */
-  color: #d1d5da; /* Light gray icon color */
+  background-color: transparent;
+  border: none;
+  color: #d1d5da;
   border-radius: 4px;
   padding: 4px;
   cursor: pointer;
@@ -168,8 +168,8 @@ watch(() => props.code, async () => {
 }
 
 .mermaid-controls button:hover {
-  background-color: rgba(255, 255, 255, 0.1); /* Subtle hover effect */
-  color: #ffffff; /* Brighter on hover */
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
 .mermaid-controls button svg {
@@ -197,6 +197,7 @@ watch(() => props.code, async () => {
   justify-content: center;
   align-items: center;
   min-height: 150px;
+  background-color: #1a1a1a;
 }
 
 .mermaid-error {

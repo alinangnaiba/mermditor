@@ -1,11 +1,24 @@
 <template>
   <div class="markdown-editor-container h-full w-full flex flex-col">
+    <div class="preview-controls" v-if="previewPane">
+      <button @click="toggleEditorVisibility" :title="isEditorVisible ? 'Hide Editor' : 'Show Editor'">
+        <svg v-if="isEditorVisible" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+          <path d="M2,9 L0,9 L0,14 L5,14 L5,12 L2,12 L2,9 L2,9 Z M0,5 L2,5 L2,2 L5,2 L5,0 L0,0 L0,5 L0,5 Z M12,12 L9,12 L9,14 L14,14 L14,9 L12,9 L12,12 L12,12 Z M9,0 L9,2 L12,2 L12,5 L14,5 L14,0 L9,0 L9,0 Z"></path>
+        </svg>
+        <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+          <path d="M0,11 L3,11 L3,14 L5,14 L5,9 L0,9 L0,11 L0,11 Z M3,3 L0,3 L0,5 L5,5 L5,0 L3,0 L3,3 L3,3 Z M9,14 L11,14 L11,11 L14,11 L14,9 L9,9 L9,14 L9,14 Z M11,3 L11,0 L9,0 L9,5 L14,5 L14,3 L11,3 L11,3 Z"></path>
+        </svg>
+      </button>
+    </div>
     <!-- Main pane container with single scroll -->
     <div class="flex-1 flex flex-col min-h-0">
       <div class="main-scroll-container flex-1 overflow-y-auto w-full" ref="mainScrollContainer">
         <div class="pane-container flex flex-row w-full min-h-full">
           <!-- Editor Pane -->
-          <div class="editor-container transition-width duration-100 flex flex-col" :style="{ width: editorWidthPercent + '%' }">
+          <div 
+            v-if="isEditorVisible"
+            class="editor-container transition-width duration-100 flex flex-col" 
+            :style="{ width: editorWidthPercent + '%' }">
             <div class="editor-pane border-r border-opacity-10 border-white bg-dark-50">
               <textarea
                 v-model="markdownText"
@@ -19,6 +32,7 @@
           
           <!-- Draggable Divider -->
           <div 
+            v-if="isEditorVisible"
             class="divider w-1.5 bg-opacity-5 bg-white hover:bg-blue-800 cursor-col-resize flex items-center justify-center" 
             @mousedown="startDrag" 
             @touchstart.prevent="startDrag"
@@ -28,8 +42,10 @@
           </div>
           
           <!-- Preview Pane -->
-          <div class="preview-container transition-width duration-100 flex flex-col" :style="{ width: (100 - editorWidthPercent) + '%' }">
-            <div class="preview-pane-content bg-deep-black" ref="previewPane">
+          <div 
+            class="preview-container transition-width duration-100 flex flex-col" 
+            :style="{ width: previewWidthPercent + '%' }">
+            <div class="preview-pane-content bg-deep-black relative" ref="previewPane">
               <div ref="previewContainer" class="markdown-content prose prose-invert max-w-none p-4 h-full"></div>
             </div>
           </div>
@@ -76,7 +92,22 @@ const mainScrollContainer = ref<HTMLElement | null>(null);
 const previewContainer = ref<HTMLElement | null>(null);
 
 const editorWidthPercent = ref(50);
+const isEditorVisible = ref(true); // New state for editor visibility
 let isDragging = false;
+
+const previewWidthPercent = computed(() => {
+  return isEditorVisible.value ? (100 - editorWidthPercent.value) : 100;
+});
+
+const toggleEditorVisibility = () => {
+  isEditorVisible.value = !isEditorVisible.value;
+  // Optionally, save this preference to localStorage
+  localStorage.setItem('mermd-editor-visible', isEditorVisible.value.toString());
+  // Trigger resize to adjust layout
+  nextTick(() => {
+    autoResizeTextarea();
+  });
+};
 
 const startDrag = (e: MouseEvent | TouchEvent) => {
   isDragging = true;
@@ -238,6 +269,11 @@ onMounted(async () => {
     editorWidthPercent.value = parseFloat(savedWidth);
   }
   
+  const savedVisibility = localStorage.getItem('mermd-editor-visible');
+  if (savedVisibility !== null) {
+    isEditorVisible.value = savedVisibility === 'true';
+  }
+  
   window.addEventListener('resize', autoResizeTextarea);
 });
 
@@ -349,8 +385,6 @@ const handleKeyboardShortcut = (e: KeyboardEvent) => {
 </script>
 
 <style scoped>
-/* Component-specific styles */
-
 .pane-container {
   display: flex;
   flex-direction: row;
@@ -364,23 +398,20 @@ const handleKeyboardShortcut = (e: KeyboardEvent) => {
   flex-direction: column; 
 }
 
-/* Styles for the direct parent of textarea */
 .editor-pane {
-  border-right: 1px solid rgba(0, 0, 0, 0.1); /* var(--border-color-translucent) or similar */
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
   position: relative;
   background-color: var(--background-dark);
   display: flex; 
   flex-direction: column;
 }
 
-/* Styles for the direct parent of the rendered markdown output */
 .preview-pane-content { 
   border-left: 1px solid var(--border-color);
   background-color: var(--background-darker);
-  overflow: hidden; /* This pane should not scroll; main-scroll-container does */
+  overflow: hidden;
 }
 
-/* The actual div where markdown HTML is rendered */
 .markdown-content {
   height: 100%; 
 }
@@ -393,10 +424,10 @@ textarea {
   background-color: transparent; 
   resize: none; 
   padding: 16px; 
-  font-size: 1rem; /* text-sm class (usually 0.875rem), consider if 1rem is intended */
+  font-size: 1rem;
   line-height: 1.6; 
   outline: none; 
-  overflow-y: hidden; /* Textarea itself should not scroll vertically */
+  overflow-y: hidden;
   position: relative; 
   z-index: 2; 
 }
@@ -405,7 +436,7 @@ textarea {
   height: 100%; 
   display: flex; 
   flex-direction: column; 
-  overflow: hidden; /* Prevent this container itself from showing scrollbars if children are managed */
+  overflow: hidden;
 }
 
 .main-scroll-container {
@@ -426,10 +457,9 @@ textarea {
 .main-scroll-container::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
   border-radius: 6px;
-  border: 2px solid rgba(0, 0, 0, 0.2); /* Consider var(--scrollbar-track) for border for better theme integration */
+  border: 2px solid rgba(0, 0, 0, 0.2);
 }
 
-/* Divider styles */
 .divider {
   width: 6px;
   background: rgba(255, 255, 255, 0.05);
@@ -443,7 +473,7 @@ textarea {
 }
 
 .divider:hover, .divider:active {
-  background: #041C42; /* Consider using CSS variables if this color needs theming */
+  background: #041C42;
 }
 
 .divider-handle {
@@ -457,17 +487,13 @@ textarea {
   background-color: rgba(255, 255, 255, 0.6);
 }
 
-
-/* Media query for mobile view */
 @media (max-width: 768px) {
   .preview-pane-content { 
     border-left: none !important;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
-  /* If .pane-container changes to flex-col on mobile, ensure editor/preview width is 100% */
 }
 
-/* Fullscreen mode styling - unchanged */
 .fullscreen-mode {
   position: fixed !important;
   top: 0;
@@ -484,5 +510,35 @@ textarea {
 
 .fullscreen-mode textarea {
   font-size: 1.1rem;
+}
+
+.preview-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+}
+
+.preview-controls button {
+  background-color: rgba(45, 45, 45, 0.7);
+  border: none;
+  color: #d1d5da;
+  border-radius: 4px;
+  
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+}
+
+.preview-controls button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.preview-pane-content { 
+  position: relative;
 }
 </style>
