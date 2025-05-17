@@ -169,7 +169,14 @@ flowchart LR
 \`\`\`
 `;
 
-const markdownText = ref(''); // Initialize empty, will be set in onMounted
+const props = defineProps({
+  initialMarkdown: {
+    type: String,
+    default: ''
+  }
+});
+
+const markdownText = ref(''); // Initialize empty
 
 let mermaidRenderTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
@@ -218,19 +225,17 @@ const saveToLocalStorage = debounce((content: string) => {
 onMounted(async () => {
   setupMermaid();
 
-  const savedContent = localStorage.getItem('mermd-content');
-  if (savedContent !== null) {
-    markdownText.value = savedContent;
-    const now = new Date();
-    lastSaved.value = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  // Prioritize prop, then localStorage, then default content
+  if (props.initialMarkdown) {
+    markdownText.value = props.initialMarkdown;
   } else {
-    markdownText.value = defaultContent;
+    const savedMarkdown = localStorage.getItem('mermd-markdown-input');
+    if (savedMarkdown) {
+      markdownText.value = savedMarkdown;
+    } else {
+      markdownText.value = defaultContent;
+    }
   }
-  
-  await nextTick(); // Ensure markdownText ref update is processed before initial render
-  await renderMarkdown(); // renderMarkdown will now trigger autoResizeTextarea
-
-  document.addEventListener('keydown', handleKeyboardShortcut);
 
   const savedWidth = localStorage.getItem('mermd-editor-width');
   if (savedWidth) {

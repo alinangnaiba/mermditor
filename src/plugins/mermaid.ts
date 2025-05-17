@@ -8,6 +8,6 @@ export const setupMermaid = () => {
   mermaid.initialize({
     startOnLoad: false,
     theme: 'dark',
-    securityLevel: 'loose', // Adjust if security is a concern
+    securityLevel: 'strict',
   });
 };
