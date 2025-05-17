@@ -1,33 +1,26 @@
-// c:\repositories\mdit\src\components\__tests__\MarkdownEditor.spec.ts
 import { mount, flushPromises } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import MarkdownEditor from '../MarkdownEditor.vue';
 
-// Mock the Mermaid plugin as it might involve complex rendering and async operations
 vi.mock('@/plugins/mermaid', () => ({
   renderMermaid: vi.fn().mockResolvedValue('<svg>Mocked Mermaid Output</svg>'),
-  setupMermaid: vi.fn(), // Add mock for setupMermaid
+  setupMermaid: vi.fn(),
 }));
 
 describe('MarkdownEditor.vue', () => {
   beforeEach(() => {
     localStorage.removeItem('mermd-markdown-input');
     localStorage.removeItem('mermd-editor-width');
-    // Ensure mocks are reset if they are stateful between tests, though vi.fn() usually resets calls.
     vi.clearAllMocks(); 
-
-    // Re-mock with fresh functions if needed, especially if they accumulate calls
-    // For simple mocks like above, clearAllMocks might be enough.
-    // If setupMermaid was called in one test and you don't want that to affect another:
     vi.mock('@/plugins/mermaid', () => ({
       renderMermaid: vi.fn().mockResolvedValue('<svg>Mocked Mermaid Output</svg>'),
       setupMermaid: vi.fn(),
     }));
-    vi.useFakeTimers(); // Use fake timers for debounce control
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    vi.useRealTimers(); // Restore real timers
+    vi.useRealTimers();
   });
 
   it('renders the editor and preview panes', async () => {
@@ -36,10 +29,10 @@ describe('MarkdownEditor.vue', () => {
         initialMarkdown: '# Hello World',
       },
     });
-    await flushPromises(); // Wait for onMounted and initial render
-    vi.runOnlyPendingTimers(); // Execute any debounced calls from onMounted
+    await flushPromises(); 
+    vi.runOnlyPendingTimers(); 
     await flushPromises();
-    await wrapper.vm.$nextTick(); // Wait for DOM updates
+    await wrapper.vm.$nextTick(); 
 
     expect(wrapper.find('.editor-pane textarea').exists()).toBe(true);
     expect(wrapper.find('.markdown-content').exists()).toBe(true);
@@ -53,18 +46,16 @@ describe('MarkdownEditor.vue', () => {
       },
     });
 
-    // Allow onMounted and its async operations/debounced calls to complete
     await flushPromises();
     vi.runOnlyPendingTimers();
     await flushPromises();
-    await wrapper.vm.$nextTick(); // Ensure DOM is updated after onMounted logic
+    await wrapper.vm.$nextTick(); 
 
     const textarea = wrapper.find('.editor-pane textarea');
     expect((textarea.element as HTMLTextAreaElement).value).toBe(initialMarkdown);
 
     const preview = wrapper.find('.markdown-content');
     expect(preview.html()).toContain('<h2>Subtitle</h2>');
-    // Ensure default content isn't present if specific markdown is provided
     expect(preview.html()).not.toContain('<h1>Markdown Editor with Mermaid</h1>');
   });
 
@@ -74,38 +65,118 @@ describe('MarkdownEditor.vue', () => {
       props: { initialMarkdown: initialText },
     });
 
-    // Initial render with prop
     await flushPromises();
     vi.runOnlyPendingTimers();
     await flushPromises();
     await wrapper.vm.$nextTick();
 
-    // Verify initial state based on prop
     const textarea = wrapper.find('.editor-pane textarea');
     expect((textarea.element as HTMLTextAreaElement).value).toBe(initialText);
-    // The preview should contain the rendered initialText. 
-    // For simplicity, we'll check for a unique part of it or its rendered form.
-    // If initialText is simple, it might just be <p>Initial text...</p>
-    // For now, let's assume it renders and we check the next state.
 
     const newMarkdown = '# New Header After Update';
     await textarea.setValue(newMarkdown);
 
-    // Wait for Vue reactivity, debounced watcher, and DOM updates
     await flushPromises();
-    vi.runOnlyPendingTimers(); // Trigger debouncedRenderMarkdown from watch
+    vi.runOnlyPendingTimers(); 
     await flushPromises();
     await wrapper.vm.$nextTick();
 
     const preview = wrapper.find('.markdown-content');
     expect(preview.html()).toContain('<h1>New Header After Update</h1>');
     expect(preview.html()).not.toContain(initialText);
-    expect(preview.html()).not.toContain('<h1>Markdown Editor with Mermaid</h1>'); // Ensure default content is not there
+    expect(preview.html()).not.toContain('<h1>Markdown Editor with Mermaid</h1>');
   });
 
-  // Add more tests here, for example:
-  // - Test auto-resize functionality (might require more complex DOM mocking or inspection)
-  // - Test drag handle functionality
-  // - Test Mermaid diagram rendering (ensure the mock is called)
-  // - Test scroll synchronization (if feasible in unit test environment)
+  it('auto-resizes textarea and preview pane based on content', async () => {
+    const wrapper = mount(MarkdownEditor, {
+      props: {
+        initialMarkdown: 'Short content',
+      },
+    });
+
+    await flushPromises();
+    vi.runAllTimers();
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+
+    const textarea = wrapper.find('textarea');
+    const previewPane = wrapper.find('.preview-pane-content');
+    
+    expect(textarea.exists()).toBe(true);
+    expect(previewPane.exists()).toBe(true);
+    
+    expect(wrapper.find('.markdown-content').html()).toContain('Short content');
+    
+    const longMarkdown = 'This is a much longer content.\n\nIt has multiple paragraphs.\n\n' + 
+                         'And should theoretically cause the height to increase.';
+    
+    await textarea.setValue(longMarkdown);
+    
+    await flushPromises();
+    vi.runAllTimers(); 
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    
+    const contentHtml = wrapper.find('.markdown-content').html();
+    expect(contentHtml).toContain('This is a much longer content');
+    expect(contentHtml).toContain('It has multiple paragraphs');
+    
+    expect((textarea.element as HTMLTextAreaElement).value).toBe(longMarkdown);
+    
+    wrapper.unmount();
+  });
+
+  it('resizes editor and preview panes when dragging the divider', async () => {
+    const wrapper = mount(MarkdownEditor, {
+      props: {
+        initialMarkdown: 'Test',
+      },
+      attachTo: document.body,
+    });
+
+    await flushPromises();
+    vi.runOnlyPendingTimers();
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    
+    const editorPane = wrapper.find('.editor-container').element as HTMLElement;
+    const previewPane = wrapper.find('.preview-container').element as HTMLElement;
+    const initialEditorWidth = editorPane.style.width;
+    const initialPreviewWidth = previewPane.style.width;
+
+    expect(initialEditorWidth).toBe('50%');
+    expect(initialPreviewWidth).toBe('50%');
+
+    const divider = wrapper.find('.divider');
+    
+    const mainScrollContainerElement = wrapper.find('.main-scroll-container').element as HTMLElement;
+    const originalGetBoundingClientRect = mainScrollContainerElement.getBoundingClientRect;
+    mainScrollContainerElement.getBoundingClientRect = vi.fn(() => ({
+      left: 0,
+      top: 0,
+      width: 1000, 
+      height: 500,
+      right: 1000,
+      bottom: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    }));
+
+    await divider.trigger('mousedown');
+    
+    const mouseMoveEvent = new MouseEvent('mousemove', { clientX: 250 }); 
+    document.dispatchEvent(mouseMoveEvent);
+    await wrapper.vm.$nextTick();
+
+    expect(editorPane.style.width).toBe('25%');
+    expect(previewPane.style.width).toBe('75%');
+
+    const mouseUpEvent = new MouseEvent('mouseup');
+    document.dispatchEvent(mouseUpEvent);
+    await wrapper.vm.$nextTick();
+
+    mainScrollContainerElement.getBoundingClientRect = originalGetBoundingClientRect;
+    wrapper.unmount();
+  });
 });

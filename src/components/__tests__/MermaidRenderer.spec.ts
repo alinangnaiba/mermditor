@@ -17,16 +17,12 @@ describe('MermaidRenderer.vue', () => {
   });
 
   it('renders an empty container when no code is provided', async () => {
-    // Mount with empty code and allow mounted hook to run
     const wrapper = mount(MermaidRenderer, { props: { code: '', idSuffix: 'empty-test' } });
-    await wrapper.vm.$nextTick(); // Wait for onMounted
-    await new Promise(resolve => setTimeout(resolve, 0)); // Wait for async renderMermaidDiagram
-    await wrapper.vm.$nextTick(); // Wait for DOM update
+    await wrapper.vm.$nextTick();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await wrapper.vm.$nextTick();
 
-    // The component sets innerHTML to '' or a loading message initially, then '' if code is empty.
-    // After renderMermaidDiagram completes with empty code, innerHTML should be empty.
     expect(wrapper.find('.mermaid-diagram-container').html()).toContain('');
-    // Check that it doesn't contain the loading message anymore
     expect(wrapper.find('.mermaid-loading').exists()).toBe(false);
     expect(mermaid.render).not.toHaveBeenCalled();
   });
@@ -49,15 +45,14 @@ describe('MermaidRenderer.vue', () => {
     await wrapper.vm.$nextTick();
 
     expect(mermaid.render).toHaveBeenCalledTimes(1);
-    // Component calls mermaid.render with 2 arguments: id and code.
     expect(mermaid.render).toHaveBeenCalledWith(expectedMermaidId, mermaidCode);
     expect(wrapper.find('.mermaid-diagram-container').html()).toContain(mockSvg);
-    expect(wrapper.find('.mermaid-loading').exists()).toBe(false); // Loading should be gone
+    expect(wrapper.find('.mermaid-loading').exists()).toBe(false);
   });
 
   it('displays an error message if mermaid.render fails', async () => {
     const mermaidCode = 'graph TD; A-->B;';
-    const errorMessage = 'Mermaid rendering failed'; // This is the message from our mock
+    const errorMessage = 'Mermaid rendering failed';
     const testIdSuffix = 'error-graph-suffix';
     const expectedMermaidId = `mermaid-diagram-${testIdSuffix}`;
 
@@ -72,10 +67,8 @@ describe('MermaidRenderer.vue', () => {
     await wrapper.vm.$nextTick();
 
     expect(mermaid.render).toHaveBeenCalledTimes(1);
-    // Component calls mermaid.render with 2 arguments: id and code.
     expect(mermaid.render).toHaveBeenCalledWith(expectedMermaidId, mermaidCode);
     expect(wrapper.find('.mermaid-error').exists()).toBe(true);
-    // The component constructs the message as "Error rendering diagram: " + error.message
     expect(wrapper.text()).toContain(`Error rendering diagram: ${errorMessage}`);
   });
 
@@ -98,7 +91,6 @@ describe('MermaidRenderer.vue', () => {
     await new Promise(resolve => setTimeout(resolve, 0));
     await wrapper.vm.$nextTick();
 
-    // Component calls mermaid.render with 2 arguments: id and code.
     expect(mermaid.render).toHaveBeenCalledWith(expectedMermaidId, initialCode);
     expect(wrapper.find('.mermaid-diagram-container').html()).toContain(mockSvgInitial.svg);
 
@@ -110,7 +102,6 @@ describe('MermaidRenderer.vue', () => {
     await wrapper.vm.$nextTick();
 
     expect(mermaid.render).toHaveBeenCalledTimes(2);
-    // Component calls mermaid.render with 2 arguments: id and code.
     expect(mermaid.render).toHaveBeenCalledWith(expectedMermaidId, updatedCode);
     expect(wrapper.find('.mermaid-diagram-container').html()).toContain(mockSvgUpdated.svg);
   });

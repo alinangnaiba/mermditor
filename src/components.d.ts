@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AppFooter: typeof import('./components/AppFooter.vue')['default']
     MarkdownEditor: typeof import('./components/MarkdownEditor.vue')['default']
     MermaidRenderer: typeof import('./components/MermaidRenderer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
