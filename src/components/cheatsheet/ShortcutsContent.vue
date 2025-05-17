@@ -1,0 +1,46 @@
+<template>
+  <div class="space-y-6">
+    <h2 class="text-2xl font-semibold mb-6 border-b border-gray-700 pb-2">Keyboard Shortcuts</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead>
+          <tr class="bg-gray-800">
+            <th class="px-6 py-3">Action</th>
+            <th class="px-6 py-3">Windows/Linux</th>
+            <th class="px-6 py-3">macOS</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-700">
+          <tr v-for="shortcut in editorShortcuts" :key="shortcut.action">
+            <td class="px-6 py-4">{{ shortcut.action }}</td>
+            <td class="px-6 py-4">
+              <kbd class="px-2 py-1 text-xs font-semibold text-gray-200 bg-gray-700 border border-gray-600 rounded-md">{{ shortcut.keys[0] }}</kbd>
+              <span v-if="shortcut.keys[1]" class="mx-1">+</span>
+              <kbd v-if="shortcut.keys[1]" class="px-2 py-1 text-xs font-semibold text-gray-200 bg-gray-700 border border-gray-600 rounded-md">{{ shortcut.keys[1] }}</kbd>
+              <span v-if="shortcut.keys[2]" class="mx-1">+</span>
+              <kbd v-if="shortcut.keys[2]" class="px-2 py-1 text-xs font-semibold text-gray-200 bg-gray-700 border border-gray-600 rounded-md">{{ shortcut.keys[2] }}</kbd>
+            </td>
+            <td class="px-6 py-4">
+              <kbd class="px-2 py-1 text-xs font-semibold text-gray-200 bg-gray-700 border border-gray-600 rounded-md">{{ shortcut.macKeys[0] }}</kbd>
+              <span v-if="shortcut.macKeys[1]" class="mx-1">+</span>
+              <kbd v-if="shortcut.macKeys[1]" class="px-2 py-1 text-xs font-semibold text-gray-200 bg-gray-700 border border-gray-600 rounded-md">{{ shortcut.macKeys[1] }}</kbd>
+              <span v-if="shortcut.macKeys[2]" class="mx-1">+</span>
+              <kbd v-if="shortcut.macKeys[2]" class="px-2 py-1 text-xs font-semibold text-gray-200 bg-gray-700 border border-gray-600 rounded-md">{{ shortcut.macKeys[2] }}</kbd>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+
+const editorShortcuts = ref([
+  { action: 'Toggle Bold', keys: ['Ctrl', 'B'], macKeys: ['⌘', 'B'] },
+  { action: 'Toggle Italic', keys: ['Ctrl', 'I'], macKeys: ['⌘', 'I'] },
+  { action: 'Insert Link', keys: ['Ctrl', 'K'], macKeys: ['⌘', 'K'] },
+  { action: 'Toggle Heading 1', keys: ['Ctrl', 'Shift', '1'], macKeys: ['⌘', 'Shift', '1'] },
+]);
+</script>
