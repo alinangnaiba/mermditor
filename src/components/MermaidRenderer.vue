@@ -20,14 +20,11 @@ const props = defineProps({
 const mermaidContainer = ref<HTMLElement | null>(null);
 const uniqueMermaidId = `mermaid-diagram-${props.idSuffix}`;
 
-/**
- * Renders a Mermaid diagram using the provided code
- */
 const renderMermaidDiagram = async () => {
   if (mermaidContainer.value && props.code) {
     try {
       mermaidContainer.value.innerHTML = '<div class="mermaid-loading">Rendering diagram...</div>';
-      await nextTick(); // Wait for DOM update
+      await nextTick();
 
       const { svg } = await mermaid.render(uniqueMermaidId, props.code);
       mermaidContainer.value.innerHTML = svg;
@@ -39,7 +36,7 @@ const renderMermaidDiagram = async () => {
       }
     }
   } else if (mermaidContainer.value) {
-    mermaidContainer.value.innerHTML = ''; // Clear if no code
+    mermaidContainer.value.innerHTML = '';
   }
 };
 

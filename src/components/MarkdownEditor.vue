@@ -63,10 +63,6 @@ import 'highlight.js/styles/atom-one-dark.css';
 
 // Setup markdown parser with plugins
 const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true,
-  breaks: false, // CommonMark standard, set to true for GFM line breaks
   highlight: null // Disable built-in highlighting as we'll use our custom plugin
 });
 
@@ -75,9 +71,9 @@ md.use(markdownItHighlight);
 md.use(markdownItMermaid);
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
-const previewPane = ref<HTMLElement | null>(null); // Ref for preview-pane-content
+const previewPane = ref<HTMLElement | null>(null);
 const mainScrollContainer = ref<HTMLElement | null>(null);
-const previewContainer = ref<HTMLElement | null>(null); // Ref for the inner markdown rendering div
+const previewContainer = ref<HTMLElement | null>(null);
 
 const editorWidthPercent = ref(50);
 let isDragging = false;
@@ -212,7 +208,7 @@ const renderMarkdown = async () => {
   }, 200); // Adjust delay if needed (e.g., 200-300ms)
 };
 
-const debouncedRenderMarkdown = debounce(renderMarkdown, 150); // Adjusted debounce time
+const debouncedRenderMarkdown = debounce(renderMarkdown, 150);
 
 const lastSaved = ref<string>('');
 const saveToLocalStorage = debounce((content: string) => {
@@ -256,7 +252,7 @@ onBeforeUnmount(() => {
 });
 
 watch(() => markdownText.value, (newValue) => { // Removed async from watcher callback as it only calls sync + debounced
-  debouncedRenderMarkdown(); // This will call renderMarkdown, which now handles calling autoResizeTextarea.
+  debouncedRenderMarkdown();
   saveToLocalStorage(newValue || '');
   // No direct call to autoResizeTextarea here anymore.
 }, { immediate: false });
@@ -311,7 +307,6 @@ const characterCount = computed(() => {
 
 // Handle scroll synchronization (placeholder, actual sync might be complex)
 const handleScroll = (e: Event) => {
-  // This function is called when mainScrollContainer is scrolled.
   // If direct synchronization between editor scroll and preview scroll is needed
   // (beyond what a shared height provides), logic would go here.
   // For now, autoResizeTextarea ensures both panes are tall enough for their content,
@@ -453,7 +448,7 @@ textarea {
   border: 2px solid rgba(0, 0, 0, 0.2); /* Consider var(--scrollbar-track) for border for better theme integration */
 }
 
-/* Divider styles - unchanged */
+/* Divider styles */
 .divider {
   width: 6px;
   background: rgba(255, 255, 255, 0.05);
@@ -482,8 +477,8 @@ textarea {
 }
 
 
-/* Media query for mobile view - unchanged */
-@media (max-width: 959px) {
+/* Media query for mobile view */
+@media (max-width: 768px) {
   .preview-pane-content { /* Adjusted selector to match new class name if it was .preview-pane */
     border-left: none !important;
     border-top: 1px solid rgba(255, 255, 255, 0.1);

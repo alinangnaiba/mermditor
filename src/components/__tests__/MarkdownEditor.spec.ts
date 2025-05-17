@@ -1,4 +1,3 @@
-// c:\repositories\mdit\src\components\__tests__\MarkdownEditor.spec.ts
 import { mount, flushPromises } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import MarkdownEditor from '../MarkdownEditor.vue';
@@ -6,7 +5,7 @@ import MarkdownEditor from '../MarkdownEditor.vue';
 // Mock the Mermaid plugin as it might involve complex rendering and async operations
 vi.mock('@/plugins/mermaid', () => ({
   renderMermaid: vi.fn().mockResolvedValue('<svg>Mocked Mermaid Output</svg>'),
-  setupMermaid: vi.fn(), // Add mock for setupMermaid
+  setupMermaid: vi.fn(),
 }));
 
 describe('MarkdownEditor.vue', () => {
@@ -23,11 +22,11 @@ describe('MarkdownEditor.vue', () => {
       renderMermaid: vi.fn().mockResolvedValue('<svg>Mocked Mermaid Output</svg>'),
       setupMermaid: vi.fn(),
     }));
-    vi.useFakeTimers(); // Use fake timers for debounce control
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    vi.useRealTimers(); // Restore real timers
+    vi.useRealTimers();
   });
 
   it('renders the editor and preview panes', async () => {
@@ -102,10 +101,4 @@ describe('MarkdownEditor.vue', () => {
     expect(preview.html()).not.toContain(initialText);
     expect(preview.html()).not.toContain('<h1>Markdown Editor with Mermaid</h1>'); // Ensure default content is not there
   });
-
-  // Add more tests here, for example:
-  // - Test auto-resize functionality (might require more complex DOM mocking or inspection)
-  // - Test drag handle functionality
-  // - Test Mermaid diagram rendering (ensure the mock is called)
-  // - Test scroll synchronization (if feasible in unit test environment)
 });
