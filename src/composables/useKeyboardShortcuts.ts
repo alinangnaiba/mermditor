@@ -155,6 +155,40 @@ function handleBold(
   return { ...result, textModified: true, preventDefault: true };
 }
 
+/**
+ * Helper function to handle tab indentation when only the cursor is present (no text selection)
+ */
+function handleCursorTabIndent(
+  value: string,
+  start: number,
+  shiftKey: boolean,
+  tabCharacter: string
+): { newTextValue: string; newSelectionStart: number; newSelectionEnd: number; textModified: boolean } {
+  let newTextValue = value;
+  let newSelectionStart = start;
+  let newSelectionEnd = start;
+  let textModified = false;
+
+  if (shiftKey) {
+    // Un-indent current line
+    const lineStartIndex = value.lastIndexOf('\n', start - 1) + 1;
+    if (value.substring(lineStartIndex, lineStartIndex + tabCharacter.length) === tabCharacter) {
+      newTextValue = value.substring(0, lineStartIndex) + value.substring(lineStartIndex + tabCharacter.length);
+      newSelectionStart = Math.max(lineStartIndex, start - tabCharacter.length);
+      newSelectionEnd = newSelectionStart;
+      textModified = true;
+    }
+  } else {
+    // Insert tab at cursor
+    newTextValue = value.substring(0, start) + tabCharacter + value.substring(start);
+    newSelectionStart = start + tabCharacter.length;
+    newSelectionEnd = newSelectionStart;
+    textModified = true;
+  }
+
+  return { newTextValue, newSelectionStart, newSelectionEnd, textModified };
+}
+
 function handleFencedCodeBlock(
   { value, start, end }: ShortcutHandlerParams
 ): ShortcutHandlerResult {
@@ -238,42 +272,6 @@ function handleHeading(
   return { newTextValue, newSelectionStart, newSelectionEnd, textModified: true, preventDefault: true };
 }
 
-function handleHeading1(
-  params: ShortcutHandlerParams
-): ShortcutHandlerResult {
-  return handleHeading(params, 1);
-}
-
-function handleHeading2(
-  params: ShortcutHandlerParams
-): ShortcutHandlerResult {
-  return handleHeading(params, 2);
-}
-
-function handleHeading3(
-  params: ShortcutHandlerParams
-): ShortcutHandlerResult {
-  return handleHeading(params, 3);
-}
-
-function handleHeading4(
-  params: ShortcutHandlerParams
-): ShortcutHandlerResult {
-  return handleHeading(params, 4);
-}
-
-function handleHeading5(
-  params: ShortcutHandlerParams
-): ShortcutHandlerResult {
-  return handleHeading(params, 5);
-}
-
-function handleHeading6(
-  params: ShortcutHandlerParams
-): ShortcutHandlerResult {
-  return handleHeading(params, 6);
-}
-
 function handleInlineCode(
   { value, start, end }: ShortcutHandlerParams
 ): ShortcutHandlerResult {
@@ -335,6 +333,81 @@ function handleStrikethrough(
   return { ...result, textModified: true, preventDefault: true };
 }
 
+/**
+ * Helper function to handle tab indentation when text is selected
+ */
+function handleSelectionTabIndent(
+  value: string,
+  start: number,
+  end: number,
+  shiftKey: boolean,
+  tabCharacter: string
+): { newTextValue: string; newSelectionStart: number; newSelectionEnd: number; textModified: boolean } {
+  const lineStartIndexForSelection = value.lastIndexOf('\n', start - 1) + 1;
+  const actualProcessStart = lineStartIndexForSelection;
+
+  let actualProcessEnd = end;
+  if (value[end - 1] !== '\n' && end < value.length) {
+    const nextNewlineAfterEnd = value.indexOf('\n', end - 1);
+    actualProcessEnd = nextNewlineAfterEnd === -1 ? value.length : nextNewlineAfterEnd;
+  }
+
+  const linesTextToProcess = value.substring(actualProcessStart, actualProcessEnd);
+  const lines = linesTextToProcess.split('\n');
+  let firstLineChange = 0;
+
+  const modifiedLines = lines.map((line, index) => {
+    if (shiftKey) {
+      if (line.startsWith(tabCharacter)) {
+        if (index === 0) firstLineChange = -tabCharacter.length;
+        return line.substring(tabCharacter.length);
+      }
+    } else {
+      // Indent non-empty lines or if it's the only line (even if empty)
+      if (line.trim() !== '' || (lines.length === 1 && line.trim() === '')) {
+        if (index === 0) firstLineChange = tabCharacter.length;
+        return tabCharacter + line;
+      }
+    }
+    return line;
+  });
+
+  const newLinesString = modifiedLines.join('\n');
+  const newTextValue = value.substring(0, actualProcessStart) + newLinesString + value.substring(actualProcessEnd);
+  
+  let newSelectionStart = start + firstLineChange;
+  // Ensure selection start does not go before the start of the line it was on
+  newSelectionStart = Math.max(lineStartIndexForSelection, newSelectionStart);
+
+  const netLengthChange = newLinesString.length - linesTextToProcess.length;
+  let newSelectionEnd = end + netLengthChange;
+  
+  // If the original selection was precise and didn't span to the start of the first line,
+  // try to maintain that relative position for the start of the selection.
+  if (start > actualProcessStart && !shiftKey) { // Indenting
+    newSelectionStart = start + tabCharacter.length;
+  } else if (start > actualProcessStart && shiftKey && value.substring(actualProcessStart, actualProcessStart + tabCharacter.length) === tabCharacter) { // Un-indenting
+    newSelectionStart = start - tabCharacter.length;
+  }
+
+  return { newTextValue, newSelectionStart, newSelectionEnd, textModified: true };
+}
+
+/**
+ * Main function to handle tab and shift+tab for indentation
+ */
+function handleTabIndent(
+  { value, start, end, shiftKey }: ShortcutHandlerParams
+): ShortcutHandlerResult {
+  const tabCharacter = '   '; // Three spaces for a tab
+  
+  // Delegate to the appropriate helper function based on whether text is selected
+  const result = start === end
+    ? handleCursorTabIndent(value, start, shiftKey, tabCharacter)
+    : handleSelectionTabIndent(value, start, end, shiftKey, tabCharacter);
+
+  return { ...result, preventDefault: true };
+}
 
 // --- Main Composable Function ---
 
@@ -344,57 +417,58 @@ export function useKeyboardShortcuts(
   autoResizeTextarea: () => Promise<void>
 ) {
   const handleKeyboardShortcut = (e: KeyboardEvent) => {
-    if (!(e.ctrlKey || e.metaKey) || !textareaRef.value) return;
+    if (!textareaRef.value) return;
 
-    const key = e.key.toLowerCase();
+    const key = e.key; // Use e.key directly for Tab, don't toLowerCase()
     const textarea = textareaRef.value;
-    const params: ShortcutHandlerParams = {
-      value: textarea.value,
-      start: textarea.selectionStart,
-      end: textarea.selectionEnd,
-      shiftKey: e.shiftKey,
-      altKey: e.altKey,
-    };
+    const { selectionStart: start, selectionEnd: end, value } = textarea;
+    const { shiftKey, altKey, ctrlKey, metaKey } = e;
 
+    // Pass altKey to params, though not used by current handlers, it's good practice
+    const params: ShortcutHandlerParams = { value, start, end, shiftKey, altKey };
     let result: ShortcutHandlerResult | null = null;
 
-    switch (key) {
-      case 'b':
-        result = e.shiftKey ? handleBlockquote(params) : handleBold(params);
-        break;
-      case 'i':
-        result = handleItalic(params);
-        break;
-      case 'k':
-        result = handleLink(params);
-        break;
-      case '!': // Heading 1 (Shift + 1)
-        if (e.shiftKey) result = handleHeading1(params);
-        break;
-      case '@': // Heading 2 (Shift + 2)
-        if (e.shiftKey) result = handleHeading2(params);
-        break;
-      case '#': // Heading 3 (Shift + 3)
-        if (e.shiftKey) result = handleHeading3(params);
-        break;
-      case '$': // Heading 4 (Shift + 4)
-        if (e.shiftKey) result = handleHeading4(params);
-        break;
-      case '%': // Heading 5 (Shift + 5)
-        if (e.shiftKey) result = handleHeading5(params);
-        break;
-      case '^': // Heading 6 (Shift + 6)
-        if (e.shiftKey) result = handleHeading6(params);
-        break;
-      case 'x': // Strikethrough (Shift + X)
-        if (e.shiftKey) result = handleStrikethrough(params);
-        break;
-      case 'e': // Inline Code
-        result = handleInlineCode(params);
-        break;
-      case 'c': // Fenced Code Block (Shift + C)
-        if (e.shiftKey) result = handleFencedCodeBlock(params);
-        break;
+    if (key === 'Tab') {
+      // Tab key is handled here directly
+      e.preventDefault();
+      result = handleTabIndent(params);
+    } else if (ctrlKey || metaKey) {
+      const lowerKey = key.toLowerCase();
+      switch (lowerKey) {
+        case 'b':
+          result = shiftKey ? handleBlockquote(params) : handleBold(params);
+          break;
+        case 'c': // Fenced Code Block (Ctrl+Shift+C)
+          if (shiftKey) result = handleFencedCodeBlock(params);
+          break;
+        case 'e': // Inline Code (Ctrl+E)
+          result = handleInlineCode(params);
+          break;
+        case 'i':
+          result = handleItalic(params);
+          break;
+        case 'k':
+          result = handleLink(params);
+          break;
+        case 'x': // Strikethrough (Ctrl+Shift+X)
+          if (shiftKey) result = handleStrikethrough(params);
+          break;
+        case '!': //Headings (Ctrl+Shift+1-6)
+        case '@':
+        case '#':
+        case '$':
+        case '%':
+        case '^':
+          if (shiftKey) {
+            if (lowerKey === '!') result = handleHeading(params, 1);
+            else if (lowerKey === '@') result = handleHeading(params, 2);
+            else if (lowerKey === '#') result = handleHeading(params, 3);
+            else if (lowerKey === '$') result = handleHeading(params, 4);
+            else if (lowerKey === '%') result = handleHeading(params, 5);
+            else if (lowerKey === '^') result = handleHeading(params, 6);
+          }
+          break;
+      }
     }
 
     if (result && result.textModified) {
@@ -410,7 +484,9 @@ export function useKeyboardShortcuts(
       });
     }
 
-    if (result && result.preventDefault) {
+    // For Ctrl/Cmd shortcuts, preventDefault if the handler requested it.
+    // Tab key's preventDefault is handled when 'Tab' is detected.
+    if (result && result.preventDefault && key !== 'Tab') {
       e.preventDefault();
       e.stopPropagation();
     }
