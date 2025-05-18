@@ -228,8 +228,6 @@ const handleScroll = () => {
       if (elementTop <= scrollPosition + activationThreshold) { 
         currentSection = id;
       } else {
-        // If we've passed a section that was potentially active, but the current one is too far down,
-        // stick with the previous one.
         break;
       }
     }
