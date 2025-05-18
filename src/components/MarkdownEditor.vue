@@ -1,7 +1,21 @@
 <template>
-  <div class="markdown-editor-container h-full w-full flex flex-col relative"> <!-- Added 'relative' class -->
-    <!-- Moved preview-controls here -->    <div class="preview-controls absolute top-2 right-4 z-10" v-if="previewPane">
-      <button @click="toggleEditorVisibility" :title="isEditorVisible ? 'Hide Editor' : 'Show Editor'" class="bg-gray-800 p-1 rounded">
+  <div class="markdown-editor-container h-full w-full flex flex-col relative">
+    <!-- Copy Editor Content Button -->
+    <button
+      v-if="isEditorVisible"
+      @click="copyEditorContent"
+      title="Copy editor content"
+      class="absolute top-3 z-20 bg-gray-800 p-1.5 rounded-md hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+      :style="{ left: `calc(${editorWidthPercent}% - 28px - 12px)` }" 
+      aria-label="Copy editor content"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+        <path d="M0 2.75C0 1.784.784 1 1.75 1h7.5a.75.75 0 0 1 0 1.5h-7.5a.25.25 0 0 0-.25.25v7.5a.25.25 0 0 0 .25.25h.01L2 10.76V2.75z M4.75 4h7.5A1.75 1.75 0 0 1 14 5.75v7.5A1.75 1.75 0 0 1 12.25 15h-7.5A1.75 1.75 0 0 1 3 13.25v-7.5A1.75 1.75 0 0 1 4.75 4Zm0 1.5a.25.25 0 0 0-.25.25v7.5a.25.25 0 0 0 .25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25h-7.5Z"/>
+      </svg>
+    </button>
+
+    <!-- Moved preview-controls here -->    <div class="preview-controls absolute top-3 right-3 z-20" v-if="previewPane">
+      <button @click="toggleEditorVisibility" :title="isEditorVisible ? 'Hide Editor' : 'Show Editor'" class="bg-gray-800 p-1.5 rounded-md text-gray-400 hover:text-white transition-colors">
         <!-- Hide Editor: L shapes point inward -->
         <svg v-if="isEditorVisible" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
           <path d="M3,10 L1,10 L1,15 L6,15 L6,13 L3,13 L3,10 Z M1,6 L3,6 L3,3 L6,3 L6,1 L1,1 L1,6 Z M13,13 L10,13 L10,15 L15,15 L15,10 L13,10 L13,13 Z M10,1 L10,3 L13,3 L13,6 L15,6 L15,1 L10,1 Z" fill="currentColor"/>
@@ -162,6 +176,20 @@ const { handleKeyboardShortcut } = useKeyboardShortcuts(markdownText, textareaRe
 
 // Initialize the composable for Markdown rendering
 const { debouncedRenderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(markdownText, previewContainer, autoResizeTextarea);
+
+const copyEditorContent = async () => {
+  if (!markdownText.value || markdownText.value.trim() === '') {
+    alert('Nothing to copy.'); // Consider a more subtle notification
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(markdownText.value);
+    alert('Editor content copied to clipboard!'); // Consider a more subtle notification
+  } catch (err) {
+    console.error('Failed to copy editor content:', err);
+    alert('Failed to copy content. Check console for details.'); // Consider a more subtle notification
+  }
+};
 
 watch(markdownText, () => {
   debouncedRenderMarkdown();
