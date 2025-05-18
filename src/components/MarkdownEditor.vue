@@ -1,5 +1,18 @@
 <template>
-  <div class="markdown-editor-container h-full w-full flex flex-col">
+  <div class="markdown-editor-container h-full w-full flex flex-col relative"> <!-- Added 'relative' class -->
+    <!-- Moved preview-controls here -->    <div class="preview-controls absolute top-2 right-4 z-10" v-if="previewPane">
+      <button @click="toggleEditorVisibility" :title="isEditorVisible ? 'Hide Editor' : 'Show Editor'" class="bg-gray-800 p-1 rounded">
+        <!-- Hide Editor: L shapes point inward -->
+        <svg v-if="isEditorVisible" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+          <path d="M3,10 L1,10 L1,15 L6,15 L6,13 L3,13 L3,10 Z M1,6 L3,6 L3,3 L6,3 L6,1 L1,1 L1,6 Z M13,13 L10,13 L10,15 L15,15 L15,10 L13,10 L13,13 Z M10,1 L10,3 L13,3 L13,6 L15,6 L15,1 L10,1 Z" fill="currentColor"/>
+        </svg>
+        <!-- Show Editor: L shapes point outward -->
+        <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+          <path d="M1,12 L4,12 L4,15 L6,15 L6,10 L1,10 L1,12 Z M4,4 L1,4 L1,6 L6,6 L6,1 L4,1 L4,4 Z M10,15 L12,15 L12,12 L15,12 L15,10 L10,10 L10,15 Z M12,4 L12,1 L10,1 L10,6 L15,6 L15,4 L12,4 Z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+
     <!-- Main pane container with single scroll -->
     <div class="flex-1 flex flex-col min-h-0">
       <div class="main-scroll-container flex-1 overflow-y-auto w-full" ref="mainScrollContainer">
@@ -35,16 +48,7 @@
           <div
             class="preview-container transition-width duration-100 flex flex-col relative"
             :style="{ width: previewWidthPercent + '%' }">
-            <div class="preview-controls absolute top-2 right-2 z-10" v-if="previewPane">
-              <button @click="toggleEditorVisibility" :title="isEditorVisible ? 'Hide Editor' : 'Show Editor'" class="bg-gray-800 p-1 rounded">
-                <svg v-if="isEditorVisible" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-                  <path d="M2,9 L0,9 L0,14 L5,14 L5,12 L2,12 L2,9 L2,9 Z M0,5 L2,5 L2,2 L5,2 L5,0 L0,0 L0,5 L0,5 Z M12,12 L9,12 L9,14 L14,14 L14,9 L12,9 L12,12 L12,12 Z M9,0 L9,2 L12,2 L12,5 L14,5 L14,0 L9,0 L9,0 Z"></path>
-                </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-                  <path d="M0,11 L3,11 L3,14 L5,14 L5,9 L0,9 L0,11 L0,11 Z M3,3 L0,3 L0,5 L5,5 L5,0 L3,0 L3,3 L3,3 Z M9,14 L11,14 L11,11 L14,11 L14,9 L9,9 L9,14 L9,14 Z M11,3 L11,0 L9,0 L9,5 L14,5 L14,3 L11,3 L11,3 Z"></path>
-                </svg>
-              </button>
-            </div>
+            <!-- preview-controls div was removed from here -->
             <div class="preview-pane-content bg-deep-black relative" ref="previewPane">
               <div ref="previewContainer" class="markdown-content prose prose-invert max-w-none p-4 h-full"></div>
             </div>
