@@ -146,16 +146,14 @@ const toggleNodeShapesSubMenu = () => {
 };
 
 watch(activeTab, async (newTab) => {
-  activeSectionId.value = null; // Reset active section when tab changes
-  nodeShapesSubMenuOpen.value = false; // Close submenu when tab changes
-  await nextTick(); // Wait for DOM to update with new tab content
+  activeSectionId.value = null;
+  nodeShapesSubMenuOpen.value = false;
+  await nextTick();
   updateSectionIds();
-  // Automatically set the first section as active if content area is available
   if (contentArea.value && sectionIds.value.length > 0) {
-    // Ensure the content area is scrolled to the top before calculating offsets
     contentArea.value.scrollTop = 0; 
     await nextTick();
-    handleScroll(); // Initial check after tab switch
+    handleScroll();
   }
 }, { immediate: true });
 
@@ -171,14 +169,11 @@ const updateSectionIds = () => {
 };
 
 const scrollToSection = async (sectionId: string) => {
-  activeSectionId.value = sectionId; // Set active section immediately on click
-  
-  // If a sub-item of Node Shapes is clicked, ensure the parent menu item reflects this
+  activeSectionId.value = sectionId;
+
   if (nodeShapeSections.some(shape => shape.id === sectionId)) {
-    // Optionally, keep the submenu open or handle as preferred
-    // nodeShapesSubMenuOpen.value = true;
+    nodeShapesSubMenuOpen.value = true;
   } else if (sectionId !== 'node-shapes') {
-    // If clicking a main section that is not 'node-shapes', close the submenu
     nodeShapesSubMenuOpen.value = false;
   }
 
@@ -188,15 +183,35 @@ const scrollToSection = async (sectionId: string) => {
     const stickyHeaderHeight = document.querySelector('.sticky.top-0')?.clientHeight || 0;
     const topOffset = sectionElement.offsetTop - contentArea.value.offsetTop - stickyHeaderHeight;
     
+    const targetSection = sectionId;
+    
     contentArea.value.scrollTo({
-      top: topOffset - 20, // Adjusted for sticky header/padding
+      top: topOffset - 20,
       behavior: 'smooth'
     });
+    
+    // After scroll animation completes (approx 500ms), ensure the active section is still correct
+    setTimeout(() => {
+      if (activeSectionId.value !== targetSection) {
+        activeSectionId.value = targetSection;
+      }
+    }, 500);
   }
 };
 
 const handleScroll = () => {
   if (!contentArea.value || sectionIds.value.length === 0) return;
+
+  if (activeSectionId.value && nodeShapeSections.some(shape => shape.id === activeSectionId.value)) {
+    const activeElement = document.getElementById(activeSectionId.value);
+    if (activeElement) {
+      const rect = activeElement.getBoundingClientRect();
+      const contentRect = contentArea.value.getBoundingClientRect();
+      if (rect.top < contentRect.bottom && rect.bottom > contentRect.top) {
+        return;
+      }
+    }
+  }
 
   const scrollPosition = contentArea.value.scrollTop;
   const containerOffsetTop = contentArea.value.offsetTop;
@@ -210,8 +225,7 @@ const handleScroll = () => {
     const element = document.getElementById(id);
     if (element) {
       const elementTop = element.offsetTop;
-      // Check if the top of the section is at or above the activation threshold
-      if (elementTop <= scrollPosition + activationThreshold) {
+      if (elementTop <= scrollPosition + activationThreshold) { 
         currentSection = id;
       } else {
         // If we've passed a section that was potentially active, but the current one is too far down,
@@ -235,7 +249,7 @@ const handleScroll = () => {
         // Check if the last element in view is a node shape or a main mermaid section
         const lastVisibleElementId = sectionIds.value.find(id => {
             const el = document.getElementById(id);
-            if (!el || !contentArea.value) return false; // Added null check for contentArea.value
+            if (!el || !contentArea.value) return false;
             const rect = el.getBoundingClientRect();
             return rect.bottom <= contentArea.value.getBoundingClientRect().bottom + 5;
         });
@@ -247,8 +261,11 @@ const handleScroll = () => {
   }
 
   if (currentSection) {
-    activeSectionId.value = currentSection;
-    // If the active section is a node shape, open the submenu
+    // Only update active section if it's changed to prevent unnecessary re-renders
+    if (activeSectionId.value !== currentSection) {
+      activeSectionId.value = currentSection;
+    }
+    
     if (nodeShapeSections.some(shape => shape.id === currentSection)) {
       nodeShapesSubMenuOpen.value = true;
     }
@@ -281,5 +298,4 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Add any component-specific styles here */
 </style>

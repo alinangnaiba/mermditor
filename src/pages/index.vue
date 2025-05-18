@@ -29,7 +29,7 @@
             including diagrams and flowcharts with Mermaid syntax. merMDitor (mer-med-it-or) is
             perfect for developers, technical writers, and anyone who needs to document complex ideas visually.
           </p>
-          <RouterLink to="/editor" class="px-8 py-4 bg-slate-600 hover:bg-slate-700 rounded-lg text-white font-medium text-lg">
+          <RouterLink to="/editor" class="px-5 py-4 bg-slate-600 hover:bg-slate-700 rounded-full text-white font-medium text-lg">
             Start Writing Now
           </RouterLink>
         </div>
@@ -44,28 +44,40 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <div class="bg-slate-900 p-6 rounded-lg border border-slate-700 flex flex-col items-center text-center">
               <!-- [ICON: Markdown] -->
-              <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+              <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
               <h4 class="text-xl font-medium mb-3">Streamlined Markdown Editing</h4>
               <p class="text-gray-300">Effortlessly create rich text documents with full GitHub-flavored Markdown. Our clean interface, essential tools, and handy keyboard shortcuts let you focus on your content and work efficiently.</p>
             </div>
             
             <div class="bg-slate-900 p-6 rounded-lg border border-slate-700 flex flex-col items-center text-center">
-              <!-- [ICON: Mermaid] -->
-              <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
+              <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="1">
+                <rect x="9" y="2" width="6" height="4" rx="1"></rect>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v3"></path>
+                <rect x="9" y="9" width="6" height="4" rx="1"></rect>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 13v2"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 15h10"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 15v2"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 15v2"></path>
+                <rect x="4" y="17" width="6" height="4" rx="1"></rect>
+                <rect x="14" y="17" width="6" height="4" rx="1"></rect>
+              </svg>
               <h4 class="text-xl font-medium mb-3">Intuitive Mermaid Diagrams</h4>
               <p class="text-gray-300">Seamlessly integrate complex diagrams. Create flowcharts, sequence diagrams, and more using intuitive Mermaid syntax. merMDitor provides a streamlined experience for visualizing ideas.</p>
             </div>
             
             <div class="bg-slate-900 p-6 rounded-lg border border-slate-700 flex flex-col items-center text-center">
               <!-- [ICON: Preview] -->
-              <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+              <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
               <h4 class="text-xl font-medium mb-3">Real-Time Live Preview</h4>
               <p class="text-gray-300">Experience instant visual feedback. See your Markdown and Mermaid diagrams rendered in real-time as you type, ensuring your final document looks exactly as intended.</p>
             </div>
 
             <div class="bg-slate-900 p-6 rounded-lg border border-slate-700 flex flex-col items-center text-center">
               <!-- [ICON: Auto-Save] -->
-              <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+              <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
               <h4 class="text-xl font-medium mb-3">Auto-Save Functionality</h4>
               <p class="text-gray-300">Never lose your work. merMDitor automatically saves your changes to your browser's local storage, so you can pick up right where you left off, even after closing the page.</p>
             </div>
@@ -73,8 +85,8 @@
             <div class="bg-slate-900 p-6 rounded-lg border border-slate-700 flex flex-col items-center text-center">
               <!-- [ICON: Free] -->
               <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                <line x1="6" y1="18" x2="18" y2="6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <line x1="6" y1="18" x2="18" y2="6" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
               </svg>
               <h4 class="text-xl font-medium mb-3">Completely Free</h4>
               <p class="text-gray-300">Enjoy all features without any cost. merMDitor is a free tool built to support your documentation and diagramming needs, accessible to everyone.</p>
@@ -82,14 +94,18 @@
 
             <div class="bg-slate-900 p-6 rounded-lg border border-slate-700 flex flex-col items-center text-center">
               <!-- [ICON: Layout] -->
-              <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9h16M4 15h16M9 4v16M15 4v16"></path></svg>
+              <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 9h16M4 15h16M9 4v16M15 4v16"></path>
+              </svg>
               <h4 class="text-xl font-medium mb-3">Intuitive Layout</h4>
               <p class="text-gray-300">A clean, minimalist design helps you stay focused. The smart layout provides essential tools without clutter, making your writing experience smooth and efficient.</p>
             </div>
             
             <div class="bg-slate-900 p-6 rounded-lg border border-slate-700 flex flex-col items-center text-center">
               <!-- [ICON: Cheatsheet] -->
-              <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
               <h4 class="text-xl font-medium mb-3">Handy Cheatsheet Access</h4>
               <p class="text-gray-300">Quickly look up Markdown and Mermaid syntax with the readily available cheatsheet, helping you format your content without friction.</p>
             </div>
