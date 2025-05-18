@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 import typography from '@tailwindcss/typography';
+const defaultTheme = require('tailwindcss/defaultTheme')
 
 export default {
   content: [
@@ -10,6 +11,9 @@ export default {
       colors: {
         'deep-black': '#0a0a0a',
         'dark-surface': '#1e1e1e', // Added lighter black from --background-dark
+      },
+      fontFamily: {
+        sans: ['"Nunito Sans"', ...defaultTheme.fontFamily.sans],
       },
     },
   },

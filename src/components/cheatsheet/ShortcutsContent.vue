@@ -51,5 +51,7 @@ const editorShortcuts = ref([
   { action: 'Toggle Heading 4', keys: ['Ctrl', 'Shift', '4'], macKeys: ['⌘', 'Shift', '4'] },
   { action: 'Toggle Heading 5', keys: ['Ctrl', 'Shift', '5'], macKeys: ['⌘', 'Shift', '5'] },
   { action: 'Toggle Heading 6', keys: ['Ctrl', 'Shift', '6'], macKeys: ['⌘', 'Shift', '6'] },
+  { action: 'Indent Line/Selection', keys: ['Tab'], macKeys: ['Tab'] },
+  { action: 'Outdent Line/Selection', keys: ['Shift', 'Tab'], macKeys: ['Shift', 'Tab'] },
 ]);
 </script>

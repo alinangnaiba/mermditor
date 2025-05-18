@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-10">
-    <div>
+    <div id="basic-flowchart">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Basic Flowchart</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
@@ -16,12 +16,61 @@ graph TD
           <MermaidRenderer :code="`graph TD\n    A[Start] --> B{Is it?}\n    B -->|Yes| C[OK]\n    B -->|No| D[End]`" />
         </div>
       </div>
-      <p class="text-sm text-gray-400 mt-2">TD = top-down, LR = left-right</p>
+      <p class="text-sm text-gray-400 mt-2">TD = top-down</p>
+
+      <div class="grid md:grid-cols-2 gap-6 mt-6">
+        <div class="bg-gray-800 rounded-lg p-4 mb-2">
+          <pre class="text-gray-300">
+```mermaid
+graph LR
+    A[Start] --> B{Is it?}
+    B -->|Yes| C[OK]
+    B -->|No| D[End]
+```</pre>
+        </div>
+        <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 mb-2">
+          <MermaidRenderer :code="`graph LR\n    A[Start] --> B{Is it?}\n    B -->|Yes| C[OK]\n    B -->|No| D[End]`" />
+        </div>
+      </div>
+      <p class="text-sm text-gray-400 mt-2">LR = left-right</p>
+
+      <div class="grid md:grid-cols-2 gap-6 mt-6">
+        <div class="bg-gray-800 rounded-lg p-4 mb-2">
+          <pre class="text-gray-300">
+```mermaid
+graph RL
+    A[Start] --> B{Is it?}
+    B -->|Yes| C[OK]
+    B -->|No| D[End]
+```</pre>
+        </div>
+        <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 mb-2">
+          <MermaidRenderer :code="`graph RL\n    A[Start] --> B{Is it?}\n    B -->|Yes| C[OK]\n    B -->|No| D[End]`" />
+        </div>
+      </div>
+      <p class="text-sm text-gray-400 mt-2">RL = right-left</p>
+
+      <div class="grid md:grid-cols-2 gap-6 mt-6">
+        <div class="bg-gray-800 rounded-lg p-4 mb-2">
+          <pre class="text-gray-300">
+```mermaid
+graph BT
+    A[Start] --> B{Is it?}
+    B -->|Yes| C[OK]
+    B -->|No| D[End]
+```</pre>
+        </div>
+        <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 mb-2">
+          <MermaidRenderer :code="`graph BT\n    A[Start] --> B{Is it?}\n    B -->|Yes| C[OK]\n    B -->|No| D[End]`" />
+        </div>
+      </div>
+      <p class="text-sm text-gray-400 mt-2">BT = bottom-top</p>
     </div>
-      <div>
+      
+    <div id="node-shapes">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Node Shapes</h3>
       
-      <div class="mb-5">
+      <div id="node-shape-square" class="mb-5">
         <h4 class="text-lg font-medium mb-3 text-blue-300">Square Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
@@ -37,7 +86,7 @@ graph TD
         </div>
       </div>
       
-      <div class="mb-5">
+      <div id="node-shape-rounded" class="mb-5">
         <h4 class="text-lg font-medium mb-3 text-blue-300">Rounded Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
@@ -53,7 +102,7 @@ graph TD
         </div>
       </div>
       
-      <div class="mb-5">
+      <div id="node-shape-stadium" class="mb-5">
         <h4 class="text-lg font-medium mb-3 text-blue-300">Stadium Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
@@ -69,7 +118,7 @@ graph TD
         </div>
       </div>
       
-      <div class="mb-5">
+      <div id="node-shape-subroutine" class="mb-5">
         <h4 class="text-lg font-medium mb-3 text-blue-300">Subroutine Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
@@ -85,7 +134,7 @@ graph TD
         </div>
       </div>
       
-      <div class="mb-5">
+      <div id="node-shape-database" class="mb-5">
         <h4 class="text-lg font-medium mb-3 text-blue-300">Database Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
@@ -101,7 +150,7 @@ graph TD
         </div>
       </div>
       
-      <div class="mb-5">
+      <div id="node-shape-circle" class="mb-5">
         <h4 class="text-lg font-medium mb-3 text-blue-300">Circle Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
@@ -117,7 +166,7 @@ graph TD
         </div>
       </div>
       
-      <div class="mb-5">
+      <div id="node-shape-asymmetric" class="mb-5">
         <h4 class="text-lg font-medium mb-3 text-blue-300">Asymmetric Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
@@ -133,7 +182,7 @@ graph TD
         </div>
       </div>
       
-      <div class="mb-5">
+      <div id="node-shape-rhombus" class="mb-5">
         <h4 class="text-lg font-medium mb-3 text-blue-300">Rhombus Node</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
@@ -149,7 +198,7 @@ graph TD
         </div>
       </div>
       
-      <div class="mb-5">
+      <div id="node-shape-parallelogram" class="mb-5">
         <h4 class="text-lg font-medium mb-3 text-blue-300">Parallelogram</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
@@ -165,7 +214,7 @@ graph TD
         </div>
       </div>
       
-      <div class="mb-5">
+      <div id="node-shape-alt-parallelogram" class="mb-5">
         <h4 class="text-lg font-medium mb-3 text-blue-300">Alternative Parallelogram</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
@@ -181,7 +230,7 @@ graph TD
         </div>
       </div>
       
-      <div class="mb-5">
+      <div id="node-shape-trapezoid" class="mb-5">
         <h4 class="text-lg font-medium mb-3 text-blue-300">Trapezoid</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
@@ -197,7 +246,7 @@ graph TD
         </div>
       </div>
       
-      <div class="mb-5">
+      <div id="node-shape-alt-trapezoid" class="mb-5">
         <h4 class="text-lg font-medium mb-3 text-blue-300">Alternative Trapezoid</h4>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="bg-gray-800 rounded-lg p-4">
@@ -214,7 +263,7 @@ graph TD
       </div>
     </div>
     
-    <div>
+    <div id="sequence-diagram">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Sequence Diagram</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
@@ -234,7 +283,7 @@ sequenceDiagram
       </div>
     </div>
     
-    <div>
+    <div id="class-diagram">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Class Diagram</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
@@ -261,7 +310,7 @@ classDiagram
       </div>
     </div>
     
-    <div>
+    <div id="state-diagram">
       <h3 class="text-xl font-medium mb-4 text-blue-400">State Diagram</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
@@ -282,7 +331,7 @@ stateDiagram-v2
       </div>
     </div>
     
-    <div>
+    <div id="gantt-chart">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Gantt Chart</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
@@ -304,7 +353,7 @@ gantt
       </div>
     </div>
     
-    <div>
+    <div id="entity-relationship">
       <h3 class="text-xl font-medium mb-4 text-blue-400">Entity Relationship</h3>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-gray-800 rounded-lg p-4 mb-2">
@@ -328,5 +377,5 @@ erDiagram
 import MermaidRenderer from '@/components/MermaidRenderer.vue';
 
 // This component displays Mermaid syntax examples.
-// It relies on the MermaidRenderer component to render the diagrams.
+// It relies on the MermaidRenderer component to render the diagrams
 </script>
