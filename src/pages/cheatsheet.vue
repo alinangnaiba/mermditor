@@ -10,8 +10,12 @@
           </RouterLink>
         </div>
         <nav class="flex items-center space-x-4">
-            <RouterLink to="/" class="text-slate-300 font-medium">Home</RouterLink>
-            <RouterLink to="/editor" class="hover:text-slate-300">Editor</RouterLink>
+            <RouterLink to="/" class="text-slate-300 font-medium">
+              Home
+            </RouterLink>
+            <RouterLink to="/editor" class="hover:text-slate-300">
+              Editor
+            </RouterLink>
         </nav>
       </div>
     </header>
