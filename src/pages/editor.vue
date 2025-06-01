@@ -5,8 +5,8 @@
       <div class="container mx-auto flex justify-between items-center">
         <div class="flex items-center">
           <RouterLink to="/" class="flex items-center hover:opacity-80 transition-opacity">
-            <img src="@/assets/logo.png" alt="MerMDitor Logo" class="h-8 mr-3" />
-            <h1 class="text-xl font-bold text-brand-blue">merMDitor</h1>
+            <img src="@/assets/logo.png" alt="MerMDitor Logo" class="h-8 mr-2" />
+            <h1 class="text-xl font-semibold text-brand-blue">merMDitor</h1>
           </RouterLink>
         </div>
         <nav class="flex items-center gap-4">
