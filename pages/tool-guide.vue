@@ -232,39 +232,53 @@ const handleScroll = () => {
   if (!contentArea.value || sectionIds.value.length === 0) return;
 
   const containerRect = contentArea.value.getBoundingClientRect();
-  const activationThreshold = 100;
+  const containerTop = containerRect.top;
+  const containerHeight = containerRect.height;
   
   let currentSection: string | null = null;
-
-  // Find the current section by checking which section is visible in viewport
-  for (const id of sectionIds.value) {
-    const element = document.getElementById(id);
-    if (element) {
-      const elementRect = element.getBoundingClientRect();
-      const relativeTop = elementRect.top - containerRect.top;
-      
-      if (relativeTop <= activationThreshold) {
-        currentSection = id;
-      } else {
-        break;
+  
+  // Handle edge cases first
+  const scrollTop = contentArea.value.scrollTop;
+  const scrollHeight = contentArea.value.scrollHeight;
+  const clientHeight = contentArea.value.clientHeight;
+  
+  // If at the very top, ensure first section is active
+  if (scrollTop < 100) {
+    currentSection = sectionIds.value[0];
+  }
+  // If at the bottom, ensure last section is active
+  else if (scrollHeight - scrollTop - clientHeight < 50) {
+    currentSection = sectionIds.value[sectionIds.value.length - 1];
+  }
+  // Normal scroll detection
+  else {
+    // Find the first section that's visible and near the top of the viewport
+    for (const id of sectionIds.value) {
+      const element = document.getElementById(id);
+      if (element) {
+        const elementRect = element.getBoundingClientRect();
+        const elementTop = elementRect.top;
+        const elementBottom = elementRect.bottom;
+        
+        // Check if section is visible in viewport
+        const isVisible = elementTop < (containerTop + containerHeight) && 
+                         elementBottom > containerTop;
+        
+        // A section is active if it's visible and its top is within a reasonable range of the container top
+        const distanceFromTop = elementTop - containerTop;
+        
+        // Select the section if it's visible and either:
+        // 1. Its top is at or above the container top (it's the current section being viewed)
+        // 2. It's the first section that's visible and reasonably close to the top
+        if (isVisible && distanceFromTop <= 200) {
+          currentSection = id;
+          break; // Take the first matching section
+        }
       }
     }
   }
-  
-  const scrollHeight = contentArea.value.scrollHeight;
-  const scrollTop = contentArea.value.scrollTop;
-  const clientHeight = contentArea.value.clientHeight;
-  const isAtBottom = scrollHeight - scrollTop - clientHeight < 10;
-  
-  if (isAtBottom && sectionIds.value.length > 0) {
-    currentSection = sectionIds.value[sectionIds.value.length - 1];
-  }
-  
-  // If at the top of the page, ensure the first section is active
-  if (contentArea.value.scrollTop < 50 && sectionIds.value.length > 0) {
-    currentSection = sectionIds.value[0];
-  }
 
+  // Only update if the section has actually changed
   if (currentSection && activeSectionId.value !== currentSection) {
     activeSectionId.value = currentSection;
     
