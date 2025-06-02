@@ -19,13 +19,12 @@
         </nav>
       </div>
     </header>
-    
-    <!-- Main Content Area -->
+      <!-- Main Content Area -->
     <div class="flex-1 flex overflow-hidden">
       <!-- Sidebar Navigation -->
       <aside v-if="activeTab === 'markdown' || activeTab === 'mermaid'" 
-             class="w-64 bg-slate-800 p-6 overflow-y-auto flex-shrink-0 border-r border-slate-700">
-        <nav class="space-y-4">
+             class="w-64 bg-slate-800 flex-shrink-0 border-r border-slate-700 sticky top-0 self-start max-h-screen overflow-y-auto">
+        <nav class="space-y-4 p-6">
           <div v-if="activeTab === 'markdown'">
             <h4 class="text-lg font-semibold mb-3 text-slate-300">Markdown Sections</h4>
             <ul class="space-y-2">
@@ -148,7 +147,6 @@ watch(activeTab, async (newTab) => {
   updateSectionIds();
   if (contentArea.value && sectionIds.value.length > 0) {
     contentArea.value.scrollTop = 0; 
-    await nextTick();
     handleScroll();
   }
 }, { immediate: true });
@@ -164,34 +162,23 @@ const updateSectionIds = () => {
   }
 };
 
-const scrollToSection = async (sectionId: string) => {
-  activeSectionId.value = sectionId;
-
+const scrollToSection = (sectionId: string) => {
+  if (!contentArea.value) return;
+  
+  // Handle node shapes submenu state
   if (nodeShapeSections.some(shape => shape.id === sectionId)) {
     nodeShapesSubMenuOpen.value = true;
   } else if (sectionId !== 'node-shapes') {
     nodeShapesSubMenuOpen.value = false;
   }
-
-  await nextTick(); 
-  const sectionElement = document.getElementById(sectionId);
-  if (sectionElement && contentArea.value) {
-    const stickyHeaderHeight = document.querySelector('.sticky.top-0')?.clientHeight || 0;
-    const topOffset = sectionElement.offsetTop - contentArea.value.offsetTop - stickyHeaderHeight;
-    
-    const targetSection = sectionId;
-    
+  
+  const element = contentArea.value.querySelector(`#${sectionId}`) as HTMLElement;
+  if (element) {
+    const elementTop = element.offsetTop;
     contentArea.value.scrollTo({
-      top: topOffset - 20,
+      top: elementTop - 20,
       behavior: 'smooth'
     });
-    
-    // After scroll animation completes (approx 500ms), ensure the active section is still correct
-    setTimeout(() => {
-      if (activeSectionId.value !== targetSection) {
-        activeSectionId.value = targetSection;
-      }
-    }, 500);
   }
 };
 
@@ -288,6 +275,52 @@ onUnmounted(() => {
   }
 });
 
+// Page-specific SEO meta tags
+useSeoMeta({
+  title: 'Tool Guide - merMDitor | Markdown & Mermaid Syntax Reference',
+  description: 'Complete guide to Markdown syntax and Mermaid diagrams. Learn how to create headings, lists, links, flowcharts, sequence diagrams, and more in merMDitor.',
+  ogTitle: 'Tool Guide - merMDitor | Markdown & Mermaid Reference',
+  ogDescription: 'Complete guide to Markdown syntax and Mermaid diagrams. Learn how to create headings, lists, links, flowcharts, and sequence diagrams.',
+  ogUrl: 'https://www.mermditor.dev/tool-guide',
+  twitterTitle: 'Tool Guide - merMDitor | Markdown & Mermaid Reference',
+  twitterDescription: 'Complete guide to Markdown syntax and Mermaid diagrams. Learn formatting, diagrams, and shortcuts.'
+})
+
+useHead({
+  link: [
+    { rel: 'canonical', href: 'https://www.mermditor.dev/tool-guide' }
+  ]
+})
+
+// Structured data for the tool guide page
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({        '@context': 'https://schema.org',
+        '@type': 'TechArticle',
+        headline: 'merMDitor Tool Guide - Markdown & Mermaid Syntax Reference',
+        description: 'Complete guide to Markdown syntax and Mermaid diagrams for the merMDitor editor',
+        url: 'https://www.mermditor.dev/tool-guide',
+        author: {
+          '@type': 'Organization',
+          name: 'merMDitor'
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'merMDitor'
+        },
+        about: [
+          'Markdown syntax',
+          'Mermaid diagrams',
+          'Text formatting',
+          'Flowcharts',
+          'Sequence diagrams'
+        ]
+      })
+    }
+  ]
+})
 </script>
 
 <style scoped>
