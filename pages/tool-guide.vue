@@ -170,8 +170,11 @@ watch(activeTab, async (newTab) => {
   await nextTick();
   updateSectionIds();
   if (contentArea.value && sectionIds.value.length > 0) {
-    contentArea.value.scrollTop = 0; 
-    handleScroll();
+    contentArea.value.scrollTop = 0;
+    // Wait a bit more for components to render
+    setTimeout(() => {
+      handleScroll();
+    }, 100);
   }
 }, { immediate: true });
 
@@ -201,43 +204,46 @@ const scrollToSection = (sectionId: string) => {
     sidebarOpen.value = false;
   }
   
-  const element = contentArea.value.querySelector(`#${sectionId}`) as HTMLElement;
-  if (element) {
-    const elementTop = element.offsetTop;
-    contentArea.value.scrollTo({
-      top: elementTop - 20,
-      behavior: 'smooth'
-    });
-  }
+  // Update active section immediately for responsive feedback
+  activeSectionId.value = sectionId;
+    // Simple approach: use scrollIntoView with better positioning
+  nextTick(() => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      // Use 'center' positioning to avoid going too far
+      element.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'nearest'
+      });
+      
+      // Fine-tune position to show section header properly
+      setTimeout(() => {
+        if (contentArea.value) {
+          // Scroll up just enough to show the section header nicely
+          contentArea.value.scrollTop -= 50;
+        }
+      }, 100);
+    }
+  });
 };
 
 const handleScroll = () => {
   if (!contentArea.value || sectionIds.value.length === 0) return;
 
-  if (activeSectionId.value && nodeShapeSections.some(shape => shape.id === activeSectionId.value)) {
-    const activeElement = document.getElementById(activeSectionId.value);
-    if (activeElement) {
-      const rect = activeElement.getBoundingClientRect();
-      const contentRect = contentArea.value.getBoundingClientRect();
-      if (rect.top < contentRect.bottom && rect.bottom > contentRect.top) {
-        return;
-      }
-    }
-  }
-
-  const scrollPosition = contentArea.value.scrollTop;
-  const containerOffsetTop = contentArea.value.offsetTop;
-  const stickyHeaderHeight = document.querySelector('.sticky.top-0')?.clientHeight || 0;
-  // A threshold to make section active a bit before it hits the very top
-  const activationThreshold = containerOffsetTop + stickyHeaderHeight + 50; 
-
+  const containerRect = contentArea.value.getBoundingClientRect();
+  const activationThreshold = 100;
+  
   let currentSection: string | null = null;
 
+  // Find the current section by checking which section is visible in viewport
   for (const id of sectionIds.value) {
     const element = document.getElementById(id);
     if (element) {
-      const elementTop = element.offsetTop;
-      if (elementTop <= scrollPosition + activationThreshold) { 
+      const elementRect = element.getBoundingClientRect();
+      const relativeTop = elementRect.top - containerRect.top;
+      
+      if (relativeTop <= activationThreshold) {
         currentSection = id;
       } else {
         break;
@@ -245,45 +251,26 @@ const handleScroll = () => {
     }
   }
   
-  // If scrolled to the very bottom, the last section should be active.
-  if (contentArea.value.scrollHeight - contentArea.value.scrollTop <= contentArea.value.clientHeight + 5) {
-    const lastMainSection = mermaidMainSections[mermaidMainSections.length - 1];
-    const lastNodeShapeSection = nodeShapeSections[nodeShapeSections.length -1]?.id;
-    
-    // Prioritize last node shape if it's the actual last element in the scrollable content
-    const lastOverallSection = document.getElementById(lastNodeShapeSection || '') 
-      ? lastNodeShapeSection 
-      : lastMainSection;
-      
-    if (activeTab.value === 'mermaid') {
-        // Check if the last element in view is a node shape or a main mermaid section
-        const lastVisibleElementId = sectionIds.value.find(id => {
-            const el = document.getElementById(id);
-            if (!el || !contentArea.value) return false;
-            const rect = el.getBoundingClientRect();
-            return rect.bottom <= contentArea.value.getBoundingClientRect().bottom + 5;
-        });
-        if (lastVisibleElementId) currentSection = lastVisibleElementId;
-        else currentSection = lastOverallSection; 
-    } else {
-        currentSection = sectionIds.value[sectionIds.value.length -1];
-    }
+  const scrollHeight = contentArea.value.scrollHeight;
+  const scrollTop = contentArea.value.scrollTop;
+  const clientHeight = contentArea.value.clientHeight;
+  const isAtBottom = scrollHeight - scrollTop - clientHeight < 10;
+  
+  if (isAtBottom && sectionIds.value.length > 0) {
+    currentSection = sectionIds.value[sectionIds.value.length - 1];
+  }
+  
+  // If at the top of the page, ensure the first section is active
+  if (contentArea.value.scrollTop < 50 && sectionIds.value.length > 0) {
+    currentSection = sectionIds.value[0];
   }
 
-  if (currentSection) {
-    // Only update active section if it's changed to prevent unnecessary re-renders
-    if (activeSectionId.value !== currentSection) {
-      activeSectionId.value = currentSection;
-    }
+  if (currentSection && activeSectionId.value !== currentSection) {
+    activeSectionId.value = currentSection;
     
+    // Auto-open node shapes submenu if a node shape section is active
     if (nodeShapeSections.some(shape => shape.id === currentSection)) {
       nodeShapesSubMenuOpen.value = true;
-    }
-  } else if (sectionIds.value.length > 0) {
-    // If no section is "active" (e.g. scrolled above the first section),
-    // default to the first section if scroll is near top.
-     if (scrollPosition < containerOffsetTop + 10) { // 10px buffer
-      activeSectionId.value = sectionIds.value[0];
     }
   }
 };
@@ -293,9 +280,10 @@ onMounted(() => {
   if (contentArea.value) {
     contentArea.value.addEventListener('scroll', handleScroll);
   }
-  // Initial check in case the content doesn't trigger a scroll event initially
-  // (e.g. if content is shorter than the viewport or already scrolled to a section via URL hash)
-  handleScroll(); 
+  // Wait for components to render before initial scroll check
+  setTimeout(() => {
+    handleScroll();
+  }, 200);
 });
 
 onUnmounted(() => {
