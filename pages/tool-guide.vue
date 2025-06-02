@@ -171,10 +171,6 @@ watch(activeTab, async (newTab) => {
   updateSectionIds();
   if (contentArea.value && sectionIds.value.length > 0) {
     contentArea.value.scrollTop = 0;
-    // Wait a bit more for components to render
-    setTimeout(() => {
-      handleScroll();
-    }, 100);
   }
 }, { immediate: true });
 
@@ -192,97 +188,84 @@ const updateSectionIds = () => {
 const scrollToSection = (sectionId: string) => {
   if (!contentArea.value) return;
   
-  // Handle node shapes submenu state
   if (nodeShapeSections.some(shape => shape.id === sectionId)) {
     nodeShapesSubMenuOpen.value = true;
   } else if (sectionId !== 'node-shapes') {
     nodeShapesSubMenuOpen.value = false;
   }
   
-  // Close sidebar on mobile after selection
   if (window.innerWidth < 1024) {
     sidebarOpen.value = false;
   }
   
-  // Update active section immediately for responsive feedback
   activeSectionId.value = sectionId;
-    // Simple approach: use scrollIntoView with better positioning
-  nextTick(() => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      // Use 'center' positioning to avoid going too far
-      element.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center',
-        inline: 'nearest'
-      });
+  const element = document.getElementById(sectionId);
+  if (element) {
+    element.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'center',
+      inline: 'nearest'
+    });
       
-      // Fine-tune position to show section header properly
-      setTimeout(() => {
-        if (contentArea.value) {
-          // Scroll up just enough to show the section header nicely
-          contentArea.value.scrollTop -= 50;
-        }
-      }, 100);
-    }
-  });
+    setTimeout(() => {
+      if (contentArea.value) {
+        contentArea.value.scrollTop -= 50;
+      }
+    }, 100);
+  }
 };
 
 const handleScroll = () => {
   if (!contentArea.value || sectionIds.value.length === 0) return;
 
-  const containerRect = contentArea.value.getBoundingClientRect();
-  const containerTop = containerRect.top;
-  const containerHeight = containerRect.height;
-  
-  let currentSection: string | null = null;
-  
-  // Handle edge cases first
   const scrollTop = contentArea.value.scrollTop;
   const scrollHeight = contentArea.value.scrollHeight;
   const clientHeight = contentArea.value.clientHeight;
   
-  // If at the very top, ensure first section is active
-  if (scrollTop < 100) {
+  let currentSection: string | null = null;
+  
+  if (scrollTop < 50) {
     currentSection = sectionIds.value[0];
-  }
-  // If at the bottom, ensure last section is active
-  else if (scrollHeight - scrollTop - clientHeight < 50) {
+  } else if (scrollHeight - scrollTop - clientHeight < 50) {
     currentSection = sectionIds.value[sectionIds.value.length - 1];
-  }
-  // Normal scroll detection
-  else {
-    // Find the first section that's visible and near the top of the viewport
+  } else {
+    let bestSection: string | null = null;
+    let bestScore = -1;
+    
     for (const id of sectionIds.value) {
       const element = document.getElementById(id);
-      if (element) {
-        const elementRect = element.getBoundingClientRect();
-        const elementTop = elementRect.top;
-        const elementBottom = elementRect.bottom;
-        
-        // Check if section is visible in viewport
-        const isVisible = elementTop < (containerTop + containerHeight) && 
-                         elementBottom > containerTop;
-        
-        // A section is active if it's visible and its top is within a reasonable range of the container top
-        const distanceFromTop = elementTop - containerTop;
-        
-        // Select the section if it's visible and either:
-        // 1. Its top is at or above the container top (it's the current section being viewed)
-        // 2. It's the first section that's visible and reasonably close to the top
-        if (isVisible && distanceFromTop <= 200) {
-          currentSection = id;
-          break; // Take the first matching section
-        }
+      if (!element) continue;
+      
+      const rect = element.getBoundingClientRect();
+      const containerRect = contentArea.value.getBoundingClientRect();
+      
+      const visibleTop = Math.max(rect.top, containerRect.top);
+      const visibleBottom = Math.min(rect.bottom, containerRect.bottom);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+      
+      if (visibleHeight <= 0) continue;
+      
+      const totalHeight = rect.height;
+      const visibilityRatio = visibleHeight / totalHeight;
+      
+      const distanceFromTop = Math.abs(rect.top - containerRect.top);
+      const maxDistance = containerRect.height;
+      const positionScore = Math.max(0, 1 - (distanceFromTop / maxDistance));
+      
+      const score = (visibilityRatio * 0.7) + (positionScore * 0.3);
+      
+      if (visibilityRatio >= 0.2 && score > bestScore) {
+        bestScore = score;
+        bestSection = id;
       }
     }
+    
+    currentSection = bestSection;
   }
 
-  // Only update if the section has actually changed
   if (currentSection && activeSectionId.value !== currentSection) {
     activeSectionId.value = currentSection;
     
-    // Auto-open node shapes submenu if a node shape section is active
     if (nodeShapeSections.some(shape => shape.id === currentSection)) {
       nodeShapesSubMenuOpen.value = true;
     }
@@ -294,10 +277,6 @@ onMounted(() => {
   if (contentArea.value) {
     contentArea.value.addEventListener('scroll', handleScroll);
   }
-  // Wait for components to render before initial scroll check
-  setTimeout(() => {
-    handleScroll();
-  }, 200);
 });
 
 onUnmounted(() => {
