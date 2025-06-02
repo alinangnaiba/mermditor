@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col h-screen bg-slate-900 text-white">
-    <!-- Header - Fixed height -->
     <header class="py-4 px-6 border-b border-slate-800 flex-shrink-0">
       <div class="container mx-auto flex justify-between items-center">
         <div class="flex items-center">
@@ -41,6 +40,40 @@
 
 <script lang="ts" setup>
 // MarkdownEditor is auto-imported by Nuxt
-</script>
 
-<!-- Using global styles from global.css -->
+// Page-specific SEO meta tags
+useSeoMeta({
+  title: 'Markdown Editor - merMDitor | Free Online Editor with Mermaid Support',
+  description: 'Start writing Markdown with live preview and Mermaid diagram support. Auto-saves your work locally. No account required - just start typing!',
+  ogTitle: 'Markdown Editor - merMDitor',
+  ogDescription: 'Start writing Markdown with live preview and Mermaid diagram support. Auto-saves your work locally.',
+  ogUrl: 'https://www.mermditor.dev/editor',
+  twitterTitle: 'Markdown Editor - merMDitor',
+  twitterDescription: 'Start writing Markdown with live preview and Mermaid diagram support. Auto-saves your work locally.'
+})
+
+useHead({
+  link: [
+    { rel: 'canonical', href: 'https://www.mermditor.dev/editor' }
+  ]
+})
+
+// Structured data for the editor page
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'merMDitor Editor',
+        description: 'Online Markdown editor with live preview and Mermaid diagram support',
+        url: 'https://www.mermditor.dev/editor',
+        applicationCategory: 'DesignApplication',
+        browserRequirements: 'Requires JavaScript. Requires HTML5.',
+        operatingSystem: 'Any',
+        permissions: 'No special permissions required'
+      })
+    }
+  ]
+})
+</script>

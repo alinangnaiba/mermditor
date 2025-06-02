@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-900 text-white flex flex-col">
-    <!-- Header -->
-    <header class="py-4 px-6 border-b border-slate-800 flex-shrink-0">
+    <!-- Header -->    <header class="py-4 px-6 border-b border-slate-800 flex-shrink-0 bg-slate-900 sticky top-0 z-30">
       <div class="container mx-auto flex justify-between items-center">
         <div class="flex items-center">
           <NuxtLink to="/" class="flex items-center hover:opacity-80 transition-opacity">
@@ -18,14 +17,38 @@
           </NuxtLink>
         </nav>
       </div>
-    </header>
-    
-    <!-- Main Content Area -->
-    <div class="flex-1 flex overflow-hidden">
-      <!-- Sidebar Navigation -->
-      <aside v-if="activeTab === 'markdown' || activeTab === 'mermaid'" 
-             class="w-64 bg-slate-800 p-6 overflow-y-auto flex-shrink-0 border-r border-slate-700">
-        <nav class="space-y-4">
+    </header>    <!-- Main Content Area -->
+    <div class="flex-1 flex relative">      <!-- Mobile Sidebar Toggle Button -->
+      <button 
+        v-if="activeTab === 'markdown' || activeTab === 'mermaid'"
+        @click="sidebarOpen = !sidebarOpen" 
+        class="lg:hidden fixed bottom-6 left-6 z-40 bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
+        aria-label="Toggle navigation menu">
+        <svg v-if="!sidebarOpen" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      
+      <!-- Overlay for mobile sidebar background -->
+      <div 
+        v-if="sidebarOpen" 
+        @click="sidebarOpen = false"
+        class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity"
+        aria-hidden="true"
+      ></div>      <!-- Sidebar Navigation -->
+      <div 
+        :class="[
+          'transition-transform duration-300 ease-in-out',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          'fixed lg:sticky left-0 top-16 z-30 h-[calc(100vh-64px)] lg:max-h-[calc(100vh-64px)]'
+        ]"
+      >
+        <aside v-if="activeTab === 'markdown' || activeTab === 'mermaid'" 
+               class="w-64 bg-slate-800 flex-shrink-0 border-r border-slate-700 h-full overflow-y-auto">
+          <nav class="space-y-4 p-6">
           <div v-if="activeTab === 'markdown'">
             <h4 class="text-lg font-semibold mb-3 text-slate-300">Markdown Sections</h4>
             <ul class="space-y-2">
@@ -62,15 +85,14 @@
               <li><a @click.prevent="scrollToSection('gantt-chart')" href="#gantt-chart" :class="['hover:text-slate-200 block', isActiveSection('gantt-chart') ? 'text-slate-200 font-semibold' : 'text-slate-400']">Gantt Chart</a></li>
               <li><a @click.prevent="scrollToSection('entity-relationship')" href="#entity-relationship" :class="['hover:text-slate-200 block', isActiveSection('entity-relationship') ? 'text-slate-200 font-semibold' : 'text-slate-400']">Entity Relationship</a></li>
             </ul>
-          </div>
-        </nav>
+          </div>        </nav>
       </aside>
+      </div>
 
       <!-- Documentation Content - Scrollable area -->
       <div class="flex-1 overflow-y-auto" ref="contentArea" @scroll="handleScroll">
-        <div class="container mx-auto py-8 px-4 pb-20">
-          <!-- Tab Navigation -->
-          <div class="mb-8 sticky top-0 bg-slate-900 py-3 z-10 border-b border-slate-800">
+        <div class="container mx-auto py-8 px-4 pb-20">          <!-- Tab Navigation -->
+          <div class="mb-8 sticky top-16 bg-slate-900 py-3 z-20 border-b border-slate-800">
             <nav class="flex justify-center space-x-4" aria-label="Tabs">
               <button 
                 @click="activeTab = 'markdown'" 
@@ -111,6 +133,7 @@ const contentArea = ref<HTMLElement | null>(null);
 const activeSectionId = ref<string | null>(null);
 const sectionIds = ref<string[]>([]);
 const nodeShapesSubMenuOpen = ref(false);
+const sidebarOpen = ref(false);
 
 const markdownSections = ['headings', 'text-formatting', 'lists', 'links-images', 'blockquotes', 'code-blocks', 'tables', 'horizontal-rule'];
 const mermaidMainSections = ['basic-flowchart', 'node-shapes', 'sequence-diagram', 'class-diagram', 'state-diagram', 'gantt-chart', 'entity-relationship'];
@@ -147,9 +170,7 @@ watch(activeTab, async (newTab) => {
   await nextTick();
   updateSectionIds();
   if (contentArea.value && sectionIds.value.length > 0) {
-    contentArea.value.scrollTop = 0; 
-    await nextTick();
-    handleScroll();
+    contentArea.value.scrollTop = 0;
   }
 }, { immediate: true });
 
@@ -164,110 +185,89 @@ const updateSectionIds = () => {
   }
 };
 
-const scrollToSection = async (sectionId: string) => {
-  activeSectionId.value = sectionId;
-
+const scrollToSection = (sectionId: string) => {
+  if (!contentArea.value) return;
+  
   if (nodeShapeSections.some(shape => shape.id === sectionId)) {
     nodeShapesSubMenuOpen.value = true;
   } else if (sectionId !== 'node-shapes') {
     nodeShapesSubMenuOpen.value = false;
   }
-
-  await nextTick(); 
-  const sectionElement = document.getElementById(sectionId);
-  if (sectionElement && contentArea.value) {
-    const stickyHeaderHeight = document.querySelector('.sticky.top-0')?.clientHeight || 0;
-    const topOffset = sectionElement.offsetTop - contentArea.value.offsetTop - stickyHeaderHeight;
-    
-    const targetSection = sectionId;
-    
-    contentArea.value.scrollTo({
-      top: topOffset - 20,
-      behavior: 'smooth'
+  
+  if (window.innerWidth < 1024) {
+    sidebarOpen.value = false;
+  }
+  
+  activeSectionId.value = sectionId;
+  const element = document.getElementById(sectionId);
+  if (element) {
+    element.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'center',
+      inline: 'nearest'
     });
-    
-    // After scroll animation completes (approx 500ms), ensure the active section is still correct
+      
     setTimeout(() => {
-      if (activeSectionId.value !== targetSection) {
-        activeSectionId.value = targetSection;
+      if (contentArea.value) {
+        contentArea.value.scrollTop -= 50;
       }
-    }, 500);
+    }, 100);
   }
 };
 
 const handleScroll = () => {
   if (!contentArea.value || sectionIds.value.length === 0) return;
 
-  if (activeSectionId.value && nodeShapeSections.some(shape => shape.id === activeSectionId.value)) {
-    const activeElement = document.getElementById(activeSectionId.value);
-    if (activeElement) {
-      const rect = activeElement.getBoundingClientRect();
-      const contentRect = contentArea.value.getBoundingClientRect();
-      if (rect.top < contentRect.bottom && rect.bottom > contentRect.top) {
-        return;
-      }
-    }
-  }
-
-  const scrollPosition = contentArea.value.scrollTop;
-  const containerOffsetTop = contentArea.value.offsetTop;
-  const stickyHeaderHeight = document.querySelector('.sticky.top-0')?.clientHeight || 0;
-  // A threshold to make section active a bit before it hits the very top
-  const activationThreshold = containerOffsetTop + stickyHeaderHeight + 50; 
-
-  let currentSection: string | null = null;
-
-  for (const id of sectionIds.value) {
-    const element = document.getElementById(id);
-    if (element) {
-      const elementTop = element.offsetTop;
-      if (elementTop <= scrollPosition + activationThreshold) { 
-        currentSection = id;
-      } else {
-        break;
-      }
-    }
-  }
+  const scrollTop = contentArea.value.scrollTop;
+  const scrollHeight = contentArea.value.scrollHeight;
+  const clientHeight = contentArea.value.clientHeight;
   
-  // If scrolled to the very bottom, the last section should be active.
-  if (contentArea.value.scrollHeight - contentArea.value.scrollTop <= contentArea.value.clientHeight + 5) {
-    const lastMainSection = mermaidMainSections[mermaidMainSections.length - 1];
-    const lastNodeShapeSection = nodeShapeSections[nodeShapeSections.length -1]?.id;
+  let currentSection: string | null = null;
+  
+  if (scrollTop < 50) {
+    currentSection = sectionIds.value[0];
+  } else if (scrollHeight - scrollTop - clientHeight < 50) {
+    currentSection = sectionIds.value[sectionIds.value.length - 1];
+  } else {
+    let bestSection: string | null = null;
+    let bestScore = -1;
     
-    // Prioritize last node shape if it's the actual last element in the scrollable content
-    const lastOverallSection = document.getElementById(lastNodeShapeSection || '') 
-      ? lastNodeShapeSection 
-      : lastMainSection;
+    for (const id of sectionIds.value) {
+      const element = document.getElementById(id);
+      if (!element) continue;
       
-    if (activeTab.value === 'mermaid') {
-        // Check if the last element in view is a node shape or a main mermaid section
-        const lastVisibleElementId = sectionIds.value.find(id => {
-            const el = document.getElementById(id);
-            if (!el || !contentArea.value) return false;
-            const rect = el.getBoundingClientRect();
-            return rect.bottom <= contentArea.value.getBoundingClientRect().bottom + 5;
-        });
-        if (lastVisibleElementId) currentSection = lastVisibleElementId;
-        else currentSection = lastOverallSection; 
-    } else {
-        currentSection = sectionIds.value[sectionIds.value.length -1];
+      const rect = element.getBoundingClientRect();
+      const containerRect = contentArea.value.getBoundingClientRect();
+      
+      const visibleTop = Math.max(rect.top, containerRect.top);
+      const visibleBottom = Math.min(rect.bottom, containerRect.bottom);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+      
+      if (visibleHeight <= 0) continue;
+      
+      const totalHeight = rect.height;
+      const visibilityRatio = visibleHeight / totalHeight;
+      
+      const distanceFromTop = Math.abs(rect.top - containerRect.top);
+      const maxDistance = containerRect.height;
+      const positionScore = Math.max(0, 1 - (distanceFromTop / maxDistance));
+      
+      const score = (visibilityRatio * 0.7) + (positionScore * 0.3);
+      
+      if (visibilityRatio >= 0.2 && score > bestScore) {
+        bestScore = score;
+        bestSection = id;
+      }
     }
+    
+    currentSection = bestSection;
   }
 
-  if (currentSection) {
-    // Only update active section if it's changed to prevent unnecessary re-renders
-    if (activeSectionId.value !== currentSection) {
-      activeSectionId.value = currentSection;
-    }
+  if (currentSection && activeSectionId.value !== currentSection) {
+    activeSectionId.value = currentSection;
     
     if (nodeShapeSections.some(shape => shape.id === currentSection)) {
       nodeShapesSubMenuOpen.value = true;
-    }
-  } else if (sectionIds.value.length > 0) {
-    // If no section is "active" (e.g. scrolled above the first section),
-    // default to the first section if scroll is near top.
-     if (scrollPosition < containerOffsetTop + 10) { // 10px buffer
-      activeSectionId.value = sectionIds.value[0];
     }
   }
 };
@@ -277,9 +277,6 @@ onMounted(() => {
   if (contentArea.value) {
     contentArea.value.addEventListener('scroll', handleScroll);
   }
-  // Initial check in case the content doesn't trigger a scroll event initially
-  // (e.g. if content is shorter than the viewport or already scrolled to a section via URL hash)
-  handleScroll(); 
 });
 
 onUnmounted(() => {
@@ -288,6 +285,52 @@ onUnmounted(() => {
   }
 });
 
+// Page-specific SEO meta tags
+useSeoMeta({
+  title: 'Tool Guide - merMDitor | Markdown & Mermaid Syntax Reference',
+  description: 'Complete guide to Markdown syntax and Mermaid diagrams. Learn how to create headings, lists, links, flowcharts, sequence diagrams, and more in merMDitor.',
+  ogTitle: 'Tool Guide - merMDitor | Markdown & Mermaid Reference',
+  ogDescription: 'Complete guide to Markdown syntax and Mermaid diagrams. Learn how to create headings, lists, links, flowcharts, and sequence diagrams.',
+  ogUrl: 'https://www.mermditor.dev/tool-guide',
+  twitterTitle: 'Tool Guide - merMDitor | Markdown & Mermaid Reference',
+  twitterDescription: 'Complete guide to Markdown syntax and Mermaid diagrams. Learn formatting, diagrams, and shortcuts.'
+})
+
+useHead({
+  link: [
+    { rel: 'canonical', href: 'https://www.mermditor.dev/tool-guide' }
+  ]
+})
+
+// Structured data for the tool guide page
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({        '@context': 'https://schema.org',
+        '@type': 'TechArticle',
+        headline: 'merMDitor Tool Guide - Markdown & Mermaid Syntax Reference',
+        description: 'Complete guide to Markdown syntax and Mermaid diagrams for the merMDitor editor',
+        url: 'https://www.mermditor.dev/tool-guide',
+        author: {
+          '@type': 'Organization',
+          name: 'merMDitor'
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'merMDitor'
+        },
+        about: [
+          'Markdown syntax',
+          'Mermaid diagrams',
+          'Text formatting',
+          'Flowcharts',
+          'Sequence diagrams'
+        ]
+      })
+    }
+  ]
+})
 </script>
 
 <style scoped>

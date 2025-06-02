@@ -57,11 +57,35 @@
 </template>
 
 <script setup lang="ts">
-// SEO and meta tags
+// Page-specific SEO meta tags
+useSeoMeta({
+  title: 'Feedback & Support - merMDitor | Report Bugs & Suggest Features',
+  description: 'Share your feedback, report bugs, or suggest improvements for merMDitor. Help us make the best Markdown and Mermaid diagram editor.',
+  ogTitle: 'Feedback & Support - merMDitor',
+  ogDescription: 'Share your feedback, report bugs, or suggest improvements for merMDitor.',
+  ogUrl: 'https://www.mermditor.dev/feedback',
+  twitterTitle: 'Feedback & Support - merMDitor',
+  twitterDescription: 'Share your feedback, report bugs, or suggest improvements for merMDitor.'
+})
+
 useHead({
-  title: 'Feedback - merMDitor',
-  meta: [
-    { name: 'description', content: 'Share your feedback, report bugs, or suggest improvements for Mermditor - the Markdown and Mermaid diagram editor.' }
+  link: [
+    { rel: 'canonical', href: 'https://www.mermditor.dev/feedback' }
+  ]
+})
+
+// Structured data for the feedback page
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({        '@context': 'https://schema.org',
+        '@type': 'ContactPage',
+        name: 'merMDitor Feedback & Support',
+        description: 'Feedback and support page for merMDitor - Markdown and Mermaid diagram editor',
+        url: 'https://www.mermditor.dev/feedback'
+      })
+    }
   ]
 })
 </script>

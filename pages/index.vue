@@ -11,34 +11,31 @@
           <NuxtLink to="/tool-guide" class="text-gray-300 hover:text-white">Tool Guide</NuxtLink>
         </nav>
       </div>
-    </header>    
-    <!-- Main Content Area -->
-    <main class="flex-grow flex flex-col">      <!-- Hero Section -->
-      <section class="py-12 md:py-20 flex flex-col items-center justify-center">
+    </header>      <!-- Main Content Area -->
+    <main class="flex-grow flex flex-col" role="main">      <!-- Hero Section -->
+      <section class="py-12 md:py-20 flex flex-col items-center justify-center" aria-labelledby="hero-heading">
         <div class="container mx-auto text-center px-4">
-        <div class="max-w-3xl mx-auto">          <h2 class="text-5xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 flex flex-col md:flex-row items-center justify-center text-brand-blue">
+        <div class="max-w-3xl mx-auto">
+          <h1 id="hero-heading" class="text-5xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 flex flex-col md:flex-row items-center justify-center text-brand-blue">
             <img src="~/assets/logo.png" alt="merMDitor Logo" class="h-10 sm:h-12 md:h-14 lg:h-16 mb-4 md:mb-0 md:mr-4" />
             merMDitor
-          </h2>
+          </h1>
           <p class="text-xl sm:text-2xl md:text-3xl text-gray-300 mb-6">A simple Markdown editor with <a href="https://mermaid.js.org/" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-slate-300 underline">Mermaid</a> diagram support</p>
           <p class="text-lg text-gray-400 mb-12 leading-relaxed">
             Write Markdown, see it rendered instantly, and add diagrams with Mermaid syntax. 
             No signup required, works in your browser, saves automatically to local storage.
-          </p>          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <NuxtLink to="/editor" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium">
               Open Editor
             </NuxtLink>
-            <!-- <RouterLink to="/richtexteditor" class="px-6 py-3 bg-slate-600 hover:bg-slate-700 rounded-lg text-white font-medium">
-              Rich Text Editor
-            </RouterLink> -->
           </div>
         </div>
       </div>
-      </section>
-        <!-- Features Section -->
-      <section class="py-16 bg-slate-800">
+      </section>        <!-- Features Section -->
+      <section class="py-16 bg-slate-800" aria-labelledby="features-heading">
         <div class="container mx-auto px-4">
-          <h3 class="text-3xl font-bold text-center mb-12 text-brand-blue">What it does</h3>
+          <h2 id="features-heading" class="text-3xl font-bold text-center mb-12 text-brand-blue">What it does</h2>
           
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <div class="bg-slate-900 p-6 rounded-lg border border-slate-700">
@@ -130,8 +127,58 @@
     </div>
   </template>
   <script lang="ts" setup>
-  // RouterLink is replaced with NuxtLink (auto-imported)
-  // AppFooter component is auto-imported by Nuxt
+// Page-specific SEO meta tags
+useSeoMeta({
+  title: 'merMDitor - Free Markdown Editor with Mermaid Diagrams | No Signup Required',
+  description: 'Free online Markdown editor with live preview and Mermaid diagram support. Create flowcharts, sequence diagrams, and more. Works entirely in your browser with auto-save. No registration required.',
+  ogTitle: 'merMDitor - Free Markdown Editor with Mermaid Diagrams',
+  ogDescription: 'Free online Markdown editor with live preview and Mermaid diagram support. Create flowcharts, sequence diagrams, and more. Works entirely in your browser with auto-save.',
+  ogImage: '/og-image.png',
+  ogUrl: 'https://www.mermditor.dev',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'merMDitor - Free Markdown Editor with Mermaid Diagrams',
+  twitterDescription: 'Free online Markdown editor with live preview and Mermaid diagram support. No signup required.',
+  twitterImage: '/og-image.png'
+})
+
+useHead({
+  link: [
+    { rel: 'canonical', href: 'https://www.mermditor.dev' }
+  ]
+})
+
+// Structured data for better SEO
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'merMDitor',
+        description: 'Free online Markdown editor with live preview and Mermaid diagram support',
+        url: 'https://www.mermditor.dev',
+        applicationCategory: 'DesignApplication',
+        operatingSystem: 'Any',
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'USD'
+        },
+        author: {
+          '@type': 'Organization',
+          name: 'merMDitor'
+        },
+        features: [
+          'Markdown editing with live preview',
+          'Mermaid diagram support',
+          'Auto-save functionality', 
+          'No registration required',
+          'Browser-based editor'
+        ]
+      })
+    }
+  ]
+})
   </script>
 
   <style>
