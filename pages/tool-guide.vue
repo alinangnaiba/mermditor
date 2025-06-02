@@ -17,11 +17,35 @@
           </NuxtLink>
         </nav>
       </div>
-    </header>
-    <!-- Main Content Area -->
-    <div class="flex-1 flex">
-      <!-- Sidebar Navigation -->
-      <div class="sticky top-16 h-[calc(100vh-64px)]">
+    </header>    <!-- Main Content Area -->
+    <div class="flex-1 flex relative">      <!-- Mobile Sidebar Toggle Button -->
+      <button 
+        v-if="activeTab === 'markdown' || activeTab === 'mermaid'"
+        @click="sidebarOpen = !sidebarOpen" 
+        class="lg:hidden fixed bottom-6 left-6 z-40 bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
+        aria-label="Toggle navigation menu">
+        <svg v-if="!sidebarOpen" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      
+      <!-- Overlay for mobile sidebar background -->
+      <div 
+        v-if="sidebarOpen" 
+        @click="sidebarOpen = false"
+        class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity"
+        aria-hidden="true"
+      ></div>      <!-- Sidebar Navigation -->
+      <div 
+        :class="[
+          'transition-transform duration-300 ease-in-out',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          'fixed lg:sticky left-0 top-16 z-30 h-[calc(100vh-64px)] lg:max-h-[calc(100vh-64px)]'
+        ]"
+      >
         <aside v-if="activeTab === 'markdown' || activeTab === 'mermaid'" 
                class="w-64 bg-slate-800 flex-shrink-0 border-r border-slate-700 h-full overflow-y-auto">
           <nav class="space-y-4 p-6">
@@ -109,6 +133,7 @@ const contentArea = ref<HTMLElement | null>(null);
 const activeSectionId = ref<string | null>(null);
 const sectionIds = ref<string[]>([]);
 const nodeShapesSubMenuOpen = ref(false);
+const sidebarOpen = ref(false);
 
 const markdownSections = ['headings', 'text-formatting', 'lists', 'links-images', 'blockquotes', 'code-blocks', 'tables', 'horizontal-rule'];
 const mermaidMainSections = ['basic-flowchart', 'node-shapes', 'sequence-diagram', 'class-diagram', 'state-diagram', 'gantt-chart', 'entity-relationship'];
@@ -169,6 +194,11 @@ const scrollToSection = (sectionId: string) => {
     nodeShapesSubMenuOpen.value = true;
   } else if (sectionId !== 'node-shapes') {
     nodeShapesSubMenuOpen.value = false;
+  }
+  
+  // Close sidebar on mobile after selection
+  if (window.innerWidth < 1024) {
+    sidebarOpen.value = false;
   }
   
   const element = contentArea.value.querySelector(`#${sectionId}`) as HTMLElement;
