@@ -1,22 +1,21 @@
 <template>
-  <div class="h-screen bg-slate-900 text-white flex flex-col">
+  <div class="min-h-screen bg-slate-900 text-white flex flex-col">
     <!-- Header -->
     <header class="py-4 px-6 border-b border-slate-800 flex-shrink-0">
-      <div class="container mx-auto flex justify-between items-center">        <div class="flex items-center">
+      <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center">
           <NuxtLink to="/" class="flex items-center hover:opacity-80 transition-opacity">
-            <img src="~/assets/logo.png" alt="MerMDitor Logo" class="h-8 mr-2" />
+            <img src="~/assets/logo.png" alt="merMDitor Logo" class="h-8 mr-3" />
             <h1 class="text-xl font-semibold text-brand-blue">merMDitor</h1>
           </NuxtLink>
-        </div>        <nav class="flex items-center space-x-4">
-            <NuxtLink to="/" class="text-slate-300 font-medium">
-              Home
-            </NuxtLink>
-            <NuxtLink to="/editor" class="hover:text-slate-300">
-              Editor
-            </NuxtLink>
-            <NuxtLink to="/feedback" class="hover:text-slate-300">
-              Feedback
-            </NuxtLink>
+        </div>
+        <nav class="flex items-center space-x-4">
+          <NuxtLink to="/" class="text-gray-300 hover:text-white">
+            Home
+          </NuxtLink>
+          <NuxtLink to="/editor" class="text-gray-300 hover:text-white">
+            Editor
+          </NuxtLink>
         </nav>
       </div>
     </header>
@@ -67,7 +66,7 @@
         </nav>
       </aside>
 
-      <!-- Cheat Sheet Content - Scrollable area -->
+      <!-- Documentation Content - Scrollable area -->
       <div class="flex-1 overflow-y-auto" ref="contentArea" @scroll="handleScroll">
         <div class="container mx-auto py-8 px-4 pb-20">
           <!-- Tab Navigation -->
@@ -91,9 +90,9 @@
             </nav>
           </div>          <!-- Tab Content -->
           <div>
-            <CheatsheetMarkdownContent v-if="activeTab === 'markdown'" />
-            <CheatsheetMermaidContent v-if="activeTab === 'mermaid'" />
-            <CheatsheetShortcutsContent v-if="activeTab === 'shortcuts'" />
+            <ToolGuideMarkdownContent v-if="activeTab === 'markdown'" />
+            <ToolGuideMermaidContent v-if="activeTab === 'mermaid'" />
+            <ToolGuideShortcutsContent v-if="activeTab === 'shortcuts'" />
           </div>
         </div>
       </div>

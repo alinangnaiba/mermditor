@@ -2,13 +2,13 @@
   <div class="min-h-screen bg-slate-900 text-white flex flex-col">
     <!-- Header -->
     <header class="py-4 px-6 border-b border-slate-800 flex-shrink-0">
-      <div class="container mx-auto flex justify-between items-center">        <div class="flex items-center">
+      <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center">
           <NuxtLink to="/" class="flex items-center hover:opacity-80 transition-opacity">
             <img src="~/assets/logo.png" alt="merMDitor Logo" class="h-8 mr-3" />
           </NuxtLink>
         </div>        <nav class="flex items-center space-x-4">
-            <NuxtLink to="/cheatsheet" class="text-gray-300 hover:text-white">Cheat Sheet</NuxtLink>
-            <NuxtLink to="/feedback" class="text-gray-300 hover:text-white">Feedback</NuxtLink>
+          <NuxtLink to="/tool-guide" class="text-gray-300 hover:text-white">Tool Guide</NuxtLink>
         </nav>
       </div>
     </header>    
@@ -25,8 +25,8 @@
             Write Markdown, see it rendered instantly, and add diagrams with Mermaid syntax. 
             No signup required, works in your browser, saves automatically to local storage.
           </p>          <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <NuxtLink to="/editor" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium">
-              Try the Editor
+            <NuxtLink to="/editor" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium">
+              Open Editor
             </NuxtLink>
             <!-- <RouterLink to="/richtexteditor" class="px-6 py-3 bg-slate-600 hover:bg-slate-700 rounded-lg text-white font-medium">
               Rich Text Editor
@@ -92,7 +92,7 @@
             </div>
 
             <div class="bg-slate-900 p-6 rounded-lg border border-slate-700">
-              <!-- [ICON: Cheatsheet] -->
+              <!-- [ICON: Tool Guide] -->
               <svg class="w-12 h-12 mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
               <h4 class="text-xl font-medium mb-3">Built-in help</h4>
