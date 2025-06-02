@@ -2,7 +2,7 @@
 
 A lightweight, modern Markdown editor built with Vue 3 and Tailwind CSS that allows you to write and preview Markdown content in real-time. It features special support for Mermaid diagrams, syntax highlighting, and a clean, distraction-free editing experience.
 
-![MerMDitor Screenshot](src/assets/logo.png)
+![MerMDitor Screenshot](assets/logo.png)
 
 ## ✨ Features
 
@@ -52,6 +52,43 @@ Follow these steps to set up the project locally:
    ```
    http://localhost:3000
    ```
+
+## 🔗 GitHub Integration Setup (Optional)
+
+The feedback feature allows users to submit suggestions, bug reports, and feature requests directly through the app, which creates GitHub issues automatically.
+
+### Prerequisites
+
+1. A GitHub repository where you want feedback issues to be created
+2. A GitHub Personal Access Token with repository permissions
+
+### Setup Steps
+
+1. **Create a GitHub Personal Access Token**:
+   - Go to [GitHub Settings > Personal Access Tokens](https://github.com/settings/tokens)
+   - Click "Generate new token" (classic)
+   - Give it a descriptive name like "MerMDitor Feedback"
+   - Select the `repo` scope (or `public_repo` for public repositories)
+   - Copy the generated token
+
+2. **Configure Environment Variables**:
+   - Copy `.env.example` to `.env`:
+     ```bash
+     cp .env.example .env
+     ```
+   - Edit `.env` and add your credentials:
+     ```bash
+     GITHUB_OWNER=your-github-username
+     GITHUB_REPO=your-repository-name
+     GITHUB_TOKEN=your_github_token_here
+     ```
+
+3. **Test the Integration**:
+   - Start the development server: `npm run dev`
+   - Navigate to the Feedback page: `http://localhost:3000/feedback`
+   - Submit a test feedback to verify it creates an issue in your repository
+
+**Note**: The `.env` file is already included in `.gitignore` to keep your credentials secure.
 
 ## 💡 Usage Guide
 

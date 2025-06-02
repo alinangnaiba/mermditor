@@ -1,16 +1,21 @@
 /** @type {import('tailwindcss').Config} */
-import typography from '@tailwindcss/typography';
 const defaultTheme = require('tailwindcss/defaultTheme')
 
 export default {
   content: [
-    "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
-  ],  theme: {
+    "./components/**/*.{js,vue,ts}",
+    "./layouts/**/*.vue",
+    "./pages/**/*.vue",
+    "./plugins/**/*.{js,ts}",
+    "./app.vue",
+    "./error.vue"
+  ],
+  theme: {
     extend: {
       colors: {
         'deep-black': '#0a0a0a',
-        'dark-surface': '#1e1e1e', // Added lighter black from --background-dark
+        'dark-surface': '#1e1e1e',
+        'brand-blue': '#3b82f6'
       },
       fontFamily: {
         sans: ['"Nunito Sans"', ...defaultTheme.fontFamily.sans],
@@ -18,6 +23,6 @@ export default {
     },
   },
   plugins: [
-    typography,
+    require('@tailwindcss/typography'),
   ],
 }
