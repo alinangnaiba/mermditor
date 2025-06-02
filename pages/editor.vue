@@ -1,0 +1,46 @@
+<template>
+  <div class="flex flex-col h-screen bg-slate-900 text-white">
+    <!-- Header - Fixed height -->
+    <header class="py-4 px-6 border-b border-slate-800 flex-shrink-0">
+      <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center">
+          <NuxtLink to="/" class="flex items-center hover:opacity-80 transition-opacity">
+            <img src="~/assets/logo.png" alt="merMDitor Logo" class="h-8 mr-3" />
+            <h1 class="text-xl font-semibold text-brand-blue">merMDitor</h1>
+          </NuxtLink>
+        </div>
+        <nav class="flex items-center space-x-4">
+          <NuxtLink to="/" class="text-gray-300 hover:text-white">          Home
+          </NuxtLink>          <NuxtLink to="/tool-guide" class="text-gray-300 hover:text-white">
+            Tool Guide
+          </NuxtLink>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Editor takes remaining space with flex-grow -->
+    <div class="flex-grow min-h-0 relative">
+      <MarkdownEditor />
+        <!-- Floating Help Button -->
+      <NuxtLink 
+        to="/feedback" 
+        class="fixed bottom-6 right-6 bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-full shadow-lg z-50 transition-colors group"
+        title="Get Help or Send Feedback"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <!-- Tooltip -->
+        <span class="absolute right-full mr-3 top-1/2 transform -translate-y-1/2 bg-slate-800 text-white text-sm px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          Help & Feedback
+        </span>
+      </NuxtLink>
+    </div>
+  </div>
+</template>
+
+<script lang="ts" setup>
+// MarkdownEditor is auto-imported by Nuxt
+</script>
+
+<!-- Using global styles from global.css -->

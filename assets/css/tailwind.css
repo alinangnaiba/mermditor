@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    @apply h-full m-0 p-0 overflow-hidden;
+  }
+  
+  body {
+    @apply bg-gray-900 text-gray-100;
+    font-family: 'Nunito Sans', sans-serif;
+  }
+}
+
+@layer components {
+  .bg-dark {
+    @apply bg-gray-900;
+  }
+  
+  .bg-dark-50 {
+    @apply bg-gray-800;
+  }
+}
