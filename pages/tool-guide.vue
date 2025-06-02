@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-900 text-white flex flex-col">
-    <!-- Header -->
-    <header class="py-4 px-6 border-b border-slate-800 flex-shrink-0">
+    <!-- Header -->    <header class="py-4 px-6 border-b border-slate-800 flex-shrink-0 bg-slate-900 sticky top-0 z-30">
       <div class="container mx-auto flex justify-between items-center">
         <div class="flex items-center">
           <NuxtLink to="/" class="flex items-center hover:opacity-80 transition-opacity">
@@ -19,12 +18,13 @@
         </nav>
       </div>
     </header>
-      <!-- Main Content Area -->
-    <div class="flex-1 flex overflow-hidden">
+    <!-- Main Content Area -->
+    <div class="flex-1 flex">
       <!-- Sidebar Navigation -->
-      <aside v-if="activeTab === 'markdown' || activeTab === 'mermaid'" 
-             class="w-64 bg-slate-800 flex-shrink-0 border-r border-slate-700 sticky top-0 self-start max-h-screen overflow-y-auto">
-        <nav class="space-y-4 p-6">
+      <div class="sticky top-16 h-[calc(100vh-64px)]">
+        <aside v-if="activeTab === 'markdown' || activeTab === 'mermaid'" 
+               class="w-64 bg-slate-800 flex-shrink-0 border-r border-slate-700 h-full overflow-y-auto">
+          <nav class="space-y-4 p-6">
           <div v-if="activeTab === 'markdown'">
             <h4 class="text-lg font-semibold mb-3 text-slate-300">Markdown Sections</h4>
             <ul class="space-y-2">
@@ -61,15 +61,14 @@
               <li><a @click.prevent="scrollToSection('gantt-chart')" href="#gantt-chart" :class="['hover:text-slate-200 block', isActiveSection('gantt-chart') ? 'text-slate-200 font-semibold' : 'text-slate-400']">Gantt Chart</a></li>
               <li><a @click.prevent="scrollToSection('entity-relationship')" href="#entity-relationship" :class="['hover:text-slate-200 block', isActiveSection('entity-relationship') ? 'text-slate-200 font-semibold' : 'text-slate-400']">Entity Relationship</a></li>
             </ul>
-          </div>
-        </nav>
+          </div>        </nav>
       </aside>
+      </div>
 
       <!-- Documentation Content - Scrollable area -->
       <div class="flex-1 overflow-y-auto" ref="contentArea" @scroll="handleScroll">
-        <div class="container mx-auto py-8 px-4 pb-20">
-          <!-- Tab Navigation -->
-          <div class="mb-8 sticky top-0 bg-slate-900 py-3 z-10 border-b border-slate-800">
+        <div class="container mx-auto py-8 px-4 pb-20">          <!-- Tab Navigation -->
+          <div class="mb-8 sticky top-16 bg-slate-900 py-3 z-20 border-b border-slate-800">
             <nav class="flex justify-center space-x-4" aria-label="Tabs">
               <button 
                 @click="activeTab = 'markdown'" 
