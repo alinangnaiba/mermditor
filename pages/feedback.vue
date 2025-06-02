@@ -48,16 +48,6 @@
 
         <!-- Feedback Form -->
         <FeedbackForm />
-
-        <!-- Alternative Contact -->
-        <div class="mt-8 text-center">
-          <p class="text-sm text-gray-400">
-            You can also reach out directly on 
-            <a href="https://github.com/your-username/mermditor" target="_blank" class="text-blue-400 hover:underline">
-              GitHub
-            </a>
-          </p>
-        </div>
       </div>
     </div>
 
