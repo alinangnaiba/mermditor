@@ -381,7 +381,7 @@ function handleSelectionTabIndent(
   newSelectionStart = Math.max(lineStartIndexForSelection, newSelectionStart);
 
   const netLengthChange = newLinesString.length - linesTextToProcess.length;
-  let newSelectionEnd = end + netLengthChange;
+  const newSelectionEnd = end + netLengthChange;
   
   // If the original selection was precise and didn't span to the start of the first line,
   // try to maintain that relative position for the start of the selection.

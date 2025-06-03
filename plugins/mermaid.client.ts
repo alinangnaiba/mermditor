@@ -5,7 +5,7 @@ export default defineNuxtPlugin({
   parallel: true,
   setup() {
     // Only run on client-side
-    if (process.client) {
+    if (import.meta.client) {
       mermaid.initialize({
         startOnLoad: false,
         theme: 'dark',

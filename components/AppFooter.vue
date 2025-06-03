@@ -1,37 +1,54 @@
 <template>
-  <footer class="bg-slate-800 border-t border-slate-700 py-8 mt-auto">
+  <footer class="mt-auto border-t border-border-primary bg-surface-secondary py-8">
     <div class="container mx-auto px-4">
-      <div class="grid md:grid-cols-2 gap-8">
+      <div class="grid gap-8 md:grid-cols-2">
         <!-- Brand Section -->
         <div>
-          <div class="flex items-center mb-4">
-            <img src="~/assets/logo.png" alt="merMDitor Logo" class="h-8 mr-3" />
-            <h3 class="text-xl font-semibold text-brand-blue">merMDitor</h3>
+          <div class="mb-4 flex items-center">
+            <img src="~/assets/logo.png" alt="merMDitor Logo" class="mr-3 h-8" >
+            <h3 class="text-xl font-semibold text-accent-primary">merMDitor</h3>
           </div>
-          <p class="text-gray-400 text-sm">
-            A simple, free Markdown editor with Mermaid diagram support. 
-            No signup required, works entirely in your browser.
+          <p class="text-sm text-text-tertiary">
+            A simple, free Markdown editor with Mermaid diagram support. No signup required, works
+            entirely in your browser.
           </p>
-        </div>        <!-- Quick Links -->
+        </div>
+
+        <!-- Quick Links -->
         <div>
-          <h4 class="text-lg font-medium text-white mb-4">Quick Links</h4>
+          <h4 class="mb-4 text-lg font-medium text-text-primary">Quick Links</h4>
           <ul class="space-y-2">
             <li>
-              <NuxtLink to="/editor" class="text-gray-400 hover:text-white transition-colors">
+              <NuxtLink
+                to="/editor"
+                class="rounded px-1 py-0.5 text-text-tertiary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary"
+              >
                 Markdown Editor
               </NuxtLink>
-            </li>            <li>
-              <NuxtLink to="/tool-guide" class="text-gray-400 hover:text-white transition-colors">
+            </li>
+            <li>
+              <NuxtLink
+                to="/tool-guide"
+                class="rounded px-1 py-0.5 text-text-tertiary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary"
+              >
                 Tool Guide
               </NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/feedback" class="text-gray-400 hover:text-white transition-colors">
+              <NuxtLink
+                to="/feedback"
+                class="rounded px-1 py-0.5 text-text-tertiary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary"
+              >
                 Help & Feedback
               </NuxtLink>
             </li>
             <li>
-              <a href="https://mermaid.js.org/syntax/flowchart.html" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition-colors">
+              <a
+                href="https://mermaid.js.org/syntax/flowchart.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="rounded px-1 py-0.5 text-text-tertiary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary"
+              >
                 Mermaid Documentation
               </a>
             </li>
@@ -40,8 +57,8 @@
       </div>
 
       <!-- Bottom Section -->
-      <div class="border-t border-slate-700 mt-8 pt-6 text-center">
-        <p class="text-gray-500 text-sm">
+      <div class="mt-8 border-t border-border-primary pt-6 text-center">
+        <p class="text-sm text-text-quaternary">
           © {{ new Date().getFullYear() }} merMDitor - Free Markdown Editor with Mermaid support
         </p>
       </div>
