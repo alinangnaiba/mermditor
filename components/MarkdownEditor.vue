@@ -1,103 +1,98 @@
 <template>  <div class="markdown-editor-container relative flex h-full w-full flex-col">
-    <!-- Copy Editor Content Button -->
-    <button
-      v-if="isEditorVisible"
-      title="Copy editor content"
-      class="absolute top-3 z-20 rounded-md bg-surface-secondary p-1.5 text-text-tertiary transition-colors hover:bg-surface-tertiary hover:text-text-primary focus:bg-surface-tertiary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-      :style="{ left: `calc(${editorWidthPercent}% - 28px - 12px - 44px)` }"
-      aria-label="Copy editor content"
-      @click="copyEditorContent"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 16 16"
-        width="16"
-        height="16"
-        fill="currentColor"
-        aria-hidden="true"
-      >
-        <path
-          d="M0 2.75C0 1.784.784 1 1.75 1h7.5a.75.75 0 0 1 0 1.5h-7.5a.25.25 0 0 0-.25.25v7.5a.25.25 0 0 0 .25.25h.01L2 10.76V2.75z M4.75 4h7.5A1.75 1.75 0 0 1 14 5.75v7.5A1.75 1.75 0 0 1 12.25 15h-7.5A1.75 1.75 0 0 1 3 13.25v-7.5A1.75 1.75 0 0 1 4.75 4Zm0 1.5a.25.25 0 0 0-.25.25v7.5a.25.25 0 0 0 .25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25h-7.5Z"
-        />
-      </svg>
-    </button>
-    
-    <!-- Hide Preview Button -->
-    <button
-      v-if="isEditorVisible"
-      :title="isPreviewVisible ? 'Hide Preview' : 'Show Preview'"
-      class="absolute top-3 z-20 rounded-md bg-surface-secondary p-1.5 text-text-tertiary transition-colors hover:bg-surface-tertiary hover:text-text-primary focus:bg-surface-tertiary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-      :style="{ left: `calc(${editorWidthPercent}% - 28px - 12px)` }"
-      :aria-label="isPreviewVisible ? 'Hide Preview' : 'Show Preview'"
-      @click="togglePreviewVisibility"
-    >
-      <!-- Hide Preview: Right-pointing arrows -->
-      <svg
-        v-if="isPreviewVisible"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 16 16"
-        width="16"
-        height="16"
-        aria-hidden="true"
-      >
-        <path
-          d="M13,6 L15,6 L15,1 L10,1 L10,3 L13,3 L13,6 Z M15,10 L13,10 L13,13 L10,13 L10,15 L15,15 L15,10 Z M6,3 L6,1 L1,1 L1,6 L3,6 L3,3 L6,3 Z M1,10 L3,10 L3,13 L6,13 L6,15 L1,15 L1,10 Z"
-          fill="currentColor"
-        />
-      </svg>
-      <!-- Show Preview: Left-pointing arrows -->
-      <svg
-        v-else
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 16 16"
-        width="16"
-        height="16"
-        aria-hidden="true"
-      >
-        <path
-          d="M3,10 L1,10 L1,15 L6,15 L6,13 L3,13 L3,10 Z M1,6 L3,6 L3,3 L6,3 L6,1 L1,1 L1,6 Z M13,13 L10,13 L10,15 L15,15 L15,10 L13,10 L13,13 Z M10,1 L10,3 L13,3 L13,6 L15,6 L15,1 L10,1 Z"
-          fill="currentColor"
-        />
-      </svg>
-    </button>    <!-- Moved preview-controls here -->
-    <div v-if="isPreviewVisible" class="preview-controls absolute right-3 top-3 z-20">
-      <button
-        :title="isEditorVisible ? 'Hide Editor' : 'Show Editor'"
-        class="rounded-md bg-surface-secondary p-1.5 text-text-tertiary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-        :aria-label="isEditorVisible ? 'Hide Editor' : 'Show Editor'"
-        @click="toggleEditorVisibility"
-      >
-        <!-- Hide Editor: L shapes point inward -->
-        <svg
-          v-if="isEditorVisible"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          width="16"
-          height="16"
-          aria-hidden="true"
-        >
-          <path
-            d="M3,10 L1,10 L1,15 L6,15 L6,13 L3,13 L3,10 Z M1,6 L3,6 L3,3 L6,3 L6,1 L1,1 L1,6 Z M13,13 L10,13 L10,15 L15,15 L15,10 L13,10 L13,13 Z M10,1 L10,3 L13,3 L13,6 L15,6 L15,1 L10,1 Z"
+    <!-- Floating Action Bar - Above all panes -->
+    <div class="relative z-30 flex justify-center py-2">
+      <div class="flex items-center space-x-1 rounded-lg bg-surface-tertiary/95 shadow-lg backdrop-blur-sm border border-border-primary">
+        <!-- Copy Content Button -->
+        <button
+          title="Copy content"
+          class="rounded-md p-2 text-text-tertiary transition-colors hover:bg-surface-quaternary hover:text-text-primary focus:bg-surface-quaternary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+          aria-label="Copy editor content"
+          @click="copyEditorContent"
+        ><svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            width="18"
+            height="18"
             fill="currentColor"
-          />
-        </svg>
-        <!-- Show Editor: L shapes point outward -->
-        <svg
-          v-else
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          width="16"
-          height="16"
-          aria-hidden="true"
-        >
-          <path
-            d="M1,12 L4,12 L4,15 L6,15 L6,10 L1,10 L1,12 Z M4,4 L1,4 L1,6 L6,6 L6,1 L4,1 L4,4 Z M10,15 L12,15 L12,12 L15,12 L15,10 L10,10 L10,15 Z M12,4 L12,1 L10,1 L10,6 L15,6 L15,4 L12,4 Z"
-            fill="currentColor"
-          />
-        </svg>
-      </button>
-    </div>
+            aria-hidden="true"
+          >
+            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+            <path d="M6 3a2 2 0 012-2h4a2 2 0 012 2v1h2a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2v-1H4a2 2 0 01-2-2V6a2 2 0 012-2h2V3zM4 6v5h2V6H4zm4 0v8h8V6H8z"/>
+          </svg>
+        </button>
 
+        <!-- Divider -->
+        <div class="h-6 w-px bg-border-secondary"></div>
+
+        <!-- Hide/Show Preview Button -->
+        <button
+          :title="isPreviewVisible ? 'Hide Preview' : 'Show Preview'"
+          class="rounded-md p-2 text-text-tertiary transition-colors hover:bg-surface-quaternary hover:text-text-primary focus:bg-surface-quaternary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+          :aria-label="isPreviewVisible ? 'Hide Preview' : 'Show Preview'"
+          @click="togglePreviewVisibility"
+        >
+          <!-- Hide Preview: Eye with slash -->
+          <svg
+            v-if="isPreviewVisible"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            width="18"
+            height="18"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+          </svg>
+          <!-- Show Preview: Eye -->
+          <svg
+            v-else
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            width="18"
+            height="18"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd"/>
+            <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"/>
+          </svg>
+        </button>
+
+        <!-- Hide/Show Editor Button -->
+        <button
+          :title="isEditorVisible ? 'Hide Editor' : 'Show Editor'"
+          class="rounded-md p-2 text-text-tertiary transition-colors hover:bg-surface-quaternary hover:text-text-primary focus:bg-surface-quaternary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+          :aria-label="isEditorVisible ? 'Hide Editor' : 'Show Editor'"
+          @click="toggleEditorVisibility"
+        >          <!-- Hide Editor: Code icon with slash -->
+          <svg
+            v-if="isEditorVisible"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            width="18"
+            height="18"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          <!-- Show Editor: Code icon -->
+          <svg
+            v-else
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            width="18"
+            height="18"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            <line x1="3" y1="3" x2="17" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
     <!-- Main pane container with single scroll -->
     <div class="flex min-h-0 flex-1 flex-col">
       <div ref="mainScrollContainer" class="main-scroll-container w-full flex-1 overflow-y-auto">
@@ -107,7 +102,7 @@
             class="editor-container transition-width flex flex-col duration-100"
             :style="{ width: isPreviewVisible ? editorWidthPercent + '%' : '100%' }"
           >
-            <div class="editor-pane border-r border-border-primary bg-surface-primary">
+            <div class="editor-pane border-r border-border-primary bg-deep-black">
               <textarea
                 ref="textareaRef"
                 v-model="markdownText"
