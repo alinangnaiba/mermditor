@@ -5,9 +5,9 @@ export function useEditorStateAndPersistence(
   initialMarkdownFromProps: Ref<string | undefined>,
   defaultContent: string,
   autoResizeTextarea: () => void
-) {
-  const markdownText = ref('');
+) {  const markdownText = ref('');
   const isEditorVisible = ref(true);
+  const isPreviewVisible = ref(true);
   const lastSaved = ref<string>('');
 
   const saveToLocalStorage = debounce((content: string) => {
@@ -16,11 +16,15 @@ export function useEditorStateAndPersistence(
     const now = new Date();
     lastSaved.value = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, 500);
-
   const loadInitialState = () => {
     const savedVisibility = localStorage.getItem('mermd-editor-visible');
     if (savedVisibility !== null) {
       isEditorVisible.value = savedVisibility === 'true';
+    }
+
+    const savedPreviewVisibility = localStorage.getItem('mermd-preview-visible');
+    if (savedPreviewVisibility !== null) {
+      isPreviewVisible.value = savedPreviewVisibility === 'true';
     }
 
     if (initialMarkdownFromProps.value) {
@@ -34,10 +38,17 @@ export function useEditorStateAndPersistence(
       }
     }
   };
-
   const toggleEditorVisibility = () => {
     isEditorVisible.value = !isEditorVisible.value;
     localStorage.setItem('mermd-editor-visible', isEditorVisible.value.toString());
+    nextTick(() => {
+      autoResizeTextarea();
+    });
+  };
+
+  const togglePreviewVisibility = () => {
+    isPreviewVisible.value = !isPreviewVisible.value;
+    localStorage.setItem('mermd-preview-visible', isPreviewVisible.value.toString());
     nextTick(() => {
       autoResizeTextarea();
     });
@@ -57,12 +68,13 @@ export function useEditorStateAndPersistence(
       markdownText.value = newVal;
     }
   });
-
   return {
     markdownText,
     isEditorVisible,
+    isPreviewVisible,
     lastSaved,
     toggleEditorVisibility,
+    togglePreviewVisibility,
     saveToLocalStorage,
     loadInitialState
   };

@@ -2,13 +2,25 @@ import { ref, computed, onMounted, onBeforeUnmount, type Ref } from 'vue';
 
 export function usePaneResizer(
   mainScrollContainerRef: Ref<HTMLElement | null>,
-  isEditorVisible: Ref<boolean>
+  isEditorVisible: Ref<boolean>,
+  isPreviewVisible: Ref<boolean>
 ) {
   const editorWidthPercent = ref(50);
   const isDragging = ref(false);
-
   const previewWidthPercent = computed(() => {
-    return isEditorVisible.value ? 100 - editorWidthPercent.value : 100;
+    if (!isEditorVisible.value && !isPreviewVisible.value) {
+      // Both hidden - shouldn't happen, but default to showing both
+      return 50;
+    } else if (!isEditorVisible.value) {
+      // Only preview visible
+      return 100;
+    } else if (!isPreviewVisible.value) {
+      // Only editor visible
+      return 0;
+    } else {
+      // Both visible
+      return 100 - editorWidthPercent.value;
+    }
   });
 
   const handleDrag = (e: MouseEvent | TouchEvent) => {

@@ -1,11 +1,10 @@
-<template>
-  <div class="markdown-editor-container relative flex h-full w-full flex-col">
+<template>  <div class="markdown-editor-container relative flex h-full w-full flex-col">
     <!-- Copy Editor Content Button -->
     <button
       v-if="isEditorVisible"
       title="Copy editor content"
       class="absolute top-3 z-20 rounded-md bg-surface-secondary p-1.5 text-text-tertiary transition-colors hover:bg-surface-tertiary hover:text-text-primary focus:bg-surface-tertiary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-      :style="{ left: `calc(${editorWidthPercent}% - 28px - 12px)` }"
+      :style="{ left: `calc(${editorWidthPercent}% - 28px - 12px - 44px)` }"
       aria-label="Copy editor content"
       @click="copyEditorContent"
     >
@@ -22,8 +21,46 @@
         />
       </svg>
     </button>
-    <!-- Moved preview-controls here -->
-    <div v-if="previewPane" class="preview-controls absolute right-3 top-3 z-20">
+    
+    <!-- Hide Preview Button -->
+    <button
+      v-if="isEditorVisible"
+      :title="isPreviewVisible ? 'Hide Preview' : 'Show Preview'"
+      class="absolute top-3 z-20 rounded-md bg-surface-secondary p-1.5 text-text-tertiary transition-colors hover:bg-surface-tertiary hover:text-text-primary focus:bg-surface-tertiary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+      :style="{ left: `calc(${editorWidthPercent}% - 28px - 12px)` }"
+      :aria-label="isPreviewVisible ? 'Hide Preview' : 'Show Preview'"
+      @click="togglePreviewVisibility"
+    >
+      <!-- Hide Preview: Right-pointing arrows -->
+      <svg
+        v-if="isPreviewVisible"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 16 16"
+        width="16"
+        height="16"
+        aria-hidden="true"
+      >
+        <path
+          d="M13,6 L15,6 L15,1 L10,1 L10,3 L13,3 L13,6 Z M15,10 L13,10 L13,13 L10,13 L10,15 L15,15 L15,10 Z M6,3 L6,1 L1,1 L1,6 L3,6 L3,3 L6,3 Z M1,10 L3,10 L3,13 L6,13 L6,15 L1,15 L1,10 Z"
+          fill="currentColor"
+        />
+      </svg>
+      <!-- Show Preview: Left-pointing arrows -->
+      <svg
+        v-else
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 16 16"
+        width="16"
+        height="16"
+        aria-hidden="true"
+      >
+        <path
+          d="M3,10 L1,10 L1,15 L6,15 L6,13 L3,13 L3,10 Z M1,6 L3,6 L3,3 L6,3 L6,1 L1,1 L1,6 Z M13,13 L10,13 L10,15 L15,15 L15,10 L13,10 L13,13 Z M10,1 L10,3 L13,3 L13,6 L15,6 L15,1 L10,1 Z"
+          fill="currentColor"
+        />
+      </svg>
+    </button>    <!-- Moved preview-controls here -->
+    <div v-if="isPreviewVisible" class="preview-controls absolute right-3 top-3 z-20">
       <button
         :title="isEditorVisible ? 'Hide Editor' : 'Show Editor'"
         class="rounded-md bg-surface-secondary p-1.5 text-text-tertiary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
@@ -64,12 +101,11 @@
     <!-- Main pane container with single scroll -->
     <div class="flex min-h-0 flex-1 flex-col">
       <div ref="mainScrollContainer" class="main-scroll-container w-full flex-1 overflow-y-auto">
-        <div class="pane-container flex min-h-full w-full flex-row">
-          <!-- Editor Pane -->
+        <div class="pane-container flex min-h-full w-full flex-row">          <!-- Editor Pane -->
           <div
             v-if="isEditorVisible"
             class="editor-container transition-width flex flex-col duration-100"
-            :style="{ width: editorWidthPercent + '%' }"
+            :style="{ width: isPreviewVisible ? editorWidthPercent + '%' : '100%' }"
           >
             <div class="editor-pane border-r border-border-primary bg-surface-primary">
               <textarea
@@ -80,20 +116,18 @@
                 @input="autoResizeTextarea"
               />
             </div>
-          </div>
-          <!-- Draggable Divider -->
+          </div>          <!-- Draggable Divider -->
           <div
-            v-if="isEditorVisible"
+            v-if="isEditorVisible && isPreviewVisible"
             class="divider flex w-1.5 cursor-col-resize items-center justify-center bg-surface-tertiary hover:bg-accent-primary"
             title="Drag to resize"
             @mousedown="startDrag"
             @touchstart.prevent="startDrag"
           >
             <div class="divider-handle h-9 w-0.5 rounded bg-text-tertiary"/>
-          </div>
-
-          <!-- Preview Pane -->
+          </div>          <!-- Preview Pane -->
           <div
+            v-show="isPreviewVisible"
             class="preview-container transition-width relative flex flex-col duration-100"
             :style="{ width: previewWidthPercent + '%' }"
           >
@@ -188,7 +222,7 @@ flowchart LR
 `
 
 // Composable for editor state and persistence
-const { markdownText, isEditorVisible, lastSaved, toggleEditorVisibility } =
+const { markdownText, isEditorVisible, isPreviewVisible, lastSaved, toggleEditorVisibility, togglePreviewVisibility } =
   useEditorStateAndPersistence(
     toRef(props, 'initialMarkdown'),
     defaultContent,
@@ -198,7 +232,8 @@ const { markdownText, isEditorVisible, lastSaved, toggleEditorVisibility } =
 // Initialize the composable for pane resizing
 const { editorWidthPercent, previewWidthPercent, startDrag } = usePaneResizer(
   mainScrollContainer,
-  isEditorVisible
+  isEditorVisible,
+  isPreviewVisible
 )
 
 // Initialize the composable for textarea sizing
@@ -207,7 +242,8 @@ const { autoResizeTextarea } = useTextareaSizing(
   previewPane,
   mainScrollContainer,
   previewContainer,
-  isEditorVisible
+  isEditorVisible,
+  isPreviewVisible
 )
 
 // Initialize the composable for keyboard shortcuts
