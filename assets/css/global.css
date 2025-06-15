@@ -16,14 +16,11 @@
 
 /* ------ Base HTML Element Styling ------ */
 html, body {
-  height: 100%;
+  height: 100%;  
   margin: 0;
   padding: 0;
   font-family: 'Nunito Sans', sans-serif;
   color: var(--text-color);
-  
-  /* Default for most pages - can be overridden in specific components */
-  overflow: hidden;
 }
 
 /* For pages that need full-height layout with fixed header and footer */
