@@ -30,7 +30,7 @@
           :title="isPreviewVisible ? 'Hide Preview' : 'Show Preview'"
           class="rounded-md p-2 text-text-tertiary transition-colors hover:bg-surface-quaternary hover:text-text-primary focus:bg-surface-quaternary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
           :aria-label="isPreviewVisible ? 'Hide Preview' : 'Show Preview'"
-          @click="togglePreviewVisibility"
+          @click="customTogglePreviewVisibility"
         >
           <!-- Hide Preview: Eye with slash -->
           <svg
@@ -250,11 +250,23 @@ const { handleKeyboardShortcut } = useKeyboardShortcuts(
 )
 
 // Initialize the composable for Markdown rendering
-const { debouncedRenderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(
+const { debouncedRenderMarkdown, preRenderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(
   markdownText,
   previewContainer,
   autoResizeTextarea
 )
+
+// Custom toggle function that pre-renders before showing preview
+const customTogglePreviewVisibility = async () => {
+  if (isPreviewVisible.value) {
+    // If preview is visible, just hide it (no pre-rendering needed)
+    togglePreviewVisibility()
+  } else {
+    // If preview is hidden, pre-render before showing
+    await preRenderMarkdown()
+    togglePreviewVisibility()
+  }
+}
 
 const copyEditorContent = async () => {
   if (!markdownText.value || markdownText.value.trim() === '') {
@@ -279,17 +291,6 @@ watch(
     }
   },
   { immediate: true }
-)
-
-// Watch for preview visibility changes to render when it becomes visible
-watch(
-  isPreviewVisible,
-  (newVisible) => {
-    // When preview becomes visible, render the current markdown content
-    if (newVisible) {
-      debouncedRenderMarkdown()
-    }
-  }
 )
 
 onMounted(async () => {
