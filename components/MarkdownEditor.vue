@@ -6,7 +6,8 @@
         <button
           title="Copy content"
           class="rounded-md p-2 text-text-tertiary transition-colors hover:bg-surface-quaternary hover:text-text-primary focus:bg-surface-quaternary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-          aria-label="Copy editor content"          @click="copyEditorContent"
+          aria-label="Copy editor content" 
+          @click="copyEditorContent"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -272,9 +273,23 @@ const copyEditorContent = async () => {
 watch(
   markdownText,
   () => {
-    debouncedRenderMarkdown()
+    // Only render the markdown when the preview pane is visible
+    if (isPreviewVisible.value) {
+      debouncedRenderMarkdown()
+    }
   },
   { immediate: true }
+)
+
+// Watch for preview visibility changes to render when it becomes visible
+watch(
+  isPreviewVisible,
+  (newVisible) => {
+    // When preview becomes visible, render the current markdown content
+    if (newVisible) {
+      debouncedRenderMarkdown()
+    }
+  }
 )
 
 onMounted(async () => {
