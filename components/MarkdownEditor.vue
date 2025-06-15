@@ -6,18 +6,18 @@
         <button
           title="Copy content"
           class="rounded-md p-2 text-text-tertiary transition-colors hover:bg-surface-quaternary hover:text-text-primary focus:bg-surface-quaternary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-          aria-label="Copy editor content"
-          @click="copyEditorContent"
-        ><svg
+          aria-label="Copy editor content"          @click="copyEditorContent"
+        >
+          <svg
             xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
+            viewBox="0 0 18 18"
             width="18"
             height="18"
             fill="currentColor"
             aria-hidden="true"
           >
-            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
-            <path d="M6 3a2 2 0 012-2h4a2 2 0 012 2v1h2a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2v-1H4a2 2 0 01-2-2V6a2 2 0 012-2h2V3zM4 6v5h2V6H4zm4 0v8h8V6H8z"/>
+            <path d="M3.5 2A1.5 1.5 0 002 3.5v9A1.5 1.5 0 003.5 14H5v-1H3.5a.5.5 0 01-.5-.5v-9a.5.5 0 01.5-.5h7a.5.5 0 01.5.5V4h1V3.5A1.5 1.5 0 0010.5 2h-7z"/>
+            <path d="M7.5 5A1.5 1.5 0 006 6.5v9A1.5 1.5 0 007.5 17h7a1.5 1.5 0 001.5-1.5v-9A1.5 1.5 0 0014.5 5h-7zM7 6.5a.5.5 0 01.5-.5h7a.5.5 0 01.5.5v9a.5.5 0 01-.5.5h-7a.5.5 0 01-.5-.5v-9z"/>
           </svg>
         </button>
 
