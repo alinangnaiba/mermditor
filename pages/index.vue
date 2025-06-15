@@ -339,16 +339,3 @@ useHead({
 })
 </script>
 
-<style>
-html,
-body {
-  height: 100%;
-  overflow-y: auto;
-}
-
-.min-h-screen {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-</style>

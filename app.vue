@@ -13,6 +13,21 @@
 import { SpeedInsights } from "@vercel/speed-insights/vue"
 import { Analytics } from '@vercel/analytics/vue'
 
+const route = useRoute()
+
+// Apply overflow style directly to body based on route
+watchEffect(() => {
+  if (import.meta.client) {
+    document.body.style.overflow = route.name === 'editor' ? 'hidden' : 'auto'
+  }
+})
+
+onUnmounted(() => {
+  if (import.meta.client) {
+    document.body.style.overflow = 'auto'
+  }
+})
+
 // Global head configuration
 useHead({
   htmlAttrs: {
@@ -24,7 +39,6 @@ useHead({
 <style>
 html, body {
   height: 100%;
-  overflow-y: auto;
 }
 
 .app-container {

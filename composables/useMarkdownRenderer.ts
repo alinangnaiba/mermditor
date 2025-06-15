@@ -49,8 +49,23 @@ export function useMarkdownRenderer(
       await autoResizeTextarea();
     }, 200);
   };
-
   const debouncedRenderMarkdown = debounce(renderMarkdown, 150);
+
+  // Function to pre-render content and return a promise when complete
+  const preRenderMarkdown = async (): Promise<void> => {
+    return new Promise((resolve) => {
+      // Clear any existing timeout
+      if (mermaidRenderTimeoutId) {
+        clearTimeout(mermaidRenderTimeoutId);
+      }
+
+      // Start immediate rendering
+      mermaidRenderTimeoutId = setTimeout(async () => {
+        await renderMarkdown();
+        resolve();
+      }, 0);
+    });
+  };
 
   const cleanup = () => {
     if (mermaidRenderTimeoutId) clearTimeout(mermaidRenderTimeoutId);
@@ -58,6 +73,7 @@ export function useMarkdownRenderer(
 
   return {
     debouncedRenderMarkdown,
+    preRenderMarkdown,
     cleanupMarkdownRenderer: cleanup,
   };
 }
