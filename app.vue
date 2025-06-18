@@ -1,17 +1,17 @@
 <template>
+  <Analytics />
+  <SpeedInsights />
   <div>
     <NuxtRouteAnnouncer />
-    <Analytics />
-    <SpeedInsights />
     <div class="app-container bg-dark">
       <NuxtPage />
     </div>
   </div>
 </template>
 
-<script setup>
-import { SpeedInsights } from "@vercel/speed-insights/vue"
-import { Analytics } from '@vercel/analytics/vue'
+<script setup lang="ts">
+import { SpeedInsights } from "@vercel/speed-insights/nuxt"
+import { Analytics } from '@vercel/analytics/nuxt'
 
 const route = useRoute()
 
