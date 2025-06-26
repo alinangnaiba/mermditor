@@ -34,7 +34,7 @@
     <div class="relative flex flex-1">
       <!-- Mobile Sidebar Toggle Button -->
       <button
-        v-if="activeTab === 'markdown' || activeTab === 'mermaid'"
+        v-if="activeTab === 'markdown' || activeTab === 'mermaid' || activeTab === 'latex'"
         class="fixed bottom-6 left-6 z-40 flex items-center justify-center rounded-full bg-surface-tertiary p-3 text-text-primary shadow-lg transition-colors hover:bg-surface-quaternary focus:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary lg:hidden"
         aria-label="Toggle navigation menu"
         @click="sidebarOpen = !sidebarOpen"
@@ -82,7 +82,7 @@
         ]"
       >
         <aside
-          v-if="activeTab === 'markdown' || activeTab === 'mermaid'"
+          v-if="activeTab === 'markdown' || activeTab === 'mermaid' || activeTab === 'latex'"
           class="h-full w-64 flex-shrink-0 overflow-y-auto border-r border-border-primary bg-surface-secondary"
         >
           <nav class="space-y-4 p-6">
@@ -324,6 +324,89 @@
                 </li>
               </ul>
             </div>
+            <div v-if="activeTab === 'latex'">
+              <h4 class="mb-3 text-lg font-semibold text-text-secondary">LaTeX Sections</h4>
+              <ul class="space-y-2">
+                <li>
+                  <a
+                    href="#basic-syntax"
+                    :class="[
+                      'block rounded px-2 py-1 transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary',
+                      isActiveSection('basic-syntax')
+                        ? 'font-semibold text-text-primary'
+                        : 'text-text-tertiary',
+                    ]"
+                    @click.prevent="scrollToSection('basic-syntax')"
+                    >Basic Syntax</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#common-expressions"
+                    :class="[
+                      'block rounded px-2 py-1 transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary',
+                      isActiveSection('common-expressions')
+                        ? 'font-semibold text-text-primary'
+                        : 'text-text-tertiary',
+                    ]"
+                    @click.prevent="scrollToSection('common-expressions')"
+                    >Common Expressions</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#advanced-expressions"
+                    :class="[
+                      'block rounded px-2 py-1 transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary',
+                      isActiveSection('advanced-expressions')
+                        ? 'font-semibold text-text-primary'
+                        : 'text-text-tertiary',
+                    ]"
+                    @click.prevent="scrollToSection('advanced-expressions')"
+                    >Advanced Expressions</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#functions-operators"
+                    :class="[
+                      'block rounded px-2 py-1 transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary',
+                      isActiveSection('functions-operators')
+                        ? 'font-semibold text-text-primary'
+                        : 'text-text-tertiary',
+                    ]"
+                    @click.prevent="scrollToSection('functions-operators')"
+                    >Functions & Operators</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#complex-examples"
+                    :class="[
+                      'block rounded px-2 py-1 transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary',
+                      isActiveSection('complex-examples')
+                        ? 'font-semibold text-text-primary'
+                        : 'text-text-tertiary',
+                    ]"
+                    @click.prevent="scrollToSection('complex-examples')"
+                    >Complex Examples</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#tips"
+                    :class="[
+                      'block rounded px-2 py-1 transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary',
+                      isActiveSection('tips')
+                        ? 'font-semibold text-text-primary'
+                        : 'text-text-tertiary',
+                    ]"
+                    @click.prevent="scrollToSection('tips')"
+                    >Tips & Best Practices</a
+                  >
+                </li>
+              </ul>
+            </div>
           </nav>
         </aside>
       </div>
@@ -364,6 +447,18 @@
                 :class="[
                   'rounded-md px-4 py-2 font-medium transition-colors',
                   'focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary',
+                  activeTab === 'latex'
+                    ? 'border-b-2 border-border-accent text-text-primary'
+                    : 'text-text-tertiary hover:bg-surface-tertiary hover:text-text-secondary',
+                ]"
+                @click="activeTab = 'latex'"
+              >
+                LaTeX
+              </button>
+              <button
+                :class="[
+                  'rounded-md px-4 py-2 font-medium transition-colors',
+                  'focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary',
                   activeTab === 'shortcuts'
                     ? 'border-b-2 border-border-accent text-text-primary'
                     : 'text-text-tertiary hover:bg-surface-tertiary hover:text-text-secondary',
@@ -378,6 +473,7 @@
           <div>
             <ToolGuideMarkdownContent v-if="activeTab === 'markdown'" />
             <ToolGuideMermaidContent v-if="activeTab === 'mermaid'" />
+            <ToolGuideLatexContent v-if="activeTab === 'latex'" />
             <ToolGuideShortcutsContent v-if="activeTab === 'shortcuts'" />
           </div>
         </div>
@@ -390,14 +486,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
 
-const activeTab = ref('markdown')
-const contentArea = ref<HTMLElement | null>(null)
-const activeSectionId = ref<string | null>(null)
-const sectionIds = ref<string[]>([])
-const nodeShapesSubMenuOpen = ref(false)
-const sidebarOpen = ref(false)
+const activeTab = ref('markdown');
+const contentArea = ref<HTMLElement | null>(null);
+const activeSectionId = ref<string | null>(null);
+const sectionIds = ref<string[]>([]);
+const nodeShapesSubMenuOpen = ref(false);
+const sidebarOpen = ref(false);
 
 const markdownSections = [
   'headings',
@@ -408,7 +504,7 @@ const markdownSections = [
   'code-blocks',
   'tables',
   'horizontal-rule',
-]
+];
 const mermaidMainSections = [
   'basic-flowchart',
   'node-shapes',
@@ -417,7 +513,15 @@ const mermaidMainSections = [
   'state-diagram',
   'gantt-chart',
   'entity-relationship',
-]
+];
+const latexSections = [
+  'basic-syntax',
+  'common-expressions',
+  'advanced-expressions',
+  'functions-operators',
+  'complex-examples',
+  'tips',
+];
 const nodeShapeSections = [
   { id: 'node-shape-square', name: 'Square Node' },
   { id: 'node-shape-rounded', name: 'Rounded Node' },
@@ -431,162 +535,164 @@ const nodeShapeSections = [
   { id: 'node-shape-alt-parallelogram', name: 'Alt. Parallelogram' },
   { id: 'node-shape-trapezoid', name: 'Trapezoid' },
   { id: 'node-shape-alt-trapezoid', name: 'Alt. Trapezoid' },
-]
+];
 
 const isActiveSection = (sectionId: string) => {
-  return activeSectionId.value === sectionId
-}
+  return activeSectionId.value === sectionId;
+};
 
 const isNodeShapeSubMenuActive = () => {
-  return nodeShapeSections.some((shape) => isActiveSection(shape.id))
-}
+  return nodeShapeSections.some((shape) => isActiveSection(shape.id));
+};
 
 const toggleNodeShapesSubMenu = () => {
-  nodeShapesSubMenuOpen.value = !nodeShapesSubMenuOpen.value
-}
+  nodeShapesSubMenuOpen.value = !nodeShapesSubMenuOpen.value;
+};
 
 watch(
   activeTab,
-  async (newTab) => {
-    activeSectionId.value = null
-    nodeShapesSubMenuOpen.value = false
-    await nextTick()
-    updateSectionIds()
+  async (_newTab) => {
+    activeSectionId.value = null;
+    nodeShapesSubMenuOpen.value = false;
+    await nextTick();
+    updateSectionIds();
     if (contentArea.value && sectionIds.value.length > 0) {
-      contentArea.value.scrollTop = 0
+      contentArea.value.scrollTop = 0;
     }
   },
   { immediate: true }
-)
+);
 
 const updateSectionIds = () => {
   if (activeTab.value === 'markdown') {
-    sectionIds.value = markdownSections
+    sectionIds.value = markdownSections;
   } else if (activeTab.value === 'mermaid') {
-    const allMermaidSections = [...mermaidMainSections, ...nodeShapeSections.map((s) => s.id)]
-    sectionIds.value = allMermaidSections
+    const allMermaidSections = [...mermaidMainSections, ...nodeShapeSections.map((s) => s.id)];
+    sectionIds.value = allMermaidSections;
+  } else if (activeTab.value === 'latex') {
+    sectionIds.value = latexSections;
   } else {
-    sectionIds.value = []
+    sectionIds.value = [];
   }
-}
+};
 
 const scrollToSection = (sectionId: string) => {
-  if (!contentArea.value) return
+  if (!contentArea.value) return;
 
   if (nodeShapeSections.some((shape) => shape.id === sectionId)) {
-    nodeShapesSubMenuOpen.value = true
+    nodeShapesSubMenuOpen.value = true;
   } else if (sectionId !== 'node-shapes') {
-    nodeShapesSubMenuOpen.value = false
+    nodeShapesSubMenuOpen.value = false;
   }
 
   if (window.innerWidth < 1024) {
-    sidebarOpen.value = false
+    sidebarOpen.value = false;
   }
 
-  activeSectionId.value = sectionId
-  const element = document.getElementById(sectionId)
+  activeSectionId.value = sectionId;
+  const element = document.getElementById(sectionId);
   if (element) {
     element.scrollIntoView({
       behavior: 'smooth',
       block: 'center',
       inline: 'nearest',
-    })
+    });
 
     setTimeout(() => {
       if (contentArea.value) {
-        contentArea.value.scrollTop -= 50
+        contentArea.value.scrollTop -= 50;
       }
-    }, 100)
+    }, 100);
   }
-}
+};
 
 const handleScroll = () => {
-  if (!contentArea.value || sectionIds.value.length === 0) return
+  if (!contentArea.value || sectionIds.value.length === 0) return;
 
-  const scrollTop = contentArea.value.scrollTop
-  const scrollHeight = contentArea.value.scrollHeight
-  const clientHeight = contentArea.value.clientHeight
+  const scrollTop = contentArea.value.scrollTop;
+  const scrollHeight = contentArea.value.scrollHeight;
+  const clientHeight = contentArea.value.clientHeight;
 
-  let currentSection: string | null = null
+  let currentSection: string | null = null;
 
   if (scrollTop < 50) {
-    currentSection = sectionIds.value[0]
+    currentSection = sectionIds.value[0];
   } else if (scrollHeight - scrollTop - clientHeight < 50) {
-    currentSection = sectionIds.value[sectionIds.value.length - 1]
+    currentSection = sectionIds.value[sectionIds.value.length - 1];
   } else {
-    let bestSection: string | null = null
-    let bestScore = -1
+    let bestSection: string | null = null;
+    let bestScore = -1;
 
     for (const id of sectionIds.value) {
-      const element = document.getElementById(id)
-      if (!element) continue
+      const element = document.getElementById(id);
+      if (!element) continue;
 
-      const rect = element.getBoundingClientRect()
-      const containerRect = contentArea.value.getBoundingClientRect()
+      const rect = element.getBoundingClientRect();
+      const containerRect = contentArea.value.getBoundingClientRect();
 
-      const visibleTop = Math.max(rect.top, containerRect.top)
-      const visibleBottom = Math.min(rect.bottom, containerRect.bottom)
-      const visibleHeight = Math.max(0, visibleBottom - visibleTop)
+      const visibleTop = Math.max(rect.top, containerRect.top);
+      const visibleBottom = Math.min(rect.bottom, containerRect.bottom);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
 
-      if (visibleHeight <= 0) continue
+      if (visibleHeight <= 0) continue;
 
-      const totalHeight = rect.height
-      const visibilityRatio = visibleHeight / totalHeight
+      const totalHeight = rect.height;
+      const visibilityRatio = visibleHeight / totalHeight;
 
-      const distanceFromTop = Math.abs(rect.top - containerRect.top)
-      const maxDistance = containerRect.height
-      const positionScore = Math.max(0, 1 - distanceFromTop / maxDistance)
+      const distanceFromTop = Math.abs(rect.top - containerRect.top);
+      const maxDistance = containerRect.height;
+      const positionScore = Math.max(0, 1 - distanceFromTop / maxDistance);
 
-      const score = visibilityRatio * 0.7 + positionScore * 0.3
+      const score = visibilityRatio * 0.7 + positionScore * 0.3;
 
       if (visibilityRatio >= 0.2 && score > bestScore) {
-        bestScore = score
-        bestSection = id
+        bestScore = score;
+        bestSection = id;
       }
     }
 
-    currentSection = bestSection
+    currentSection = bestSection;
   }
 
   if (currentSection && activeSectionId.value !== currentSection) {
-    activeSectionId.value = currentSection
+    activeSectionId.value = currentSection;
 
     if (nodeShapeSections.some((shape) => shape.id === currentSection)) {
-      nodeShapesSubMenuOpen.value = true
+      nodeShapesSubMenuOpen.value = true;
     }
   }
-}
+};
 
 onMounted(() => {
-  updateSectionIds()
+  updateSectionIds();
   if (contentArea.value) {
-    contentArea.value.addEventListener('scroll', handleScroll)
+    contentArea.value.addEventListener('scroll', handleScroll);
   }
-})
+});
 
 onUnmounted(() => {
   if (contentArea.value) {
-    contentArea.value.removeEventListener('scroll', handleScroll)
+    contentArea.value.removeEventListener('scroll', handleScroll);
   }
-})
+});
 
 // Page-specific SEO meta tags
 useSeoMeta({
-  title: 'Tool Guide - merMDitor | Markdown & Mermaid Syntax Reference',
+  title: 'Tool Guide - merMDitor | Markdown, Mermaid & LaTeX Syntax Reference',
   description:
-    'Complete guide to Markdown syntax and Mermaid diagrams. Learn how to create headings, lists, links, flowcharts, sequence diagrams, and more in merMDitor.',
-  ogTitle: 'Tool Guide - merMDitor | Markdown & Mermaid Reference',
+    'Complete guide to Markdown syntax, Mermaid diagrams, and LaTeX math expressions. Learn how to create headings, lists, links, flowcharts, sequence diagrams, mathematical formulas, and more in merMDitor.',
+  ogTitle: 'Tool Guide - merMDitor | Markdown, Mermaid & LaTeX Reference',
   ogDescription:
-    'Complete guide to Markdown syntax and Mermaid diagrams. Learn how to create headings, lists, links, flowcharts, and sequence diagrams.',
+    'Complete guide to Markdown syntax, Mermaid diagrams, and LaTeX math expressions. Learn how to create headings, lists, links, flowcharts, and mathematical formulas.',
   ogUrl: 'https://www.mermditor.dev/tool-guide',
-  twitterTitle: 'Tool Guide - merMDitor | Markdown & Mermaid Reference',
+  twitterTitle: 'Tool Guide - merMDitor | Markdown, Mermaid & LaTeX Reference',
   twitterDescription:
-    'Complete guide to Markdown syntax and Mermaid diagrams. Learn formatting, diagrams, and shortcuts.',
-})
+    'Complete guide to Markdown syntax, Mermaid diagrams, and LaTeX math expressions. Learn formatting, diagrams, math, and shortcuts.',
+});
 
 useHead({
   link: [{ rel: 'canonical', href: 'https://www.mermditor.dev/tool-guide' }],
-})
+});
 
 // Structured data for the tool guide page
 useHead({
@@ -596,9 +702,9 @@ useHead({
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'TechArticle',
-        headline: 'merMDitor Tool Guide - Markdown & Mermaid Syntax Reference',
+        headline: 'merMDitor Tool Guide - Markdown, Mermaid & LaTeX Syntax Reference',
         description:
-          'Complete guide to Markdown syntax and Mermaid diagrams for the merMDitor editor',
+          'Complete guide to Markdown syntax, Mermaid diagrams, and LaTeX math expressions for the merMDitor editor',
         url: 'https://www.mermditor.dev/tool-guide',
         author: {
           '@type': 'Organization',
@@ -611,14 +717,16 @@ useHead({
         about: [
           'Markdown syntax',
           'Mermaid diagrams',
+          'LaTeX math expressions',
           'Text formatting',
           'Flowcharts',
           'Sequence diagrams',
+          'Mathematical formulas',
         ],
       }),
     },
   ],
-})
+});
 </script>
 
 <style scoped></style>

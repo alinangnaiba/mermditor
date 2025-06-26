@@ -76,11 +76,11 @@ useSeoMeta({
   twitterTitle: 'Markdown Editor - merMDitor',
   twitterDescription:
     'Start writing Markdown with live preview and Mermaid diagram support. Auto-saves your work locally.',
-})
+});
 
 useHead({
   link: [{ rel: 'canonical', href: 'https://www.mermditor.dev/editor' }],
-})
+});
 
 // Structured data for the editor page
 useHead({
@@ -100,5 +100,5 @@ useHead({
       }),
     },
   ],
-})
+});
 </script>

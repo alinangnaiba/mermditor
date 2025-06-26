@@ -233,3 +233,52 @@ html, body {
     padding: 0.75rem;
   }
 }
+
+/* ------ KaTeX Math Rendering Styles ------ */
+.math-block-container {
+  margin: 1rem 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.math-inline {
+  display: inline-block;
+  margin: 0 0.2rem;
+}
+
+.math-block {
+  display: block;
+  margin: 1rem 0;
+  padding: 0.5rem;
+  text-align: center;
+  overflow-x: auto;
+}
+
+/* Ensure KaTeX renders properly in dark theme */
+.katex {
+  color: rgba(255, 255, 255, 0.87) !important;
+}
+
+.katex .base {
+  color: rgba(255, 255, 255, 0.87) !important;
+}
+
+.katex .mord,
+.katex .mop,
+.katex .mbin,
+.katex .mrel,
+.katex .mopen,
+.katex .mclose,
+.katex .mpunct {
+  color: rgba(255, 255, 255, 0.87) !important;
+}
+
+/* Math error styling */
+.katex-error {
+  color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}

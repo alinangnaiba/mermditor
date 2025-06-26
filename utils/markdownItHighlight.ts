@@ -30,7 +30,7 @@ export function markdownItHighlight(md: MarkdownIt) {
     if (!highlighted) {
       try {
         highlighted = hljs.highlightAuto(token.content).value;
-      } catch (err) {
+      } catch {
         highlighted = md.utils.escapeHtml(token.content);
       }
     }

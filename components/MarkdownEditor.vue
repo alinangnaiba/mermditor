@@ -23,7 +23,7 @@
         </button>
 
         <!-- Divider -->
-        <div class="h-6 w-px bg-border-secondary"></div>
+        <div class="h-6 w-px bg-border-secondary"/>
 
         <!-- Hide/Show Preview Button -->
         <button
@@ -154,8 +154,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, computed, toRef } from 'vue' // Removed nextTick, added toRef
-import 'highlight.js/styles/atom-one-dark.css'
+import { ref, onMounted, onBeforeUnmount, watch, computed, toRef } from 'vue'; // Removed nextTick, added toRef
+import 'highlight.js/styles/atom-one-dark.css';
 // Composables are auto-imported in Nuxt
 
 const props = defineProps({
@@ -163,12 +163,12 @@ const props = defineProps({
     type: String,
     default: '',
   },
-})
+});
 
-const textareaRef = ref<HTMLTextAreaElement | null>(null)
-const previewPane = ref<HTMLElement | null>(null)
-const mainScrollContainer = ref<HTMLElement | null>(null)
-const previewContainer = ref<HTMLElement | null>(null)
+const textareaRef = ref<HTMLTextAreaElement | null>(null);
+const previewPane = ref<HTMLElement | null>(null);
+const mainScrollContainer = ref<HTMLElement | null>(null);
+const previewContainer = ref<HTMLElement | null>(null);
 
 const defaultContent = `# Markdown Editor with Mermaid
 
@@ -215,7 +215,23 @@ flowchart LR
     C -->|One| D[Result one]
     C -->|Two| E[Result two]
 \`\`\`
-`
+
+## LaTeX Math Examples
+
+### Inline Math
+You can include inline math like $x^2 + y^2 = z^2$ or $E = mc^2$ within sentences.
+
+### Block Math
+For more complex equations, use block math:
+
+$$
+\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
+$$
+
+$$
+\\sum_{i=1}^{n} x_i = x_1 + x_2 + \\cdots + x_n
+$$
+`;
 
 // Composable for editor state and persistence
 const { markdownText, isEditorVisible, isPreviewVisible, lastSaved, toggleEditorVisibility, togglePreviewVisibility } =
@@ -223,14 +239,14 @@ const { markdownText, isEditorVisible, isPreviewVisible, lastSaved, toggleEditor
     toRef(props, 'initialMarkdown'),
     defaultContent,
     () => autoResizeTextarea() // Pass autoResizeTextarea as a callback
-  )
+  );
 
 // Initialize the composable for pane resizing
 const { editorWidthPercent, previewWidthPercent, startDrag } = usePaneResizer(
   mainScrollContainer,
   isEditorVisible,
   isPreviewVisible
-)
+);
 
 // Initialize the composable for textarea sizing
 const { autoResizeTextarea } = useTextareaSizing(
@@ -240,83 +256,83 @@ const { autoResizeTextarea } = useTextareaSizing(
   previewContainer,
   isEditorVisible,
   isPreviewVisible
-)
+);
 
 // Initialize the composable for keyboard shortcuts
 const { handleKeyboardShortcut } = useKeyboardShortcuts(
   markdownText,
   textareaRef,
   autoResizeTextarea
-)
+);
 
 // Initialize the composable for Markdown rendering
 const { debouncedRenderMarkdown, preRenderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(
   markdownText,
   previewContainer,
   autoResizeTextarea
-)
+);
 
 // Custom toggle function that pre-renders before showing preview
 const customTogglePreviewVisibility = async () => {
   if (isPreviewVisible.value) {
     // If preview is visible, just hide it (no pre-rendering needed)
-    togglePreviewVisibility()
+    togglePreviewVisibility();
   } else {
     // If preview is hidden, pre-render before showing
-    await preRenderMarkdown()
-    togglePreviewVisibility()
+    await preRenderMarkdown();
+    togglePreviewVisibility();
   }
-}
+};
 
 const copyEditorContent = async () => {
   if (!markdownText.value || markdownText.value.trim() === '') {
-    alert('Nothing to copy.') // Consider a more subtle notification
-    return
+    alert('Nothing to copy.'); // Consider a more subtle notification
+    return;
   }
   try {
-    await navigator.clipboard.writeText(markdownText.value)
-    alert('Editor content copied to clipboard!') // Consider a more subtle notification
+    await navigator.clipboard.writeText(markdownText.value);
+    alert('Editor content copied to clipboard!'); // Consider a more subtle notification
   } catch (err) {
-    console.error('Failed to copy editor content:', err)
-    alert('Failed to copy content. Check console for details.') // Consider a more subtle notification
+    console.error('Failed to copy editor content:', err);
+    alert('Failed to copy content. Check console for details.'); // Consider a more subtle notification
   }
-}
+};
 
 watch(
   markdownText,
   () => {
     // Only render the markdown when the preview pane is visible
     if (isPreviewVisible.value) {
-      debouncedRenderMarkdown()
+      debouncedRenderMarkdown();
     }
   },
   { immediate: true }
-)
+);
 
 onMounted(async () => {
-  document.addEventListener('keydown', handleKeyboardShortcut)
-  autoResizeTextarea() // Initial call after mount and state is loaded
-})
+  document.addEventListener('keydown', handleKeyboardShortcut);
+  autoResizeTextarea(); // Initial call after mount and state is loaded
+});
 
 onBeforeUnmount(() => {
-  document.removeEventListener('keydown', handleKeyboardShortcut)
-  cleanupMarkdownRenderer()
-})
+  document.removeEventListener('keydown', handleKeyboardShortcut);
+  cleanupMarkdownRenderer();
+});
 
 // Word count computation
 const wordCount = computed(() => {
-  if (!markdownText.value) return 0
+  if (!markdownText.value) return 0;
   const cleanText = markdownText.value
     .replace(/```[\s\S]*?```/g, '')
     .replace(/`[^`]*`/g, '')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-    .replace(/[#*_~`]/g, '')
-  return cleanText.split(/\s+/).filter((word) => word.length > 0).length
-})
+    .replace(/[#*_~`]/g, '');
+  return cleanText.split(/\s+/).filter((word) => word.length > 0).length;
+});
 
 // Character count computation
 const characterCount = computed(() => {
-  return markdownText.value.length
-})
+  return markdownText.value.length;
+});
 </script>

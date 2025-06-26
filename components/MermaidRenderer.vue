@@ -79,8 +79,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick, computed } from 'vue'
-import mermaid from 'mermaid'
+import { ref, onMounted, watch, nextTick, computed } from 'vue';
+import mermaid from 'mermaid';
 
 const props = defineProps({
   code: {
@@ -91,91 +91,91 @@ const props = defineProps({
     type: [String, Number],
     default: () => Math.random().toString(36).substring(2, 9),
   },
-})
+});
 
-const mermaidContainer = ref<HTMLElement | null>(null)
-const uniqueMermaidId = `mermaid-diagram-${props.idSuffix}`
+const mermaidContainer = ref<HTMLElement | null>(null);
+const uniqueMermaidId = `mermaid-diagram-${props.idSuffix}`;
 
-const scale = ref(1)
-const pan = ref({ x: 0, y: 0 })
-const isPanning = ref(false)
-const startPanPosition = ref({ x: 0, y: 0 })
+const scale = ref(1);
+const pan = ref({ x: 0, y: 0 });
+const isPanning = ref(false);
+const startPanPosition = ref({ x: 0, y: 0 });
 
 const diagramStyle = computed(() => ({
   transform: `scale(${scale.value}) translate(${pan.value.x}px, ${pan.value.y}px)`,
   cursor: isPanning.value ? 'grabbing' : 'grab',
   transition: isPanning.value ? 'none' : 'transform 0.2s ease-out',
-}))
+}));
 
 const zoomIn = () => {
-  scale.value = Math.min(scale.value * 1.2, 3) // Max zoom 3x
-}
+  scale.value = Math.min(scale.value * 1.2, 3); // Max zoom 3x
+};
 
 const zoomOut = () => {
-  scale.value = Math.max(scale.value / 1.2, 0.2) // Min zoom 0.2x
-}
+  scale.value = Math.max(scale.value / 1.2, 0.2); // Min zoom 0.2x
+};
 
 const reset = () => {
-  scale.value = 1
-  pan.value = { x: 0, y: 0 }
-}
+  scale.value = 1;
+  pan.value = { x: 0, y: 0 };
+};
 
 const handleMouseDown = (event: MouseEvent) => {
-  if (event.button !== 0) return // Only pan with left mouse button
-  isPanning.value = true
+  if (event.button !== 0) return; // Only pan with left mouse button
+  isPanning.value = true;
   startPanPosition.value = {
     x: event.clientX - pan.value.x,
     y: event.clientY - pan.value.y,
-  }
+  };
   // Prevent text selection while dragging
-  event.preventDefault()
-}
+  event.preventDefault();
+};
 
 const handleMouseMove = (event: MouseEvent) => {
-  if (!isPanning.value) return
+  if (!isPanning.value) return;
   pan.value = {
     x: event.clientX - startPanPosition.value.x,
     y: event.clientY - startPanPosition.value.y,
-  }
-}
+  };
+};
 
 const handleMouseUp = () => {
-  isPanning.value = false
-}
+  isPanning.value = false;
+};
 
 const renderMermaidDiagram = async () => {
   if (mermaidContainer.value && props.code) {
     try {
-      mermaidContainer.value.innerHTML = '<div class="mermaid-loading">Rendering diagram...</div>'
-      await nextTick()
+      mermaidContainer.value.innerHTML = '<div class="mermaid-loading">Rendering diagram...</div>';
+      await nextTick();
 
-      const { svg } = await mermaid.render(uniqueMermaidId, props.code)
-      mermaidContainer.value.innerHTML = svg
+      const { svg } = await mermaid.render(uniqueMermaidId, props.code);
+      mermaidContainer.value.innerHTML = svg;
     } catch (error) {
-      console.error(`Mermaid rendering error for ID ${uniqueMermaidId}:`, error)
+      console.error(`Mermaid rendering error for ID ${uniqueMermaidId}:`, error);
       if (mermaidContainer.value) {
-        mermaidContainer.value.textContent = `Error rendering diagram: ${(error as Error).message}`
-        mermaidContainer.value.classList.add('mermaid-error')
+        mermaidContainer.value.textContent = `Error rendering diagram: ${(error as Error).message}`;
+        mermaidContainer.value.classList.add('mermaid-error');
       }
     }
   } else if (mermaidContainer.value) {
-    mermaidContainer.value.innerHTML = ''
+    mermaidContainer.value.innerHTML = '';
   }
-}
+};
 
 onMounted(async () => {
-  await renderMermaidDiagram()
-})
+  await renderMermaidDiagram();
+});
 
 watch(
   () => props.code,
   async () => {
     // Reset zoom/pan when code changes, as the diagram might be different
-    reset()
-    await renderMermaidDiagram()
+    reset();
+    await renderMermaidDiagram();
   },
   { immediate: false }
-)
+);
 </script>
 
 <style scoped>

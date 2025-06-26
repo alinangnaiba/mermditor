@@ -1,4 +1,4 @@
-import { ref, nextTick, watch, type Ref, onMounted, onBeforeUnmount } from 'vue';
+import { nextTick, watch, type Ref, onMounted, onBeforeUnmount } from 'vue';
 
 export function useTextareaSizing(
   textareaRef: Ref<HTMLTextAreaElement | null>,
@@ -9,45 +9,37 @@ export function useTextareaSizing(
   isPreviewVisible: Ref<boolean>
 ) {
   const autoResizeTextarea = async () => {
-    if (
-      textareaRef.value &&
-      mainScrollContainerRef.value &&
-      isEditorVisible.value
-    ) {
-      // Reset heights to auto to allow scrollHeight to be calculated correctly
+    if (!textareaRef.value || !mainScrollContainerRef.value) return;
+
+    if (isEditorVisible.value && isPreviewVisible.value) {
+      // Both panes visible - sync heights
       textareaRef.value.style.height = 'auto';
-      
-      if (previewPaneRef.value && isPreviewVisible.value) {
+      if (previewPaneRef.value) {
         previewPaneRef.value.style.height = 'auto';
       }
 
-      await nextTick(); // Wait for DOM to update with auto heights
+      await nextTick();
 
       const scrollContainerHeight = mainScrollContainerRef.value.clientHeight;
-      
       const textareaScrollHeight = textareaRef.value.scrollHeight;
       
       let previewContentScrollHeight = 0;
-      if (previewContainerRef.value && isPreviewVisible.value) {
+      if (previewContainerRef.value) {
         previewContentScrollHeight = previewContainerRef.value.scrollHeight;
       }
       
-      const minPixelHeight = 80; // Minimum height for each pane's content
-      
+      const minPixelHeight = 80;
       const requiredTextareaHeight = Math.max(textareaScrollHeight, minPixelHeight);
       const requiredPreviewHeight = Math.max(previewContentScrollHeight, minPixelHeight);
-      
       const maxContentHeight = Math.max(requiredTextareaHeight, requiredPreviewHeight);
-      
       const finalNewHeight = Math.max(maxContentHeight, scrollContainerHeight);
 
       textareaRef.value.style.height = `${finalNewHeight}px`;
-      
-      if (previewPaneRef.value && isPreviewVisible.value) {
+      if (previewPaneRef.value) {
         previewPaneRef.value.style.height = `${finalNewHeight}px`;
       }
-    } else if (textareaRef.value && !isEditorVisible.value && previewPaneRef.value && mainScrollContainerRef.value && previewContainerRef.value && isPreviewVisible.value) {
-      // Handle case where editor is not visible, preview should take full height or respect container
+    } else if (!isEditorVisible.value && isPreviewVisible.value && previewPaneRef.value && previewContainerRef.value) {
+      // Only preview visible
       previewPaneRef.value.style.height = 'auto';
       await nextTick();
       const scrollContainerHeight = mainScrollContainerRef.value.clientHeight;
@@ -55,8 +47,8 @@ export function useTextareaSizing(
       const finalNewHeight = Math.max(previewContentScrollHeight, scrollContainerHeight, 80);
       previewPaneRef.value.style.height = `${finalNewHeight}px`;
       textareaRef.value.style.height = 'auto';
-    } else if (textareaRef.value && isEditorVisible.value && !isPreviewVisible.value && mainScrollContainerRef.value) {
-      // Handle case where preview is not visible, editor should take full height
+    } else if (isEditorVisible.value && !isPreviewVisible.value) {
+      // Only editor visible
       textareaRef.value.style.height = 'auto';
       await nextTick();
       const scrollContainerHeight = mainScrollContainerRef.value.clientHeight;
@@ -64,7 +56,9 @@ export function useTextareaSizing(
       const finalNewHeight = Math.max(textareaScrollHeight, scrollContainerHeight, 80);
       textareaRef.value.style.height = `${finalNewHeight}px`;
     }
-  };  watch([isEditorVisible, isPreviewVisible], () => {
+  };
+
+  watch([isEditorVisible, isPreviewVisible], () => {
     nextTick(() => {
         autoResizeTextarea();
     });

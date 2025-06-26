@@ -1,4 +1,4 @@
-import { ref, nextTick, type Ref } from 'vue';
+import { nextTick, type Ref } from 'vue';
 
 // Helper function to check for potential URL-like strings
 const isPotentiallyUrlLike = (text: string): boolean => {
