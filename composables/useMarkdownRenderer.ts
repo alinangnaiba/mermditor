@@ -88,7 +88,7 @@ export function useMarkdownRenderer(
       await autoResizeTextarea();
     }, 200);
   };
-  const debouncedRenderMarkdown = debounce(renderMarkdown, 150);
+  const debouncedRenderMarkdown = debounce(renderMarkdown, 10);
 
   // Function to pre-render content and return a promise when complete
   const preRenderMarkdown = async (): Promise<void> => {
