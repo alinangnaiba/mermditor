@@ -1,26 +1,13 @@
-import { nextTick, createApp, type Ref, type App, onUnmounted } from 'vue';
+import { nextTick, type Ref, onUnmounted } from 'vue';
 import MarkdownIt from 'markdown-it';
 import { markdownItMermaid } from '~/utils/markdownItMermaid';
 import { markdownItHighlight } from '~/utils/markdownItHighlight';
 import { markdownItKatex } from '~/utils/markdownItKatex';
-import MermaidRenderer from '~/components/MermaidRenderer.vue';
-import KatexRenderer from '~/components/KatexRenderer.vue';
 import debounce from 'lodash/debounce';
 
-interface RenderedComponent {
-  app: App;
-  container: HTMLElement;
-  content: string;
-}
-
-interface ComponentRenderer {
-  name: string;
-  selector: string;
-  render: (element: Element, index: number) => void;
-  strategy: 'immediate' | 'debounced';
-  debounceMs?: number;
-  cache?: Map<string, RenderedComponent>; // Optional cache for position-based caching
-}
+import type { ComponentRenderer, RenderedComponent } from '~/types/markdown-renderer';
+import { createMermaidRenderer, createMathBlockRenderer, createMathInlineRenderer } from './renderers';
+import { getMermaidChangeInfo } from './utils/mermaid-detection';
 
 export function useMarkdownRenderer(
   markdownText: Ref<string>,
@@ -40,37 +27,7 @@ export function useMarkdownRenderer(
   let lastMermaidBlocks: string[] = [];
   const renderedMermaidElements = new Map<string, HTMLElement>();
 
-  // Extract mermaid blocks from markdown text
-  const extractMermaidBlocks = (text: string): string[] => {
-    const mermaidRegex = /```mermaid\s*\n([\s\S]*?)\n```/g;
-    const blocks: string[] = [];
-    let match;
-    while ((match = mermaidRegex.exec(text)) !== null) {
-      blocks.push(match[1].trim());
-    }
-    return blocks;
-  };
-
-  const getMermaidChangeInfo = (newText: string) => {
-    const newMermaidBlocks = extractMermaidBlocks(newText);
-    const unchangedPositions = new Set<string>();
-    
-    newMermaidBlocks.forEach((block, index) => {
-      const positionKey = `mermaid-${index}`;
-      if (index < lastMermaidBlocks.length && lastMermaidBlocks[index] === block) {
-        unchangedPositions.add(positionKey);
-      }
-    });
-    
-    const mermaidChanged = JSON.stringify(newMermaidBlocks) !== JSON.stringify(lastMermaidBlocks);
-    
-    return {
-      mermaidChanged,
-      newMermaidBlocks,
-      unchangedPositions
-    };
-  };
-
+  // Helper functions for mermaid element preservation
   const preserveMermaidElements = () => {
     if (!previewContainerRef.value) return;
     
@@ -97,91 +54,12 @@ export function useMarkdownRenderer(
     });
   };
 
-  // Component renderers registry with metadata-driven strategies
-  const mermaidRenderer: ComponentRenderer = {
-    name: 'mermaid',
-    selector: '.mermaid-placeholder',
-    strategy: 'debounced',
-    debounceMs: 100,
-    cache: mermaidCache,
-    render: (element: Element, index: number) => {
-      const mermaidCode = decodeURIComponent(element.getAttribute('data-mermaid-code') || '');
-      if (!mermaidCode) return;
-
-      const positionKey = `mermaid-${index}`;
-      
-      // If we reach here, content has changed - invalidate cache if exists
-      if (mermaidCache.has(positionKey)) {
-        const cached = mermaidCache.get(positionKey)!;
-        cached.app.unmount();
-        mermaidCache.delete(positionKey);
-      }
-
-      // Render new content
-      const container = document.createElement('div');
-      container.setAttribute('data-mermaid-position', positionKey); // Add position identifier
-      element.replaceWith(container);
-
-      const app = createApp(MermaidRenderer, {
-        code: mermaidCode,
-        idSuffix: `${index}-${Date.now()}`,
-      });
-      app.mount(container);
-
-      // Cache the rendered component
-      mermaidCache.set(positionKey, {
-        app,
-        container,
-        content: mermaidCode
-      });
-      
-      // Also update our preserved elements map
-      renderedMermaidElements.set(positionKey, container);
-    }
-  };
-
-  const mathBlockRenderer: ComponentRenderer = {
-    name: 'math-block',
-    selector: '.math-block',
-    strategy: 'immediate',
-    render: (element: Element, index: number) => {
-      const mathCode = decodeURIComponent(element.getAttribute('data-math') || '');
-      if (!mathCode) return;
-
-      const container = document.createElement('div');
-      element.replaceWith(container);
-
-      const app = createApp(KatexRenderer, {
-        code: mathCode,
-        isBlock: true,
-        idSuffix: `block-${index}-${Date.now()}`,
-      });
-      app.mount(container);
-    }
-  };
-
-  const mathInlineRenderer: ComponentRenderer = {
-    name: 'math-inline',
-    selector: '.math-inline',
-    strategy: 'immediate',
-    render: (element: Element, index: number) => {
-      const mathCode = decodeURIComponent(element.getAttribute('data-math') || '');
-      if (!mathCode) return;
-
-      const container = document.createElement('span');
-      element.replaceWith(container);
-
-      const app = createApp(KatexRenderer, {
-        code: mathCode,
-        isBlock: false,
-        idSuffix: `inline-${index}-${Date.now()}`,
-      });
-      app.mount(container);
-    }
-  };
-
-  // Registry of all component renderers - easily extensible
-  const componentRenderers = [mermaidRenderer, mathBlockRenderer, mathInlineRenderer];
+  // Create component renderers using factory functions
+  const componentRenderers: ComponentRenderer[] = [
+    createMermaidRenderer(mermaidCache, renderedMermaidElements),
+    createMathBlockRenderer(),
+    createMathInlineRenderer()
+  ];
 
   // Create debounced functions for each debounced renderer
   const debouncedRenderFunctions = new Map<string, () => void>();
@@ -251,7 +129,7 @@ export function useMarkdownRenderer(
     if (!previewContainerRef.value) return;
 
     const currentText = markdownText.value || '';
-    const changeInfo = getMermaidChangeInfo(currentText);
+    const changeInfo = getMermaidChangeInfo(currentText, lastMermaidBlocks);
 
     // Preserve existing mermaid elements before re-rendering HTML
     preserveMermaidElements();
