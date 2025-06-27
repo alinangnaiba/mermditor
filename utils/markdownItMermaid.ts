@@ -1,18 +1,6 @@
 import type MarkdownIt from 'markdown-it';
 
 /**
- * Simple function to escape HTML special characters
- */
-function escapeHtml(unsafe: string): string {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-/**
  * Custom markdown-it plugin for mermaid diagram rendering
  * This plugin identifies mermaid code blocks and replaces them with placeholder divs
  * that will be processed by the MermaidRenderer component

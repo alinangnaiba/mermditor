@@ -2,7 +2,9 @@ import { nextTick, createApp, type Ref } from 'vue';
 import MarkdownIt from 'markdown-it';
 import { markdownItMermaid } from '~/utils/markdownItMermaid';
 import { markdownItHighlight } from '~/utils/markdownItHighlight';
+import { markdownItKatex } from '~/utils/markdownItKatex';
 import MermaidRenderer from '~/components/MermaidRenderer.vue';
+import KatexRenderer from '~/components/KatexRenderer.vue';
 import debounce from 'lodash/debounce';
 
 export function useMarkdownRenderer(
@@ -17,6 +19,7 @@ export function useMarkdownRenderer(
 
   md.use(markdownItHighlight);
   md.use(markdownItMermaid);
+  md.use(markdownItKatex);
 
   let mermaidRenderTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
@@ -40,6 +43,42 @@ export function useMarkdownRenderer(
       const app = createApp(MermaidRenderer, {
         code: mermaidCode,
         idSuffix: `${index}-${Date.now()}`,
+      });
+      app.mount(container);
+    });
+
+    // Render KaTeX math expressions
+    const mathBlocks = previewContainerRef.value.querySelectorAll('.math-block');
+    const mathInlines = previewContainerRef.value.querySelectorAll('.math-inline');
+
+    // Process block math
+    mathBlocks.forEach((mathElement, index) => {
+      const mathCode = decodeURIComponent(mathElement.getAttribute('data-math') || '');
+      if (!mathCode) return;
+
+      const container = document.createElement('div');
+      mathElement.replaceWith(container);
+
+      const app = createApp(KatexRenderer, {
+        code: mathCode,
+        isBlock: true,
+        idSuffix: `block-${index}-${Date.now()}`,
+      });
+      app.mount(container);
+    });
+
+    // Process inline math
+    mathInlines.forEach((mathElement, index) => {
+      const mathCode = decodeURIComponent(mathElement.getAttribute('data-math') || '');
+      if (!mathCode) return;
+
+      const container = document.createElement('span');
+      mathElement.replaceWith(container);
+
+      const app = createApp(KatexRenderer, {
+        code: mathCode,
+        isBlock: false,
+        idSuffix: `inline-${index}-${Date.now()}`,
       });
       app.mount(container);
     });

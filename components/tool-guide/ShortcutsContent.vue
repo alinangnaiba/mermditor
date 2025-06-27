@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref } from 'vue';
 
 const editorShortcuts = ref([
   { action: 'Toggle Bold', keys: ['Ctrl', 'B'], macKeys: ['⌘', 'B'] },
@@ -79,5 +79,5 @@ const editorShortcuts = ref([
   { action: 'Toggle Heading 6', keys: ['Ctrl', 'Shift', '6'], macKeys: ['⌘', 'Shift', '6'] },
   { action: 'Indent Line/Selection', keys: ['Tab'], macKeys: ['Tab'] },
   { action: 'Outdent Line/Selection', keys: ['Shift', 'Tab'], macKeys: ['Shift', 'Tab'] },
-])
+]);
 </script>

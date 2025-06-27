@@ -54,7 +54,7 @@ export function usePaneResizer(
     localStorage.setItem('mermd-editor-width', editorWidthPercent.value.toString());
   };
 
-  const startDrag = (e: MouseEvent | TouchEvent) => {
+  const startDrag = (_e: MouseEvent | TouchEvent) => {
     isDragging.value = true;
     document.addEventListener('mousemove', handleDrag);
     document.addEventListener('touchmove', handleDrag, { passive: false });

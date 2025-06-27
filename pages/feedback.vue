@@ -87,11 +87,11 @@ useSeoMeta({
   ogUrl: 'https://www.mermditor.dev/feedback',
   twitterTitle: 'Feedback & Support - merMDitor',
   twitterDescription: 'Share your feedback, report bugs, or suggest improvements for merMDitor.',
-})
+});
 
 useHead({
   link: [{ rel: 'canonical', href: 'https://www.mermditor.dev/feedback' }],
-})
+});
 
 // Structured data for the feedback page
 useHead({
@@ -108,5 +108,5 @@ useHead({
       }),
     },
   ],
-})
+});
 </script>

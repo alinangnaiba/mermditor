@@ -169,12 +169,12 @@ const form = ref({
   title: '',
   description: '',
   email: '',
-})
+});
 
-const isSubmitting = ref(false)
-const submitted = ref(false)
-const error = ref('')
-const issueUrl = ref('')
+const isSubmitting = ref(false);
+const submitted = ref(false);
+const error = ref('');
+const issueUrl = ref('');
 
 const resetForm = () => {
   form.value = {
@@ -182,32 +182,36 @@ const resetForm = () => {
     title: '',
     description: '',
     email: '',
-  }
-  submitted.value = false
-  error.value = ''
-  issueUrl.value = ''
-}
+  };
+  submitted.value = false;
+  error.value = '';
+  issueUrl.value = '';
+};
 
 const submitSuggestion = async () => {
-  isSubmitting.value = true
-  error.value = ''
+  isSubmitting.value = true;
+  error.value = '';
   try {
     const data = (await $fetch('/api/suggestions', {
       method: 'POST',
       body: form.value,
-    })) as { success: boolean; issueUrl: string; issueNumber: number }
+    })) as { success: boolean; issueUrl: string; issueNumber: number };
 
-    submitted.value = true
-    issueUrl.value = data.issueUrl
+    submitted.value = true;
+    issueUrl.value = data.issueUrl;
 
     // Reset form after successful submission
     setTimeout(() => {
-      resetForm()
-    }, 3000)
-  } catch (err: any) {
-    error.value = err.data?.message || 'An unexpected error occurred'
+      resetForm();
+    }, 3000);
+  } catch (err: unknown) {
+    const errorMessage = err && typeof err === 'object' && 'data' in err && 
+                        err.data && typeof err.data === 'object' && 'message' in err.data
+                        ? String(err.data.message)
+                        : 'An unexpected error occurred';
+    error.value = errorMessage;
   } finally {
-    isSubmitting.value = false
+    isSubmitting.value = false;
   }
-}
+};
 </script>

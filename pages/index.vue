@@ -298,11 +298,11 @@ useSeoMeta({
   twitterDescription:
     'Free online Markdown editor with live preview and Mermaid diagram support. No signup required.',
   twitterImage: '/og-image.png',
-})
+});
 
 useHead({
   link: [{ rel: 'canonical', href: 'https://www.mermditor.dev' }],
-})
+});
 
 // Structured data for better SEO
 useHead({
@@ -336,6 +336,6 @@ useHead({
       }),
     },
   ],
-})
+});
 </script>
 
