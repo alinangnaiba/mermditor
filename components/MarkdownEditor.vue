@@ -261,7 +261,7 @@ const { handleKeyboardShortcut } = useKeyboardShortcuts(
   autoResizeTextarea
 );
 
-const { debouncedRenderMarkdown, preRenderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(
+const { renderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(
   markdownText,
   previewContainer,
   autoResizeTextarea
@@ -275,8 +275,8 @@ const customTogglePreviewVisibility = async () => {
     // If preview is visible, just hide it (no pre-rendering needed)
     togglePreviewVisibility();
   } else {
-    // If preview is hidden, pre-render before showing
-    await preRenderMarkdown();
+    // If preview is hidden, render before showing
+    await renderMarkdown();
     togglePreviewVisibility();
   }
 };
@@ -300,7 +300,7 @@ watch(
   () => {
     // Only render the markdown when the preview pane is visible
     if (isPreviewVisible.value) {
-      debouncedRenderMarkdown();
+      renderMarkdown();
     }
   },
   { immediate: true }
