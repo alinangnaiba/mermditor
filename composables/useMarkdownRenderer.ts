@@ -1,4 +1,4 @@
-import { nextTick, createApp, type Ref } from 'vue';
+import { nextTick, createApp, type Ref, type App, onUnmounted } from 'vue';
 import MarkdownIt from 'markdown-it';
 import { markdownItMermaid } from '~/utils/markdownItMermaid';
 import { markdownItHighlight } from '~/utils/markdownItHighlight';
@@ -7,13 +7,19 @@ import MermaidRenderer from '~/components/MermaidRenderer.vue';
 import KatexRenderer from '~/components/KatexRenderer.vue';
 import debounce from 'lodash/debounce';
 
+interface RenderedComponent {
+  app: App;
+  container: HTMLElement;
+  content: string;
+}
+
 export function useMarkdownRenderer(
   markdownText: Ref<string>,
   previewContainerRef: Ref<HTMLElement | null>,
   autoResizeTextarea: () => Promise<void>
 ) {
   const md = new MarkdownIt({
-    highlight: null, // Disable built-in highlighting
+    highlight: null,
     breaks: true,
   });
 
@@ -22,6 +28,8 @@ export function useMarkdownRenderer(
   md.use(markdownItKatex);
 
   let mermaidRenderTimeoutId: ReturnType<typeof setTimeout> | undefined;
+  
+  const mermaidCache = new Map<string, RenderedComponent>();
 
   const renderMarkdown = async () => {
     if (!previewContainerRef.value) return;
@@ -31,12 +39,34 @@ export function useMarkdownRenderer(
 
     await nextTick();
 
-    const mermaidPlaceholders = previewContainerRef.value.querySelectorAll('.mermaid-placeholder');
+    const activeMermaidPositions = new Set<string>();
 
+    const mermaidPlaceholders = previewContainerRef.value.querySelectorAll('.mermaid-placeholder');
+    
     mermaidPlaceholders.forEach((placeholder, index) => {
       const mermaidCode = decodeURIComponent(placeholder.getAttribute('data-mermaid-code') || '');
       if (!mermaidCode) return;
 
+      const positionKey = `mermaid-${index}`;
+      activeMermaidPositions.add(positionKey);
+
+      if (mermaidCache.has(positionKey)) {
+        const cached = mermaidCache.get(positionKey)!;
+        
+        // Compare content to see if it changed
+        if (cached.content === mermaidCode) {
+          // Content unchanged - reuse cached version
+          const clonedContainer = cached.container.cloneNode(true) as HTMLElement;
+          placeholder.replaceWith(clonedContainer);
+          return;
+        } else {
+          // Content changed - invalidate cache
+          cached.app.unmount();
+          mermaidCache.delete(positionKey);
+        }
+      }
+
+      // Render new content (first time or content changed)
       const container = document.createElement('div');
       placeholder.replaceWith(container);
 
@@ -45,13 +75,16 @@ export function useMarkdownRenderer(
         idSuffix: `${index}-${Date.now()}`,
       });
       app.mount(container);
+
+      // Cache with position key and current content
+      mermaidCache.set(positionKey, {
+        app,
+        container,
+        content: mermaidCode
+      });
     });
 
-    // Render KaTeX math expressions
     const mathBlocks = previewContainerRef.value.querySelectorAll('.math-block');
-    const mathInlines = previewContainerRef.value.querySelectorAll('.math-inline');
-
-    // Process block math
     mathBlocks.forEach((mathElement, index) => {
       const mathCode = decodeURIComponent(mathElement.getAttribute('data-math') || '');
       if (!mathCode) return;
@@ -67,7 +100,7 @@ export function useMarkdownRenderer(
       app.mount(container);
     });
 
-    // Process inline math
+    const mathInlines = previewContainerRef.value.querySelectorAll('.math-inline');
     mathInlines.forEach((mathElement, index) => {
       const mathCode = decodeURIComponent(mathElement.getAttribute('data-math') || '');
       if (!mathCode) return;
@@ -83,22 +116,32 @@ export function useMarkdownRenderer(
       app.mount(container);
     });
 
+    // Clean up cache entries for Mermaid positions that no longer exist
+    cleanupInactivePositions(mermaidCache, activeMermaidPositions);
+
     if (mermaidRenderTimeoutId) clearTimeout(mermaidRenderTimeoutId);
     mermaidRenderTimeoutId = setTimeout(async () => {
       await autoResizeTextarea();
     }, 200);
   };
-  const debouncedRenderMarkdown = debounce(renderMarkdown, 10);
 
-  // Function to pre-render content and return a promise when complete
+  const cleanupInactivePositions = (cache: Map<string, RenderedComponent>, activePositions: Set<string>) => {
+    for (const [positionKey, cached] of cache.entries()) {
+      if (!activePositions.has(positionKey)) {
+        cached.app.unmount();
+        cache.delete(positionKey);
+      }
+    }
+  };
+
+  const debouncedRenderMarkdown = debounce(renderMarkdown, 100);
+
   const preRenderMarkdown = async (): Promise<void> => {
     return new Promise((resolve) => {
-      // Clear any existing timeout
       if (mermaidRenderTimeoutId) {
         clearTimeout(mermaidRenderTimeoutId);
       }
 
-      // Start immediate rendering
       mermaidRenderTimeoutId = setTimeout(async () => {
         await renderMarkdown();
         resolve();
@@ -108,7 +151,15 @@ export function useMarkdownRenderer(
 
   const cleanup = () => {
     if (mermaidRenderTimeoutId) clearTimeout(mermaidRenderTimeoutId);
+    for (const cached of mermaidCache.values()) {
+      cached.app.unmount();
+    }
+    mermaidCache.clear();
   };
+
+  onUnmounted(() => {
+    cleanup();
+  });
 
   return {
     debouncedRenderMarkdown,
