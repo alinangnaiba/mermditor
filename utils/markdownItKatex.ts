@@ -5,50 +5,32 @@ import type MarkdownIt from 'markdown-it';
  * and marks them for client-side rendering
  */
 export function markdownItKatex(md: MarkdownIt) {
-  // Add a custom rule for block math before other rules
-  md.block.ruler.before('fence', 'block_math', blockMathRule);
-  
-  // Override the fence renderer to handle math blocks
-  const originalFence = md.renderer.rules.fence?.bind(md.renderer.rules) || md.renderer.rules.fence;
+  // Add block math rule
+  md.block.ruler.before('fence', 'math_block', mathBlockRule, {
+    alt: ['paragraph', 'reference', 'blockquote']
+  });
 
-  md.renderer.rules.fence = (tokens: any[], idx: number, options: any, env: any, self: any) => {
-    const token = tokens[idx];
-    const code = token.content.trim();
-    
-    if (token.info.trim() === 'math') {
-      return `<div class="math-block-container"><div class="math-block" data-math="${encodeURIComponent(code)}">${escapeHtml(code)}</div></div>`;
-    }
-    
-    return originalFence ? originalFence(tokens, idx, options, env, self) : '';
-  };
+  // Add inline math rule
+  md.inline.ruler.after('escape', 'math_inline', mathInlineRule);
 
-  // Add renderer for block math
-  md.renderer.rules.block_math = (tokens: any[], idx: number) => {
+  // Add renderers
+  md.renderer.rules.math_block = (tokens: any[], idx: number) => {
     const token = tokens[idx];
     const content = token.content.trim();
     return `<div class="math-block-container"><div class="math-block" data-math="${encodeURIComponent(content)}">${escapeHtml(content)}</div></div>`;
   };
 
-  // Add inline math rule using a simpler approach
-  const originalInline = md.renderer.rules.text || ((tokens, idx) => tokens[idx].content);
-  
-  md.renderer.rules.text = (tokens: any[], idx: number, options: any, env: any, self: any) => {
+  md.renderer.rules.math_inline = (tokens: any[], idx: number) => {
     const token = tokens[idx];
-    let content = token.content;
-    
-    // Process inline math: $...$
-    content = content.replace(/\$([^$\n]+?)\$/g, (match: string, math: string) => {
-      return `<span class="math-inline" data-math="${encodeURIComponent(math)}">${escapeHtml(math)}</span>`;
-    });
-    
-    return content;
+    const content = token.content.trim();
+    return `<span class="math-inline" data-math="${encodeURIComponent(content)}">${escapeHtml(content)}</span>`;
   };
 }
 
 /**
- * Block rule for detecting $$...$$ math blocks
+ * Block math rule for $$...$$ blocks
  */
-function blockMathRule(state: any, start: number, end: number, silent: boolean) {
+function mathBlockRule(state: any, start: number, end: number, silent: boolean) {
   const marker = '$$';
   let pos = state.bMarks[start] + state.tShift[start];
   let max = state.eMarks[start];
@@ -58,46 +40,45 @@ function blockMathRule(state: any, start: number, end: number, silent: boolean) 
   if (state.src.slice(pos, pos + marker.length) !== marker) return false;
 
   pos += marker.length;
-  const firstLine = state.src.slice(pos, max).trim();
+  let firstLine = state.src.slice(pos, max).trim();
 
-  // Check for single-line math block
+  // Single line case: $$math$$
   if (firstLine.endsWith(marker)) {
-    // Single line: $$math$$
     const mathContent = firstLine.slice(0, -marker.length).trim();
     if (silent) return true;
 
-    const token = state.push('block_math', 'div', 0);
+    const token = state.push('math_block', 'div', 0);
     token.content = mathContent;
     token.map = [start, start + 1];
     state.line = start + 1;
     return true;
   }
 
-  // Multi-line math block
+  // Multi-line case
   let nextLine = start + 1;
-  let terminatorFound = false;
+  let found = false;
 
   while (nextLine < end) {
     pos = state.bMarks[nextLine] + state.tShift[nextLine];
     max = state.eMarks[nextLine];
     
     if (pos < max && state.sCount[nextLine] < state.blkIndent) {
-      // non-empty line with negative indent should stop the block
       break;
     }
 
-    if (state.src.slice(pos, max).trim() === marker) {
-      terminatorFound = true;
+    const line = state.src.slice(pos, max).trim();
+    if (line === marker) {
+      found = true;
       break;
     }
 
     nextLine++;
   }
 
-  if (!terminatorFound) return false;
+  if (!found) return false;
   if (silent) return true;
 
-  // Extract math content between markers
+  // Collect content
   const lines = [];
   if (firstLine) lines.push(firstLine);
   
@@ -107,11 +88,50 @@ function blockMathRule(state: any, start: number, end: number, silent: boolean) 
     lines.push(state.src.slice(pos, max));
   }
 
-  const token = state.push('block_math', 'div', 0);
+  const token = state.push('math_block', 'div', 0);
   token.content = lines.join('\n').trim();
   token.map = [start, nextLine + 1];
   state.line = nextLine + 1;
   return true;
+}
+
+/**
+ * Inline math rule for $...$ expressions
+ */
+function mathInlineRule(state: any, silent: boolean) {
+  const start = state.pos;
+  const marker = '$';
+
+  if (state.src[start] !== marker) return false;
+  if (start > 0 && state.src[start - 1] === marker) return false; // Avoid $$
+
+  const max = state.posMax;
+  let pos = start + 1;
+
+  // Find closing marker
+  while (pos < max) {
+    if (state.src[pos] === marker) {
+      // Check it's not $$
+      if (pos + 1 < max && state.src[pos + 1] === marker) {
+        pos += 2;
+        continue;
+      }
+      
+      const content = state.src.slice(start + 1, pos);
+      if (content.trim() && !content.includes('\n')) {
+        if (silent) return true;
+
+        const token = state.push('math_inline', 'span', 0);
+        token.content = content;
+        state.pos = pos + 1;
+        return true;
+      }
+      return false;
+    }
+    pos++;
+  }
+
+  return false;
 }
 
 /**
