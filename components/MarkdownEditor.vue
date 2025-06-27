@@ -272,6 +272,8 @@ const { debouncedRenderMarkdown, preRenderMarkdown, cleanupMarkdownRenderer } = 
   autoResizeTextarea
 );
 
+const { success, error } = useToast();
+
 // Custom toggle function that pre-renders before showing preview
 const customTogglePreviewVisibility = async () => {
   if (isPreviewVisible.value) {
@@ -286,15 +288,15 @@ const customTogglePreviewVisibility = async () => {
 
 const copyEditorContent = async () => {
   if (!markdownText.value || markdownText.value.trim() === '') {
-    alert('Nothing to copy.'); // Consider a more subtle notification
+    error('Nothing to copy');
     return;
   }
   try {
     await navigator.clipboard.writeText(markdownText.value);
-    alert('Editor content copied to clipboard!'); // Consider a more subtle notification
+    success('Content copied to clipboard!');
   } catch (err) {
     console.error('Failed to copy editor content:', err);
-    alert('Failed to copy content. Check console for details.'); // Consider a more subtle notification
+    error('Failed to copy content');
   }
 };
 
