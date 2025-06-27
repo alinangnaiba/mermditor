@@ -233,7 +233,6 @@ $$
 $$
 `;
 
-// Composable for editor state and persistence
 const { markdownText, isEditorVisible, isPreviewVisible, lastSaved, toggleEditorVisibility, togglePreviewVisibility } =
   useEditorStateAndPersistence(
     toRef(props, 'initialMarkdown'),
@@ -241,14 +240,12 @@ const { markdownText, isEditorVisible, isPreviewVisible, lastSaved, toggleEditor
     () => autoResizeTextarea() // Pass autoResizeTextarea as a callback
   );
 
-// Initialize the composable for pane resizing
 const { editorWidthPercent, previewWidthPercent, startDrag } = usePaneResizer(
   mainScrollContainer,
   isEditorVisible,
   isPreviewVisible
 );
 
-// Initialize the composable for textarea sizing
 const { autoResizeTextarea } = useTextareaSizing(
   textareaRef,
   previewPane,
@@ -258,14 +255,12 @@ const { autoResizeTextarea } = useTextareaSizing(
   isPreviewVisible
 );
 
-// Initialize the composable for keyboard shortcuts
 const { handleKeyboardShortcut } = useKeyboardShortcuts(
   markdownText,
   textareaRef,
   autoResizeTextarea
 );
 
-// Initialize the composable for Markdown rendering
 const { debouncedRenderMarkdown, preRenderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(
   markdownText,
   previewContainer,
@@ -313,7 +308,7 @@ watch(
 
 onMounted(async () => {
   document.addEventListener('keydown', handleKeyboardShortcut);
-  autoResizeTextarea(); // Initial call after mount and state is loaded
+  autoResizeTextarea();
 });
 
 onBeforeUnmount(() => {
