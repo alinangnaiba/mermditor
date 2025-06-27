@@ -11,7 +11,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, nextTick, computed } from 'vue';
 import * as katex from 'katex';
-// Import KaTeX CSS statically
 import 'katex/dist/katex.min.css';
 
 const props = defineProps<{
@@ -32,32 +31,20 @@ const renderMath = async () => {
   try {
     error.value = null;
     
-    // Clear previous content
     mathContainer.value.innerHTML = '';
     
     // Render the math expression
     katex.render(props.code.trim(), mathContainer.value, {
-      displayMode: isBlock.value, // Use computed isBlock value
+      displayMode: isBlock.value,
       throwOnError: false,
       errorColor: '#ef4444',
       strict: 'warn',
       trust: false,
-      output: 'html', // Force HTML output for better control
+      output: 'html',
       macros: {
-        // Add common macros
         '\\text': '\\textrm'
       }
-    });
-    
-    // For inline math, adjust the positioning after rendering
-    if (!isBlock.value && mathContainer.value) {
-      const katexElement = mathContainer.value.querySelector('.katex') as HTMLElement;
-      if (katexElement) {
-        katexElement.style.verticalAlign = '0';
-        katexElement.style.position = 'relative';
-      }
-    }
-    
+    });    
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown rendering error';
     console.error('KaTeX rendering error:', err);
