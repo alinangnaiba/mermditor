@@ -233,7 +233,6 @@ $$
 $$
 `;
 
-// Composable for editor state and persistence
 const { markdownText, isEditorVisible, isPreviewVisible, lastSaved, toggleEditorVisibility, togglePreviewVisibility } =
   useEditorStateAndPersistence(
     toRef(props, 'initialMarkdown'),
@@ -241,14 +240,12 @@ const { markdownText, isEditorVisible, isPreviewVisible, lastSaved, toggleEditor
     () => autoResizeTextarea() // Pass autoResizeTextarea as a callback
   );
 
-// Initialize the composable for pane resizing
 const { editorWidthPercent, previewWidthPercent, startDrag } = usePaneResizer(
   mainScrollContainer,
   isEditorVisible,
   isPreviewVisible
 );
 
-// Initialize the composable for textarea sizing
 const { autoResizeTextarea } = useTextareaSizing(
   textareaRef,
   previewPane,
@@ -258,19 +255,19 @@ const { autoResizeTextarea } = useTextareaSizing(
   isPreviewVisible
 );
 
-// Initialize the composable for keyboard shortcuts
 const { handleKeyboardShortcut } = useKeyboardShortcuts(
   markdownText,
   textareaRef,
   autoResizeTextarea
 );
 
-// Initialize the composable for Markdown rendering
-const { debouncedRenderMarkdown, preRenderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(
+const { renderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(
   markdownText,
   previewContainer,
   autoResizeTextarea
 );
+
+const { success, error } = useToast();
 
 // Custom toggle function that pre-renders before showing preview
 const customTogglePreviewVisibility = async () => {
@@ -278,23 +275,23 @@ const customTogglePreviewVisibility = async () => {
     // If preview is visible, just hide it (no pre-rendering needed)
     togglePreviewVisibility();
   } else {
-    // If preview is hidden, pre-render before showing
-    await preRenderMarkdown();
+    // If preview is hidden, render before showing
+    await renderMarkdown();
     togglePreviewVisibility();
   }
 };
 
 const copyEditorContent = async () => {
   if (!markdownText.value || markdownText.value.trim() === '') {
-    alert('Nothing to copy.'); // Consider a more subtle notification
+    error('Nothing to copy');
     return;
   }
   try {
     await navigator.clipboard.writeText(markdownText.value);
-    alert('Editor content copied to clipboard!'); // Consider a more subtle notification
+    success('Content copied to clipboard!');
   } catch (err) {
     console.error('Failed to copy editor content:', err);
-    alert('Failed to copy content. Check console for details.'); // Consider a more subtle notification
+    error('Failed to copy content');
   }
 };
 
@@ -303,7 +300,7 @@ watch(
   () => {
     // Only render the markdown when the preview pane is visible
     if (isPreviewVisible.value) {
-      debouncedRenderMarkdown();
+      renderMarkdown();
     }
   },
   { immediate: true }
@@ -311,7 +308,7 @@ watch(
 
 onMounted(async () => {
   document.addEventListener('keydown', handleKeyboardShortcut);
-  autoResizeTextarea(); // Initial call after mount and state is loaded
+  autoResizeTextarea();
 });
 
 onBeforeUnmount(() => {

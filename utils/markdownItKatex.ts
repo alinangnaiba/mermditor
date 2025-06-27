@@ -40,7 +40,7 @@ function mathBlockRule(state: any, start: number, end: number, silent: boolean) 
   if (state.src.slice(pos, pos + marker.length) !== marker) return false;
 
   pos += marker.length;
-  let firstLine = state.src.slice(pos, max).trim();
+  const firstLine = state.src.slice(pos, max).trim();
 
   // Single line case: $$math$$
   if (firstLine.endsWith(marker)) {

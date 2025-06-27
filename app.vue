@@ -6,6 +6,7 @@
     <div class="app-container bg-dark">
       <NuxtPage />
     </div>
+    <ToastNotification />
   </div>
 </template>
 

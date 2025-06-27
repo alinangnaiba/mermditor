@@ -1,11 +1,13 @@
-import { nextTick, createApp, type Ref } from 'vue';
+import { nextTick, type Ref, onUnmounted } from 'vue';
 import MarkdownIt from 'markdown-it';
 import { markdownItMermaid } from '~/utils/markdownItMermaid';
 import { markdownItHighlight } from '~/utils/markdownItHighlight';
 import { markdownItKatex } from '~/utils/markdownItKatex';
-import MermaidRenderer from '~/components/MermaidRenderer.vue';
-import KatexRenderer from '~/components/KatexRenderer.vue';
 import debounce from 'lodash/debounce';
+
+import type { ComponentRenderer, RenderedComponent } from '~/types/markdown-renderer';
+import { createMermaidRenderer, createMathBlockRenderer, createMathInlineRenderer } from './renderers';
+import { getMermaidChangeInfo } from './utils/mermaid-detection';
 
 export function useMarkdownRenderer(
   markdownText: Ref<string>,
@@ -13,7 +15,7 @@ export function useMarkdownRenderer(
   autoResizeTextarea: () => Promise<void>
 ) {
   const md = new MarkdownIt({
-    highlight: null, // Disable built-in highlighting
+    highlight: null,
     breaks: true,
   });
 
@@ -21,98 +23,168 @@ export function useMarkdownRenderer(
   md.use(markdownItMermaid);
   md.use(markdownItKatex);
 
-  let mermaidRenderTimeoutId: ReturnType<typeof setTimeout> | undefined;
+  const mermaidCache = new Map<string, RenderedComponent>();
+  let lastMermaidBlocks: string[] = [];
+  const renderedMermaidElements = new Map<string, HTMLElement>();
 
+  // Helper functions for mermaid element preservation
+  const preserveMermaidElements = () => {
+    if (!previewContainerRef.value) return;
+    
+    const mermaidContainers = previewContainerRef.value.querySelectorAll('[data-mermaid-position]');
+    mermaidContainers.forEach((container) => {
+      const position = container.getAttribute('data-mermaid-position');
+      if (position) {
+        renderedMermaidElements.set(position, container.cloneNode(true) as HTMLElement);
+      }
+    });
+  };
+
+  const restoreMermaidElements = (unchangedPositions: Set<string>) => {
+    if (!previewContainerRef.value) return;
+    
+    const placeholders = previewContainerRef.value.querySelectorAll('.mermaid-placeholder');
+    placeholders.forEach((placeholder, index) => {
+      const positionKey = `mermaid-${index}`;
+      
+      if (unchangedPositions.has(positionKey) && renderedMermaidElements.has(positionKey)) {
+        const preservedElement = renderedMermaidElements.get(positionKey)!;
+        placeholder.replaceWith(preservedElement);
+      }
+    });
+  };
+
+  // Create component renderers using factory functions
+  const componentRenderers: ComponentRenderer[] = [
+    createMermaidRenderer(mermaidCache, renderedMermaidElements),
+    createMathBlockRenderer(),
+    createMathInlineRenderer()
+  ];
+
+  // Create debounced functions for each debounced renderer
+  const debouncedRenderFunctions = new Map<string, () => void>();
+  
+  componentRenderers
+    .filter(r => r.strategy === 'debounced')
+    .forEach(renderer => {
+      const debouncedFn = debounce(() => {
+        renderSingleComponent(renderer);
+      }, renderer.debounceMs || 100);
+      
+      debouncedRenderFunctions.set(renderer.name, debouncedFn);
+    });
+
+  const renderSingleComponent = (renderer: ComponentRenderer) => {
+    if (!previewContainerRef.value) return;
+    
+    const elements = previewContainerRef.value.querySelectorAll(renderer.selector);
+    const activePositions = new Set<string>();
+
+    elements.forEach((element, index) => {
+      const positionKey = `${renderer.name}-${index}`;
+      
+      // Track active positions for cache cleanup
+      if (renderer.cache) {
+        activePositions.add(positionKey);
+        
+        // Check if content has changed before rendering
+        const contentAttr = element.getAttribute('data-mermaid-code') || element.getAttribute('data-math') || '';
+        const currentContent = decodeURIComponent(contentAttr);
+        
+        if (renderer.cache.has(positionKey)) {
+          const cached = renderer.cache.get(positionKey)!;
+          if (cached.content === currentContent) {
+            // Content unchanged - skip rendering entirely to avoid flicker
+            return;
+          }
+        }
+      }
+      
+      // Only render if content changed or no cache exists
+      renderer.render(element, index);
+    });
+
+    // Clean up inactive cache entries
+    if (renderer.cache) {
+      cleanupInactivePositions(renderer.cache, activePositions);
+    }
+  };
+
+  const cleanupInactivePositions = (cache: Map<string, RenderedComponent>, activePositions: Set<string>) => {
+    for (const [positionKey, cached] of cache.entries()) {
+      if (!activePositions.has(positionKey)) {
+        cached.app.unmount();
+        cache.delete(positionKey);
+      }
+    }
+  };
+
+  const renderImmediate = () => {
+    const immediateRenderers = componentRenderers.filter(r => r.strategy === 'immediate');
+    immediateRenderers.forEach(renderSingleComponent);
+  };
+
+  // Main render function - smart change detection to prevent unnecessary flickering
   const renderMarkdown = async () => {
     if (!previewContainerRef.value) return;
 
-    const html = md.render(markdownText.value || '');
+    const currentText = markdownText.value || '';
+    const changeInfo = getMermaidChangeInfo(currentText, lastMermaidBlocks);
+
+    // Preserve existing mermaid elements before re-rendering HTML
+    preserveMermaidElements();
+
+    // Always re-render the HTML (this is fast and handles markdown/katex changes)
+    const html = md.render(currentText);
     previewContainerRef.value.innerHTML = html;
 
     await nextTick();
 
-    const mermaidPlaceholders = previewContainerRef.value.querySelectorAll('.mermaid-placeholder');
+    // Restore unchanged mermaid elements to prevent flicker
+    restoreMermaidElements(changeInfo.unchangedPositions);
 
-    mermaidPlaceholders.forEach((placeholder, index) => {
-      const mermaidCode = decodeURIComponent(placeholder.getAttribute('data-mermaid-code') || '');
-      if (!mermaidCode) return;
+    // Always render immediate components (KaTeX) as they don't flicker and are fast
+    renderImmediate();
 
-      const container = document.createElement('div');
-      placeholder.replaceWith(container);
-
-      const app = createApp(MermaidRenderer, {
-        code: mermaidCode,
-        idSuffix: `${index}-${Date.now()}`,
+    // Only render changed mermaid components
+    if (changeInfo.mermaidChanged) {
+      // Only render mermaid components that actually changed
+      const debouncedRenderers = componentRenderers.filter(r => r.strategy === 'debounced');
+      debouncedRenderers.forEach(renderer => {
+        const debouncedFn = debouncedRenderFunctions.get(renderer.name);
+        if (debouncedFn) {
+          debouncedFn();
+        }
       });
-      app.mount(container);
-    });
+    }
 
-    // Render KaTeX math expressions
-    const mathBlocks = previewContainerRef.value.querySelectorAll('.math-block');
-    const mathInlines = previewContainerRef.value.querySelectorAll('.math-inline');
+    // Update tracking variables
+    lastMermaidBlocks = changeInfo.newMermaidBlocks;
 
-    // Process block math
-    mathBlocks.forEach((mathElement, index) => {
-      const mathCode = decodeURIComponent(mathElement.getAttribute('data-math') || '');
-      if (!mathCode) return;
-
-      const container = document.createElement('div');
-      mathElement.replaceWith(container);
-
-      const app = createApp(KatexRenderer, {
-        code: mathCode,
-        isBlock: true,
-        idSuffix: `block-${index}-${Date.now()}`,
-      });
-      app.mount(container);
-    });
-
-    // Process inline math
-    mathInlines.forEach((mathElement, index) => {
-      const mathCode = decodeURIComponent(mathElement.getAttribute('data-math') || '');
-      if (!mathCode) return;
-
-      const container = document.createElement('span');
-      mathElement.replaceWith(container);
-
-      const app = createApp(KatexRenderer, {
-        code: mathCode,
-        isBlock: false,
-        idSuffix: `inline-${index}-${Date.now()}`,
-      });
-      app.mount(container);
-    });
-
-    if (mermaidRenderTimeoutId) clearTimeout(mermaidRenderTimeoutId);
-    mermaidRenderTimeoutId = setTimeout(async () => {
+    // Auto-resize textarea after a brief delay for final layout
+    setTimeout(async () => {
       await autoResizeTextarea();
-    }, 200);
-  };
-  const debouncedRenderMarkdown = debounce(renderMarkdown, 150);
-
-  // Function to pre-render content and return a promise when complete
-  const preRenderMarkdown = async (): Promise<void> => {
-    return new Promise((resolve) => {
-      // Clear any existing timeout
-      if (mermaidRenderTimeoutId) {
-        clearTimeout(mermaidRenderTimeoutId);
-      }
-
-      // Start immediate rendering
-      mermaidRenderTimeoutId = setTimeout(async () => {
-        await renderMarkdown();
-        resolve();
-      }, 0);
-    });
+    }, 150);
   };
 
   const cleanup = () => {
-    if (mermaidRenderTimeoutId) clearTimeout(mermaidRenderTimeoutId);
+    // Clear all caches and unmount components
+    componentRenderers.forEach(renderer => {
+      if (renderer.cache) {
+        for (const cached of renderer.cache.values()) {
+          cached.app.unmount();
+        }
+        renderer.cache.clear();
+      }
+    });
   };
 
+  onUnmounted(() => {
+    cleanup();
+  });
+
   return {
-    debouncedRenderMarkdown,
-    preRenderMarkdown,
+    renderMarkdown,
     cleanupMarkdownRenderer: cleanup,
   };
 }
