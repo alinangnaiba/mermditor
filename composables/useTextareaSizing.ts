@@ -20,6 +20,9 @@ export function useTextareaSizing(
 
       await nextTick();
 
+      // Additional null checks after nextTick in case refs became null during navigation
+      if (!textareaRef.value || !mainScrollContainerRef.value) return;
+
       const scrollContainerHeight = mainScrollContainerRef.value.clientHeight;
       const textareaScrollHeight = textareaRef.value.scrollHeight;
       
@@ -42,15 +45,23 @@ export function useTextareaSizing(
       // Only preview visible
       previewPaneRef.value.style.height = 'auto';
       await nextTick();
+      
+      if (!mainScrollContainerRef.value || !previewPaneRef.value || !previewContainerRef.value) return;
+      
       const scrollContainerHeight = mainScrollContainerRef.value.clientHeight;
       const previewContentScrollHeight = previewContainerRef.value.scrollHeight;
       const finalNewHeight = Math.max(previewContentScrollHeight, scrollContainerHeight, 80);
       previewPaneRef.value.style.height = `${finalNewHeight}px`;
-      textareaRef.value.style.height = 'auto';
-    } else if (isEditorVisible.value && !isPreviewVisible.value) {
-      // Only editor visible
+      
+      if (textareaRef.value) {
+        textareaRef.value.style.height = 'auto';
+      }
+    } else if (isEditorVisible.value && !isPreviewVisible.value && textareaRef.value) {
       textareaRef.value.style.height = 'auto';
       await nextTick();
+      
+      if (!textareaRef.value || !mainScrollContainerRef.value) return;
+      
       const scrollContainerHeight = mainScrollContainerRef.value.clientHeight;
       const textareaScrollHeight = textareaRef.value.scrollHeight;
       const finalNewHeight = Math.max(textareaScrollHeight, scrollContainerHeight, 80);
@@ -60,20 +71,28 @@ export function useTextareaSizing(
 
   watch([isEditorVisible, isPreviewVisible], () => {
     nextTick(() => {
+      if (textareaRef.value || mainScrollContainerRef.value) {
         autoResizeTextarea();
+      }
     });
   }, { immediate: true });
 
   // Watch for changes that might affect sizing and trigger resize
-  // Removed deep: true as it might be too aggressive and cause performance issues.
-  // Specific refs changing should be enough.
-  watch([textareaRef, previewPaneRef], autoResizeTextarea, { immediate: false });
+  watch([textareaRef, previewPaneRef], () => {
+    if (textareaRef.value || mainScrollContainerRef.value) {
+      autoResizeTextarea();
+    }
+  }, { immediate: false });
   
-  const handleWindowResize = () => autoResizeTextarea();
+  const handleWindowResize = () => {
+    if (textareaRef.value || mainScrollContainerRef.value) {
+      autoResizeTextarea();
+    }
+  };
 
   onMounted(() => {
     window.addEventListener('resize', handleWindowResize);
-    autoResizeTextarea(); // Initial call
+    autoResizeTextarea();
   });
 
   onBeforeUnmount(() => {

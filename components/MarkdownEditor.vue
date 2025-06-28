@@ -2,6 +2,101 @@
     <!-- Floating Action Bar - Above all panes -->
     <div class="relative z-30 flex justify-center py-2">
       <div class="flex items-center space-x-1 rounded-lg bg-surface-tertiary/95 shadow-lg backdrop-blur-sm border border-border-primary">
+        <!-- Autosave Checkbox -->
+        <label class="flex items-center space-x-2 px-3 py-2 cursor-pointer">
+          <input
+            type="checkbox"
+            :checked="isAutosaveEnabled"
+            class="w-4 h-4 text-accent-primary bg-surface-quaternary border-border-primary rounded focus:ring-accent-primary focus:ring-2"
+            @change="handleAutosaveToggle"
+          >
+          <span class="text-sm text-text-secondary">Autosave</span>
+        </label>
+
+        <!-- Clear Data Button -->
+        <button
+          title="Clear all stored data"
+          class="rounded-md p-2 text-text-tertiary transition-colors hover:bg-red-600 hover:text-white focus:bg-red-600 focus:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+          aria-label="Clear all stored data"
+          @click="clearData"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            width="18"
+            height="18"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+
+        <!-- Divider -->
+        <div class="h-6 w-px bg-border-secondary"/>
+
+        <!-- Import File Button -->
+        <button
+          title="Import markdown file"
+          class="rounded-md p-2 text-text-tertiary transition-colors hover:bg-surface-quaternary hover:text-text-primary focus:bg-surface-quaternary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+          aria-label="Import markdown file"
+          @click="importFile"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            width="18"
+            height="18"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+
+        <!-- Save File Button -->
+        <button
+          title="Save markdown file"
+          class="rounded-md p-2 text-text-tertiary transition-colors hover:bg-surface-quaternary hover:text-text-primary focus:bg-surface-quaternary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+          aria-label="Save markdown file"
+          @click="saveFile"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            width="18"
+            height="18"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+
+        <!-- Divider -->
+        <div class="h-6 w-px bg-border-secondary"/>
+
+        <!-- Clear Content Button -->
+        <button
+          title="Clear editor content"
+          class="rounded-md p-2 text-text-tertiary transition-colors hover:bg-surface-quaternary hover:text-text-primary focus:bg-surface-quaternary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+          aria-label="Clear editor content"
+          @click="clearContent"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            width="18"
+            height="18"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <!-- X inside a circle -->
+            <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none"/>
+            <path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+
         <!-- Copy Content Button -->
         <button
           title="Copy content"
@@ -94,6 +189,7 @@
         </button>
       </div>
     </div>
+
     <!-- Main pane container with single scroll -->
     <div class="flex min-h-0 flex-1 flex-col">
       <div ref="mainScrollContainer" class="main-scroll-container w-full flex-1 overflow-y-auto">
@@ -146,17 +242,36 @@
         {{ wordCount }} words | {{ characterCount }} characters
       </div>
       <div class="text-sm text-text-tertiary">
-        <span v-if="lastSaved">Last saved: {{ lastSaved }}</span>
-        <span v-else>Changes saved automatically</span>
+        <span v-if="isAutosaveEnabled">
+          <span v-if="lastSaved">Last saved: {{ lastSaved }}</span>
+          <span v-else>Autosave enabled</span>
+        </span>
+        <span v-else>Autosave disabled</span>
       </div>
     </div>
+
+    <!-- Modern Confirmation Dialog -->
+    <ConfirmationDialog
+      :is-visible="confirmDialog.isVisible.value"
+      :title="confirmDialog.currentOptions.value.title"
+      :message="confirmDialog.currentOptions.value.message"
+      :confirm-text="confirmDialog.currentOptions.value.confirmText"
+      :cancel-text="confirmDialog.currentOptions.value.cancelText"
+      :type="confirmDialog.currentOptions.value.type"
+      @confirm="confirmDialog.handleConfirm"
+      @cancel="confirmDialog.handleCancel"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, computed, toRef } from 'vue'; // Removed nextTick, added toRef
+import { ref, onMounted, onBeforeUnmount, watch, computed, toRef } from 'vue';
 import 'highlight.js/styles/atom-one-dark.css';
-// Composables are auto-imported in Nuxt
+import { useFileOperations } from '~/composables/utils/file-operations';
+import { useDataManagement } from '~/composables/utils/data-management';
+import { useConfirmDialog } from '~/composables/utils/confirm-dialog';
+import ConfirmationDialog from './ConfirmationDialog.vue';
+// Other composables are auto-imported in Nuxt
 
 const props = defineProps({
   initialMarkdown: {
@@ -233,11 +348,15 @@ $$
 $$
 `;
 
-const { markdownText, isEditorVisible, isPreviewVisible, lastSaved, toggleEditorVisibility, togglePreviewVisibility } =
+// Modern confirmation dialog
+const confirmDialog = useConfirmDialog();
+
+const { markdownText, isEditorVisible, isPreviewVisible, lastSaved, isAutosaveEnabled, toggleEditorVisibility, togglePreviewVisibility, toggleAutosave } =
   useEditorStateAndPersistence(
     toRef(props, 'initialMarkdown'),
     defaultContent,
-    () => autoResizeTextarea() // Pass autoResizeTextarea as a callback
+    () => autoResizeTextarea(),
+    confirmDialog.showConfirmation
   );
 
 const { editorWidthPercent, previewWidthPercent, startDrag } = usePaneResizer(
@@ -269,13 +388,32 @@ const { renderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(
 
 const { success, error } = useToast();
 
+const { clearAllData } = useDataManagement();
+
+const { saveFile, importFile } = useFileOperations({
+  markdownText,
+  defaultContent,
+  onImportSuccess: async (filename: string) => {
+    // Auto-resize and render after import
+    await autoResizeTextarea();
+    if (isPreviewVisible.value) {
+      await renderMarkdown();
+    }
+    success(`File "${filename}" imported successfully!`);
+  },
+  onSaveSuccess: () => {
+    success('File saved successfully!');
+  },
+  onError: (message: string) => {
+    error(message);
+  }
+});
+
 // Custom toggle function that pre-renders before showing preview
 const customTogglePreviewVisibility = async () => {
   if (isPreviewVisible.value) {
-    // If preview is visible, just hide it (no pre-rendering needed)
     togglePreviewVisibility();
   } else {
-    // If preview is hidden, render before showing
     await renderMarkdown();
     togglePreviewVisibility();
   }
@@ -292,6 +430,39 @@ const copyEditorContent = async () => {
   } catch (err) {
     console.error('Failed to copy editor content:', err);
     error('Failed to copy content');
+  }
+};
+
+const clearContent = () => {
+  markdownText.value = '';
+  success('Editor content cleared');
+};
+
+const clearData = async () => {
+  const confirmed = await confirmDialog.showConfirmation({
+    title: 'Clear All Data',
+    message: 'This will delete all your saved content and settings. This action cannot be undone.',
+    confirmText: 'Clear Data',
+    cancelText: 'Cancel'
+  });
+
+  if (confirmed) {
+    const result = clearAllData();
+    if (result) {
+      markdownText.value = defaultContent;
+      isAutosaveEnabled.value = false;
+    }
+  }
+};
+
+const handleAutosaveToggle = async (event: Event) => {
+  const checkbox = event.target as HTMLInputElement;
+  event.preventDefault();
+  
+  const success = await toggleAutosave();
+  
+  if (!success) {
+    checkbox.checked = isAutosaveEnabled.value;
   }
 };
 
