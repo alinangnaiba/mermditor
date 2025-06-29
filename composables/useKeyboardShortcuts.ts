@@ -416,6 +416,9 @@ export function useKeyboardShortcuts(
   fileOperations?: {
     saveFile: () => Promise<void>;
     importFile: () => void;
+  },
+  findOperations?: {
+    openFindPanel: () => void;
   }
 ) {
   const handleKeyboardShortcut = (e: KeyboardEvent) => {
@@ -444,6 +447,15 @@ export function useKeyboardShortcuts(
           break;
         case 'e': // Inline Code (Ctrl+E)
           result = handleInlineCode(params);
+          break;
+        case 'f':
+          if (shiftKey && findOperations?.openFindPanel) {
+            // Ctrl+Shift+F: Open find panel
+            e.preventDefault();
+            e.stopPropagation();
+            findOperations.openFindPanel();
+            return;
+          }
           break;
         case 'i':
           result = handleItalic(params);

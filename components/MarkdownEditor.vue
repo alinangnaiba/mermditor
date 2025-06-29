@@ -114,78 +114,120 @@
             :style="{ width: isPreviewVisible ? editorWidthPercent + '%' : '100%' }"
           >
             <div class="editor-pane border-r border-border-primary bg-deep-black flex flex-col">
-              <!-- Editor Toolbar -->
-              <div class="editor-toolbar flex items-center space-x-4 px-4 py-2 bg-deep-black border-b border-border-primary">
-                <!-- File Menu -->
-                <div class="relative">
-                  <button
-                    class="text-sm text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary rounded px-2 py-1"
-                    @click="toggleFileMenu"
-                  >
-                    File
-                  </button>
-                  <!-- File Dropdown -->
-                  <div
-                    v-if="fileMenuOpen"
-                    class="absolute top-full left-0 mt-1 w-48 bg-deep-black border border-border-primary rounded-md shadow-lg z-50"
-                  >
-                    <div class="py-1">
-                      <button
-                        class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors"
-                        @click="importFile(); closeAllMenus()"
-                      >
-                        Import
-                      </button>
-                      <button
-                        class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors flex justify-between items-center"
-                        @click="saveFile(); closeAllMenus()"
-                      >
-                        <span>Save</span>
-                        <span class="text-xs text-text-tertiary">Ctrl+S</span>
-                      </button>
+              <!-- Sticky Header Area (Toolbar + Find Panel) -->
+              <div class="sticky top-0 z-40 bg-deep-black">
+                <!-- Editor Toolbar -->
+                <div class="editor-toolbar flex items-center space-x-4 px-4 py-2 border-b border-border-primary">
+                  <!-- File Menu -->
+                  <div class="relative">
+                    <button
+                      class="text-sm text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary rounded px-2 py-1"
+                      @click="toggleFileMenu"
+                    >
+                      File
+                    </button>
+                    <!-- File Dropdown -->
+                    <div
+                      v-if="fileMenuOpen"
+                      class="absolute top-full left-0 mt-1 w-48 bg-deep-black border border-border-primary rounded-md shadow-lg z-50"
+                    >
+                      <div class="py-1">
+                        <button
+                          class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors"
+                          @click="importFile(); closeAllMenus()"
+                        >
+                          Import
+                        </button>
+                        <button
+                          class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors flex justify-between items-center"
+                          @click="saveFile(); closeAllMenus()"
+                        >
+                          <span>Save</span>
+                          <span class="text-xs text-text-tertiary">Ctrl+S</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Edit Menu -->
+                  <div class="relative">
+                    <button
+                      class="text-sm text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary rounded px-2 py-1"
+                      @click="toggleEditMenu"
+                    >
+                      Edit
+                    </button>
+                    <!-- Edit Dropdown -->
+                    <div
+                      v-if="editMenuOpen"
+                      class="absolute top-full left-0 mt-1 w-40 bg-deep-black border border-border-primary rounded-md shadow-lg z-50"
+                    >
+                      <div class="py-1">
+                        <button
+                          class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors flex justify-between items-center"
+                          @click="openFindPanel(); closeAllMenus()"
+                        >
+                          <span>Find</span>
+                          <span class="text-xs text-text-tertiary">Ctrl+Shift+F</span>
+                        </button>
+                        <div class="h-px bg-border-secondary mx-2 my-1"/>
+                        <button
+                          class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors"
+                          @click="copyEditorContent(); closeAllMenus()"
+                        >
+                          Copy
+                        </button>
+                        <button
+                          class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors"
+                          @click="clearContent(); closeAllMenus()"
+                        >
+                          Clear Content
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Edit Menu -->
-                <div class="relative">
-                  <button
-                    class="text-sm text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary rounded px-2 py-1"
-                    @click="toggleEditMenu"
-                  >
-                    Edit
-                  </button>
-                  <!-- Edit Dropdown -->
-                  <div
-                    v-if="editMenuOpen"
-                    class="absolute top-full left-0 mt-1 w-40 bg-deep-black border border-border-primary rounded-md shadow-lg z-50"
-                  >
-                    <div class="py-1">
-                      <button
-                        class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors"
-                        @click="copyEditorContent(); closeAllMenus()"
-                      >
-                        Copy
-                      </button>
-                      <button
-                        class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors"
-                        @click="clearContent(); closeAllMenus()"
-                      >
-                        Clear Content
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <!-- Find/Replace Panel -->
+                <Transition name="slide-down">                <FindReplacePanel
+                  v-if="findPanelVisible"
+                  :markdown-text="markdownText"
+                  :textarea-ref="textareaRef"
+                  :scroll-container="mainScrollContainer"
+                  @close="closeFindPanel"
+                  @highlight="handleHighlight"
+                  @clear-highlight="clearHighlight"
+                />
+                </Transition>
               </div>
 
-              <!-- Editor Textarea -->
-              <textarea
-                ref="textareaRef"
-                v-model="markdownText"
-                class="no-scrollbar w-full resize-none bg-transparent p-4 font-mono text-sm leading-relaxed text-text-primary placeholder-text-tertiary outline-none"
-                placeholder="Type your markdown here..."
-                @input="autoResizeTextarea"
-              />
+              <!-- Editor Container with Highlighting -->
+              <div class="relative flex-1">
+                <!-- Highlighting Background -->
+                <div
+                  v-if="highlightMatches.length > 0"
+                  ref="highlightLayerRef"
+                  class="absolute inset-0 pointer-events-none z-10 font-mono text-sm leading-relaxed"
+                  style="padding: 1rem; white-space: pre-wrap; word-wrap: break-word;"
+                >
+                  <span
+                    v-for="(segment, index) in highlightedSegments"
+                    :key="index"
+                    :class="segment.isMatch ? (segment.isCurrent ? 'bg-yellow-400 text-black' : 'bg-yellow-200 text-black') : ''"
+                    class="whitespace-pre-wrap"
+                  >{{ segment.text }}</span>
+                </div>
+
+                <!-- Editor Textarea -->
+                <textarea
+                  ref="textareaRef"
+                  v-model="markdownText"
+                  class="no-scrollbar w-full h-full resize-none bg-transparent p-4 font-mono text-sm leading-relaxed text-text-primary placeholder-text-tertiary outline-none relative z-20"
+                  :class="{ 'text-transparent': highlightMatches.length > 0 }"
+                  placeholder="Type your markdown here..."
+                  @input="autoResizeTextarea"
+                />
+              </div>
             </div>
           </div>          <!-- Draggable Divider -->
           <div
@@ -250,6 +292,7 @@ import { useFileOperations } from '~/composables/utils/file-operations';
 import { useDataManagement } from '~/composables/utils/data-management';
 import { useConfirmDialog } from '~/composables/utils/confirm-dialog';
 import ConfirmationDialog from './ConfirmationDialog.vue';
+import FindReplacePanel from './FindReplacePanel.vue';
 // Other composables are auto-imported in Nuxt
 
 const props = defineProps({
@@ -381,13 +424,6 @@ const { saveFile, importFile } = useFileOperations({
   }
 });
 
-const { handleKeyboardShortcut } = useKeyboardShortcuts(
-  markdownText,
-  textareaRef,
-  autoResizeTextarea,
-  { saveFile, importFile }
-);
-
 // Custom toggle function that pre-renders before showing preview
 const customTogglePreviewVisibility = async () => {
   if (isPreviewVisible.value) {
@@ -448,12 +484,86 @@ const handleAutosaveToggle = async (event: Event) => {
 // Editor menu state
 const fileMenuOpen = ref(false);
 const editMenuOpen = ref(false);
+const findPanelVisible = ref(false);
 
 // Close all editor menus
 const closeAllMenus = () => {
   fileMenuOpen.value = false;
   editMenuOpen.value = false;
 };
+
+// Find panel functions
+const openFindPanel = () => {
+  findPanelVisible.value = true;
+};
+
+const closeFindPanel = () => {
+  findPanelVisible.value = false;
+};
+
+// Highlighting state for find functionality
+const highlightMatches = ref<Array<{ start: number; end: number }>>([]);
+const currentHighlightIndex = ref(0);
+const highlightLayerRef = ref<HTMLElement | null>(null);
+
+// Handle highlighting from find panel
+const handleHighlight = (matches: Array<{ start: number; end: number }>, currentIndex: number) => {
+  highlightMatches.value = matches;
+  currentHighlightIndex.value = currentIndex;
+};
+
+const clearHighlight = () => {
+  highlightMatches.value = [];
+  currentHighlightIndex.value = 0;
+};
+
+// Computed property to create highlighted segments
+const highlightedSegments = computed(() => {
+  if (highlightMatches.value.length === 0) return [];
+  
+  const text = markdownText.value;
+  const segments: Array<{ text: string; isMatch: boolean; isCurrent: boolean }> = [];
+  let lastIndex = 0;
+  
+  highlightMatches.value.forEach((match, index) => {
+    // Add text before match
+    if (match.start > lastIndex) {
+      segments.push({
+        text: text.substring(lastIndex, match.start),
+        isMatch: false,
+        isCurrent: false
+      });
+    }
+    
+    // Add highlighted match
+    segments.push({
+      text: text.substring(match.start, match.end),
+      isMatch: true,
+      isCurrent: index === currentHighlightIndex.value
+    });
+    
+    lastIndex = match.end;
+  });
+  
+  // Add remaining text after last match
+  if (lastIndex < text.length) {
+    segments.push({
+      text: text.substring(lastIndex),
+      isMatch: false,
+      isCurrent: false
+    });
+  }
+  
+  return segments;
+});
+
+const { handleKeyboardShortcut } = useKeyboardShortcuts(
+  markdownText,
+  textareaRef,
+  autoResizeTextarea,
+  { saveFile, importFile },
+  { openFindPanel }
+);
 
 // Menu toggle functions
 const toggleFileMenu = () => {
@@ -513,3 +623,20 @@ const characterCount = computed(() => {
   return markdownText.value.length;
 });
 </script>
+
+<style scoped>
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.2s ease;
+}
+
+.slide-down-enter-from {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+.slide-down-leave-to {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+</style>
