@@ -6,18 +6,66 @@
         <label for="search-input" class="text-sm text-text-secondary whitespace-nowrap">
           Find:
         </label>
-        <input
-          id="search-input"
-          ref="searchInputRef"
-          v-model="searchTerm"
-          type="text"
-          placeholder="Find in text..."
-          class="flex-1 px-3 py-1 text-sm bg-dark-surface rounded text-text-primary placeholder-text-tertiary focus:outline-none"
-          style="box-shadow: none; outline: none;"
-          @keydown="handleSearchKeydown"
-          @focus="handleInputFocus"
-          @blur="handleInputBlur"
-        >
+        <div class="relative flex-1">
+          <input
+            id="search-input"
+            ref="searchInputRef"
+            v-model="searchTerm"
+            type="text"
+            placeholder="Find in text..."
+            class="w-full px-3 py-1 pr-20 text-sm bg-dark-surface rounded text-text-primary placeholder-text-tertiary focus:outline-none"
+            style="box-shadow: none; outline: none;"
+            @keydown="handleSearchKeydown"
+            @focus="handleInputFocus"
+            @blur="handleInputBlur"
+          >
+          
+          <!-- Search Options Toggles -->
+          <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+            <!-- Case Sensitivity Toggle -->
+            <button
+              title="Match Case"
+              type="button"
+              class="w-6 h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none"
+              :class="{ 'bg-surface-quaternary text-text-primary': isCaseSensitive }"
+              @click="toggleCaseSensitive"
+            >
+              Aa
+            </button>
+            
+            <!-- Whole Word Toggle -->
+            <button
+              title="Match Whole Word"
+              type="button"
+              class="w-6 h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none"
+              :class="{ 'bg-surface-quaternary text-text-primary': isWholeWord }"
+              @click="toggleWholeWord"
+            >
+              <span class="relative">
+                ab
+                <span class="absolute -bottom-0.5 left-0 right-0 h-0.5 border-b border-current"/>
+              </span>
+            </button>
+            
+            <!-- Regex Toggle -->
+            <button
+              title="Use Regular Expression"
+              type="button"
+              class="w-6 h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none"
+              :class="{ 'bg-surface-quaternary text-text-primary': isRegex }"
+              @click="toggleRegex"
+            >
+              .*
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div v-if="regexError" class="px-4 pb-2">
+        <div class="text-xs text-red-400">
+          {{ regexError }}
+        </div>
       </div>
 
       <!-- Navigation Controls -->
@@ -91,6 +139,12 @@ const searchTerm = ref('');
 const currentMatchIndex = ref(0);
 const matches = ref<Array<{ start: number; end: number }>>([]);
 
+// Search options
+const isCaseSensitive = ref(false);
+const isWholeWord = ref(false);
+const isRegex = ref(false);
+const regexError = ref('');
+
 const hasMatches = computed(() => matches.value.length > 0);
 const matchCountText = computed(() => {
   if (!searchTerm.value.trim()) return 'Press Enter to search';
@@ -101,22 +155,54 @@ const matchCountText = computed(() => {
 const findMatches = () => {
   matches.value = [];
   currentMatchIndex.value = 0;
+  regexError.value = '';
 
   if (!searchTerm.value || !props.markdownText) {
     return;
   }
 
   const text = props.markdownText;
-  const searchText = searchTerm.value.toLowerCase();
-  const textLower = text.toLowerCase();
+  let searchPattern: string | RegExp;
   
-  let index = 0;
-  while ((index = textLower.indexOf(searchText, index)) !== -1) {
-    matches.value.push({
-      start: index,
-      end: index + searchText.length
-    });
-    index += searchText.length;
+  try {
+    if (isRegex.value) {
+      // Create regex pattern
+      const flags = isCaseSensitive.value ? 'g' : 'gi';
+      searchPattern = new RegExp(searchTerm.value, flags);
+    } else {
+      // Create string search pattern
+      let pattern = searchTerm.value;
+      
+      // Escape special regex characters for literal search
+      pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
+      // Add word boundaries if whole word is enabled
+      if (isWholeWord.value) {
+        pattern = `\\b${pattern}\\b`;
+      }
+      
+      const flags = isCaseSensitive.value ? 'g' : 'gi';
+      searchPattern = new RegExp(pattern, flags);
+    }
+
+    // Find all matches
+    let match;
+    while ((match = searchPattern.exec(text)) !== null) {
+      matches.value.push({
+        start: match.index,
+        end: match.index + match[0].length
+      });
+      
+      // Prevent infinite loop for zero-length matches
+      if (match[0].length === 0) {
+        searchPattern.lastIndex++;
+      }
+    }
+  } catch {
+    // Handle regex errors
+    if (isRegex.value) {
+      regexError.value = 'Invalid regular expression';
+    }
   }
 };
 
@@ -236,6 +322,41 @@ const handleInputBlur = (event: FocusEvent) => {
   }
 };
 
+// Toggle functions
+const toggleCaseSensitive = () => {
+  isCaseSensitive.value = !isCaseSensitive.value;
+  // Re-search if there's already a search term
+  if (searchTerm.value.trim()) {
+    findMatches();
+    if (matches.value.length > 0) {
+      selectMatch(0);
+    }
+  }
+};
+
+const toggleWholeWord = () => {
+  isWholeWord.value = !isWholeWord.value;
+  // Re-search if there's already a search term
+  if (searchTerm.value.trim()) {
+    findMatches();
+    if (matches.value.length > 0) {
+      selectMatch(0);
+    }
+  }
+};
+
+const toggleRegex = () => {
+  isRegex.value = !isRegex.value;
+  regexError.value = '';
+  // Re-search if there's already a search term
+  if (searchTerm.value.trim()) {
+    findMatches();
+    if (matches.value.length > 0) {
+      selectMatch(0);
+    }
+  }
+};
+
 // Watch for text changes to update matches only if search was already performed
 watch(() => props.markdownText, () => {
   if (searchTerm.value.trim() && matches.value.length > 0) {
@@ -247,6 +368,7 @@ watch(() => props.markdownText, () => {
 watch(searchTerm, () => {
   matches.value = [];
   currentMatchIndex.value = 0;
+  regexError.value = '';
   emit('clearHighlight');
 });
 
