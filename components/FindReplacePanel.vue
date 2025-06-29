@@ -1,8 +1,9 @@
 <template>
-  <div class="find-replace-panel bg-deep-black border-b border-border-primary">
-    <div class="flex items-center px-4 py-2 space-x-3">
-      <!-- Search Input -->
-      <div class="flex items-center space-x-2 flex-1">
+  <div class="find-replace-panel bg-deep-black border border-border-primary rounded-md shadow-lg max-w-lg">
+    <!-- Main content container with responsive layout -->
+    <div class="flex flex-col lg:flex-row lg:items-center px-2 lg:px-4 py-1 lg:py-2 gap-2 lg:gap-3">
+      <!-- Search Input Row -->
+      <div class="flex items-center space-x-1 lg:space-x-2 flex-1 min-w-0">
         <label for="search-input" class="text-sm text-text-secondary whitespace-nowrap">
           Find:
         </label>
@@ -13,7 +14,8 @@
             v-model="searchTerm"
             type="text"
             placeholder="Find in text..."
-            class="w-full px-3 py-1 pr-20 text-sm bg-dark-surface rounded text-text-primary placeholder-text-tertiary focus:outline-none"
+            class="w-full px-2 lg:px-3 py-1 pr-16 lg:pr-20 text-sm bg-dark-surface rounded text-text-primary placeholder-text-tertiary focus:outline-none"
+            :class="{ 'border border-red-500': regexError }"
             style="box-shadow: none; outline: none;"
             @keydown="handleSearchKeydown"
             @focus="handleInputFocus"
@@ -21,12 +23,12 @@
           >
           
           <!-- Search Options Toggles -->
-          <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+          <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center space-x-0.5 lg:space-x-1">
             <!-- Case Sensitivity Toggle -->
             <button
               title="Match Case"
               type="button"
-              class="w-6 h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none"
+              class="w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none touch-manipulation"
               :class="{ 'bg-surface-quaternary text-text-primary': isCaseSensitive }"
               @click="toggleCaseSensitive"
             >
@@ -37,7 +39,7 @@
             <button
               title="Match Whole Word"
               type="button"
-              class="w-6 h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none"
+              class="w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none touch-manipulation"
               :class="{ 'bg-surface-quaternary text-text-primary': isWholeWord }"
               @click="toggleWholeWord"
             >
@@ -51,7 +53,7 @@
             <button
               title="Use Regular Expression"
               type="button"
-              class="w-6 h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none"
+              class="w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none touch-manipulation"
               :class="{ 'bg-surface-quaternary text-text-primary': isRegex }"
               @click="toggleRegex"
             >
@@ -61,62 +63,62 @@
         </div>
       </div>
 
-      <!-- Error Message -->
-      <div v-if="regexError" class="px-4 pb-2">
-        <div class="text-xs text-red-400">
-          {{ regexError }}
-        </div>
-      </div>
-
-      <!-- Navigation Controls -->
-      <div class="flex items-center space-x-1">
+      <!-- Navigation Controls Row -->
+      <div class="flex items-center justify-between lg:justify-end space-x-1 lg:space-x-1 flex-shrink-0">
         <!-- Previous Button -->
         <button
           title="Previous match (Shift+Enter)"
-          class="p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          class="p-1 lg:p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
           :disabled="!hasMatches"
           @click="findPrevious"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
+          <svg class="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
         </button>
 
         <!-- Next Button -->
         <button
           title="Next match (Enter)"
-          class="p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          class="p-1 lg:p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
           :disabled="!hasMatches"
           @click="findNext"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
+          <svg class="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
           </svg>
         </button>
 
         <!-- Match Counter -->
-        <span class="text-xs text-text-tertiary min-w-fit px-2">
+        <div
+class="text-xs lg:text-sm whitespace-nowrap flex-shrink-0 min-w-0 px-1 lg:px-2"
+             :class="matchCountText === 'No results' ? 'text-red-400' : 'text-text-tertiary'">
           {{ matchCountText }}
-        </span>
-      </div>
+        </div>
 
-      <!-- Close Button -->
-      <button
-        title="Close (Escape)"
-        class="p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-        @click="closeFindPanel"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
+        <!-- Close Button -->
+        <button
+          title="Close find panel (Escape)"
+          class="p-1 lg:p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary touch-manipulation"
+          @click="$emit('close')"
+        >
+          <svg class="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div v-if="regexError" class="px-2 lg:px-4 pb-1 lg:pb-2">
+      <div class="text-xs text-red-400">{{ regexError }}</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { validateRegexPattern } from '~/composables/utils/regex-validator';
 
 interface Props {
   markdownText: string;
@@ -138,8 +140,8 @@ const searchInputRef = ref<HTMLInputElement | null>(null);
 const searchTerm = ref('');
 const currentMatchIndex = ref(0);
 const matches = ref<Array<{ start: number; end: number }>>([]);
+const hasSearched = ref(false);
 
-// Search options
 const isCaseSensitive = ref(false);
 const isWholeWord = ref(false);
 const isRegex = ref(false);
@@ -148,6 +150,7 @@ const regexError = ref('');
 const hasMatches = computed(() => matches.value.length > 0);
 const matchCountText = computed(() => {
   if (!searchTerm.value.trim()) return 'Press Enter to search';
+  if (!hasSearched.value) return 'Press Enter to search';
   if (matches.value.length === 0) return 'No results';
   return `${currentMatchIndex.value + 1} of ${matches.value.length}`;
 });
@@ -156,6 +159,7 @@ const findMatches = () => {
   matches.value = [];
   currentMatchIndex.value = 0;
   regexError.value = '';
+  hasSearched.value = true;
 
   if (!searchTerm.value || !props.markdownText) {
     return;
@@ -166,17 +170,20 @@ const findMatches = () => {
   
   try {
     if (isRegex.value) {
-      // Create regex pattern
+      const validation = validateRegexPattern(searchTerm.value);
+      
+      if (!validation.isValid) {
+        regexError.value = validation.error || 'Invalid regular expression';
+        return;
+      }
+      
       const flags = isCaseSensitive.value ? 'g' : 'gi';
       searchPattern = new RegExp(searchTerm.value, flags);
     } else {
-      // Create string search pattern
       let pattern = searchTerm.value;
       
-      // Escape special regex characters for literal search
       pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       
-      // Add word boundaries if whole word is enabled
       if (isWholeWord.value) {
         pattern = `\\b${pattern}\\b`;
       }
@@ -185,7 +192,6 @@ const findMatches = () => {
       searchPattern = new RegExp(pattern, flags);
     }
 
-    // Find all matches
     let match;
     while ((match = searchPattern.exec(text)) !== null) {
       matches.value.push({
@@ -193,13 +199,11 @@ const findMatches = () => {
         end: match.index + match[0].length
       });
       
-      // Prevent infinite loop for zero-length matches
       if (match[0].length === 0) {
         searchPattern.lastIndex++;
       }
     }
   } catch {
-    // Handle regex errors
     if (isRegex.value) {
       regexError.value = 'Invalid regular expression';
     }
@@ -212,47 +216,37 @@ const selectMatch = (matchIndex: number) => {
   const match = matches.value[matchIndex];
   if (!match) return;
 
-  // Emit highlighting information to parent component
   emit('highlight', matches.value, matchIndex);
   
-  // Calculate the position of the match in the textarea
   const textarea = props.textareaRef;
   const textBeforeMatch = props.markdownText.substring(0, match.start);
   const lines = textBeforeMatch.split('\n');
-  const lineNumber = lines.length - 1; // 0-based line number
+  const lineNumber = lines.length - 1;
   
-  // Get computed styles to calculate accurate line height
   const textareaStyles = window.getComputedStyle(textarea);
   const fontSize = parseFloat(textareaStyles.fontSize);
   const lineHeight = parseFloat(textareaStyles.lineHeight) || fontSize * 1.5;
   
-  // Get textarea position relative to the scroll container
   const scrollContainer = props.scrollContainer;
   const textareaRect = textarea.getBoundingClientRect();
   const containerRect = scrollContainer.getBoundingClientRect();
   
-  // Calculate the vertical position of the match within the textarea
   const matchTopInTextarea = lineNumber * lineHeight;
   
-  // Calculate the absolute position within the scroll container
   const textareaTopInContainer = textareaRect.top - containerRect.top + scrollContainer.scrollTop;
   const matchTopInContainer = textareaTopInContainer + matchTopInTextarea;
   
-  // Calculate target scroll position to center the match
   const containerHeight = scrollContainer.clientHeight;
   const targetScrollTop = matchTopInContainer - (containerHeight / 2);
   
-  // Ensure we don't scroll past the bounds
   const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
   const finalScrollTop = Math.max(0, Math.min(targetScrollTop, maxScrollTop));
   
-  // Smooth scroll to the match
   scrollContainer.scrollTo({
     top: finalScrollTop,
     behavior: 'smooth'
   });
   
-  // Keep focus in the search input
   setTimeout(() => {
     searchInputRef.value?.focus();
   }, 100);
@@ -280,16 +274,14 @@ const handleSearchKeydown = (event: KeyboardEvent) => {
       event.preventDefault();
       if (!searchTerm.value.trim()) return;
       
-      // If no matches exist yet, find them first
       if (matches.value.length === 0) {
         findMatches();
         if (matches.value.length > 0) {
-          selectMatch(0); // Start at first match
+          selectMatch(0);
         }
         return;
       }
       
-      // Navigate through existing matches
       if (event.shiftKey) {
         findPrevious();
       } else {
@@ -322,10 +314,8 @@ const handleInputBlur = (event: FocusEvent) => {
   }
 };
 
-// Toggle functions
 const toggleCaseSensitive = () => {
   isCaseSensitive.value = !isCaseSensitive.value;
-  // Re-search if there's already a search term
   if (searchTerm.value.trim()) {
     findMatches();
     if (matches.value.length > 0) {
@@ -336,7 +326,6 @@ const toggleCaseSensitive = () => {
 
 const toggleWholeWord = () => {
   isWholeWord.value = !isWholeWord.value;
-  // Re-search if there's already a search term
   if (searchTerm.value.trim()) {
     findMatches();
     if (matches.value.length > 0) {
@@ -348,7 +337,6 @@ const toggleWholeWord = () => {
 const toggleRegex = () => {
   isRegex.value = !isRegex.value;
   regexError.value = '';
-  // Re-search if there's already a search term
   if (searchTerm.value.trim()) {
     findMatches();
     if (matches.value.length > 0) {
@@ -357,18 +345,17 @@ const toggleRegex = () => {
   }
 };
 
-// Watch for text changes to update matches only if search was already performed
 watch(() => props.markdownText, () => {
   if (searchTerm.value.trim() && matches.value.length > 0) {
     findMatches();
   }
 });
 
-// Reset matches when search term changes
 watch(searchTerm, () => {
   matches.value = [];
   currentMatchIndex.value = 0;
   regexError.value = '';
+  hasSearched.value = false;
   emit('clearHighlight');
 });
 

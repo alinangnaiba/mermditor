@@ -13,8 +13,7 @@ export function extractMermaidBlocks(text: string): string[] {
 export function getMermaidChangeInfo(newText: string, lastMermaidBlocks: string[]): MermaidChangeInfo {
   const newMermaidBlocks = extractMermaidBlocks(newText);
   const unchangedPositions = new Set<string>();
-  
-  // Compare each mermaid block to see which ones are unchanged
+
   newMermaidBlocks.forEach((block, index) => {
     const positionKey = `mermaid-${index}`;
     if (index < lastMermaidBlocks.length && lastMermaidBlocks[index] === block) {

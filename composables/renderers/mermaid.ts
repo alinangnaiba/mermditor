@@ -17,17 +17,15 @@ export function createMermaidRenderer(
       if (!mermaidCode) return;
 
       const positionKey = `mermaid-${index}`;
-      
-      // If we reach here, content has changed - invalidate cache if exists
+
       if (cache.has(positionKey)) {
         const cached = cache.get(positionKey)!;
         cached.app.unmount();
         cache.delete(positionKey);
       }
 
-      // Render new content
       const container = document.createElement('div');
-      container.setAttribute('data-mermaid-position', positionKey); // Add position identifier
+      container.setAttribute('data-mermaid-position', positionKey);
       element.replaceWith(container);
 
       const app = createApp(MermaidRenderer, {
@@ -36,14 +34,12 @@ export function createMermaidRenderer(
       });
       app.mount(container);
 
-      // Cache the rendered component
       cache.set(positionKey, {
         app,
         container,
         content: mermaidCode
       });
-      
-      // Also update our preserved elements map
+
       renderedMermaidElements.set(positionKey, container);
     }
   };

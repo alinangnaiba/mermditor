@@ -189,15 +189,17 @@
                 </div>
 
                 <!-- Find/Replace Panel -->
-                <Transition name="slide-down">                <FindReplacePanel
-                  v-if="findPanelVisible"
-                  :markdown-text="markdownText"
-                  :textarea-ref="textareaRef"
-                  :scroll-container="mainScrollContainer"
-                  @close="closeFindPanel"
-                  @highlight="handleHighlight"
-                  @clear-highlight="clearHighlight"
-                />
+                <Transition name="slide-down">
+                  <div v-if="findPanelVisible" class="flex justify-end px-4 py-2">
+                    <FindReplacePanel
+                      :markdown-text="markdownText"
+                      :textarea-ref="textareaRef"
+                      :scroll-container="mainScrollContainer"
+                      @close="closeFindPanel"
+                      @highlight="handleHighlight"
+                      @clear-highlight="clearHighlight"
+                    />
+                  </div>
                 </Transition>
               </div>
 
@@ -223,7 +225,7 @@
                   ref="textareaRef"
                   v-model="markdownText"
                   class="no-scrollbar w-full h-full resize-none bg-transparent p-4 font-mono text-sm leading-relaxed text-text-primary placeholder-text-tertiary outline-none relative z-20"
-                  :class="{ 'text-transparent': highlightMatches.length > 0 }"
+                  :class="{ 'text-transparent-with-cursor': highlightMatches.length > 0 }"
                   placeholder="Type your markdown here..."
                   @input="autoResizeTextarea"
                 />
@@ -370,7 +372,6 @@ $$
 $$
 `;
 
-// Modern confirmation dialog
 const confirmDialog = useConfirmDialog();
 
 const { markdownText, isEditorVisible, isPreviewVisible, lastSaved, isAutosaveEnabled, toggleEditorVisibility, togglePreviewVisibility, toggleAutosave } =
@@ -409,7 +410,6 @@ const { clearAllData } = useDataManagement();
 const { saveFile, importFile } = useFileOperations({
   markdownText,
   onImportSuccess: async (filename: string) => {
-    // Auto-resize and render after import
     await autoResizeTextarea();
     if (isPreviewVisible.value) {
       await renderMarkdown();
@@ -443,7 +443,6 @@ const copyEditorContent = async () => {
     await navigator.clipboard.writeText(markdownText.value);
     success('Content copied to clipboard!');
   } catch (err) {
-    console.error('Failed to copy editor content:', err);
     error('Failed to copy content');
   }
 };
@@ -481,18 +480,15 @@ const handleAutosaveToggle = async (event: Event) => {
   }
 };
 
-// Editor menu state
 const fileMenuOpen = ref(false);
 const editMenuOpen = ref(false);
 const findPanelVisible = ref(false);
 
-// Close all editor menus
 const closeAllMenus = () => {
   fileMenuOpen.value = false;
   editMenuOpen.value = false;
 };
 
-// Find panel functions
 const openFindPanel = () => {
   findPanelVisible.value = true;
 };
@@ -501,12 +497,10 @@ const closeFindPanel = () => {
   findPanelVisible.value = false;
 };
 
-// Highlighting state for find functionality
 const highlightMatches = ref<Array<{ start: number; end: number }>>([]);
 const currentHighlightIndex = ref(0);
 const highlightLayerRef = ref<HTMLElement | null>(null);
 
-// Handle highlighting from find panel
 const handleHighlight = (matches: Array<{ start: number; end: number }>, currentIndex: number) => {
   highlightMatches.value = matches;
   currentHighlightIndex.value = currentIndex;
@@ -517,7 +511,6 @@ const clearHighlight = () => {
   currentHighlightIndex.value = 0;
 };
 
-// Computed property to create highlighted segments
 const highlightedSegments = computed(() => {
   if (highlightMatches.value.length === 0) return [];
   
@@ -526,7 +519,6 @@ const highlightedSegments = computed(() => {
   let lastIndex = 0;
   
   highlightMatches.value.forEach((match, index) => {
-    // Add text before match
     if (match.start > lastIndex) {
       segments.push({
         text: text.substring(lastIndex, match.start),
@@ -535,7 +527,6 @@ const highlightedSegments = computed(() => {
       });
     }
     
-    // Add highlighted match
     segments.push({
       text: text.substring(match.start, match.end),
       isMatch: true,
@@ -545,7 +536,6 @@ const highlightedSegments = computed(() => {
     lastIndex = match.end;
   });
   
-  // Add remaining text after last match
   if (lastIndex < text.length) {
     segments.push({
       text: text.substring(lastIndex),
@@ -565,7 +555,6 @@ const { handleKeyboardShortcut } = useKeyboardShortcuts(
   { openFindPanel }
 );
 
-// Menu toggle functions
 const toggleFileMenu = () => {
   editMenuOpen.value = false;
   fileMenuOpen.value = !fileMenuOpen.value;
@@ -579,7 +568,6 @@ const toggleEditMenu = () => {
 watch(
   markdownText,
   () => {
-    // Only render the markdown when the preview pane is visible
     if (isPreviewVisible.value) {
       renderMarkdown();
     }
@@ -590,7 +578,6 @@ watch(
 onMounted(async () => {
   document.addEventListener('keydown', handleKeyboardShortcut);
   document.addEventListener('click', (event) => {
-    // Close editor menus when clicking outside
     const target = event.target as Element;
     const editorToolbar = document.querySelector('.editor-toolbar');
     
@@ -606,7 +593,6 @@ onBeforeUnmount(() => {
   cleanupMarkdownRenderer();
 });
 
-// Word count computation
 const wordCount = computed(() => {
   if (!markdownText.value) return 0;
   const cleanText = markdownText.value
@@ -618,7 +604,6 @@ const wordCount = computed(() => {
   return cleanText.split(/\s+/).filter((word) => word.length > 0).length;
 });
 
-// Character count computation
 const characterCount = computed(() => {
   return markdownText.value.length;
 });
@@ -638,5 +623,15 @@ const characterCount = computed(() => {
 .slide-down-leave-to {
   transform: translateY(-100%);
   opacity: 0;
+}
+
+.text-transparent-with-cursor {
+  color: transparent;
+  caret-color: #ffffff;
+}
+
+.text-transparent-with-cursor:focus {
+  color: transparent;
+  caret-color: #ffffff;
 }
 </style>

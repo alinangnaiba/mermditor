@@ -18,7 +18,7 @@ export function useDataManagement() {
         'mermd-editor-visible',
         'mermd-preview-visible',
         'mermd-autosave-enabled',
-        'mermd-editor-width'  // Added missing editor width key
+        'mermd-editor-width'
       ];
 
       // Remove each key
@@ -29,7 +29,6 @@ export function useDataManagement() {
       success('All data cleared successfully');
       return true;
     } catch (err) {
-      console.error('Failed to clear data:', err);
       error('Failed to clear data');
       return false;
     }
@@ -66,7 +65,6 @@ export function useDataManagement() {
         keys: Object.keys(storageData)
       };
     } catch (err) {
-      console.error('Failed to get storage info:', err);
       return null;
     }
   };
@@ -102,7 +100,6 @@ export function useDataManagement() {
 
       success('Data exported successfully');
     } catch (err) {
-      console.error('Failed to export data:', err);
       error('Failed to export data');
     }
   };

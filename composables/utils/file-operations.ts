@@ -83,7 +83,6 @@ export function useFileOperations(options: FileOperationsOptions) {
       if (err instanceof Error && err.name === 'AbortError') {
         return;
       }
-      console.error('Failed to save file:', err);
       onError?.('Failed to save file');
     }
   };
@@ -126,7 +125,6 @@ export function useFileOperations(options: FileOperationsOptions) {
       
       onImportSuccess?.(file.name);
     } catch (err) {
-      console.error('Failed to read file:', err);
       onError?.('Failed to read file');
     }
   };
