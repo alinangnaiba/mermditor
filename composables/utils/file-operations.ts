@@ -2,14 +2,13 @@ import type { Ref } from 'vue';
 
 export interface FileOperationsOptions {
   markdownText: Ref<string>;
-  defaultContent: string;
   onImportSuccess?: (filename: string) => void;
   onSaveSuccess?: () => void;
   onError?: (message: string) => void;
 }
 
 export function useFileOperations(options: FileOperationsOptions) {
-  const { markdownText, defaultContent, onImportSuccess, onSaveSuccess, onError } = options;
+  const { markdownText, onImportSuccess, onSaveSuccess, onError } = options;
 
   const generateFilename = (content: string): string => {
     const headingMatch = content.match(/^#\s+(.+)$/m);

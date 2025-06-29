@@ -412,7 +412,11 @@ function handleTabIndent(
 export function useKeyboardShortcuts(
   markdownText: Ref<string>,
   textareaRef: Ref<HTMLTextAreaElement | null>,
-  autoResizeTextarea: () => Promise<void>
+  autoResizeTextarea: () => Promise<void>,
+  fileOperations?: {
+    saveFile: () => Promise<void>;
+    importFile: () => void;
+  }
 ) {
   const handleKeyboardShortcut = (e: KeyboardEvent) => {
     if (!textareaRef.value) return;
@@ -446,6 +450,15 @@ export function useKeyboardShortcuts(
           break;
         case 'k':
           result = handleLink(params);
+          break;
+        case 's':
+          if (fileOperations?.saveFile) {
+            // Ctrl+S: Save file
+            e.preventDefault();
+            e.stopPropagation();
+            fileOperations.saveFile();
+            return;
+          }
           break;
         case 'x': // Strikethrough (Ctrl+Shift+X)
           if (shiftKey) result = handleStrikethrough(params);
