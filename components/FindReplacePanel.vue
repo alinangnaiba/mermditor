@@ -1,7 +1,7 @@
 <template>
   <div class="find-replace-panel bg-deep-black border border-border-primary rounded-md shadow-lg max-w-lg">
     <!-- Find Row -->
-    <div class="flex flex-col lg:flex-row lg:items-center px-2 lg:px-4 py-1 lg:py-2 gap-2 lg:gap-3">
+    <div class="flex flex-col lg:flex-row lg:items-center px-1 lg:px-2 py-0 lg:py-1 gap-1 lg:gap-2">
       <!-- Toggle Button Column -->
       <div class="flex items-center justify-start lg:justify-center flex-shrink-0">
         <button
@@ -154,7 +154,6 @@
             type="text"
             placeholder="Replace with..."
             class="w-full px-2 lg:px-3 py-1 text-sm bg-dark-surface rounded text-text-primary placeholder-text-quaternary focus:outline-none"
-            :disabled="!hasMatches"
             style="box-shadow: none; outline: none;"
             @keydown="handleReplaceKeydown"
             @focus="handleInputFocus"
