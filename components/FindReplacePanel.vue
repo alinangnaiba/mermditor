@@ -31,10 +31,6 @@
 
       <!-- Search Input Row -->
       <div class="flex items-center space-x-1 lg:space-x-2 flex-1 min-w-0">
-        
-        <label for="search-input" class="text-sm text-text-primary whitespace-nowrap">
-          Find:
-        </label>
         <div class="relative flex-1">
           <input
             id="search-input"
@@ -143,9 +139,6 @@
     <div v-if="isReplaceMode" class="flex flex-col lg:flex-row lg:items-center px-2 lg:px-4 py-1 lg:py-2 gap-2 lg:gap-3">
       <!-- Replace Input Row -->
       <div class="flex items-center space-x-1 lg:space-x-2 flex-1 min-w-0">
-        <label for="replace-input" class="text-sm text-text-primary whitespace-nowrap">
-          Replace:
-        </label>
         <div class="relative flex-1">
           <input
             id="replace-input"
