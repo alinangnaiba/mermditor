@@ -2,14 +2,13 @@ import type { Ref } from 'vue';
 
 export interface FileOperationsOptions {
   markdownText: Ref<string>;
-  defaultContent: string;
   onImportSuccess?: (filename: string) => void;
   onSaveSuccess?: () => void;
   onError?: (message: string) => void;
 }
 
 export function useFileOperations(options: FileOperationsOptions) {
-  const { markdownText, defaultContent, onImportSuccess, onSaveSuccess, onError } = options;
+  const { markdownText, onImportSuccess, onSaveSuccess, onError } = options;
 
   const generateFilename = (content: string): string => {
     const headingMatch = content.match(/^#\s+(.+)$/m);
@@ -84,7 +83,6 @@ export function useFileOperations(options: FileOperationsOptions) {
       if (err instanceof Error && err.name === 'AbortError') {
         return;
       }
-      console.error('Failed to save file:', err);
       onError?.('Failed to save file');
     }
   };
@@ -126,8 +124,7 @@ export function useFileOperations(options: FileOperationsOptions) {
       markdownText.value = content;
       
       onImportSuccess?.(file.name);
-    } catch (err) {
-      console.error('Failed to read file:', err);
+    } catch {
       onError?.('Failed to read file');
     }
   };
