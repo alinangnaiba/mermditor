@@ -1,10 +1,35 @@
 <template>
   <div class="find-replace-panel bg-deep-black border border-border-primary rounded-md shadow-lg max-w-lg">
-    <!-- Main content container with responsive layout -->
+    <!-- Find Row -->
     <div class="flex flex-col lg:flex-row lg:items-center px-2 lg:px-4 py-1 lg:py-2 gap-2 lg:gap-3">
       <!-- Search Input Row -->
       <div class="flex items-center space-x-1 lg:space-x-2 flex-1 min-w-0">
-        <label for="search-input" class="text-sm text-text-secondary whitespace-nowrap">
+        <!-- Toggle Arrow Button -->
+        <button
+          title="Toggle Replace Mode"
+          type="button"
+          class="w-4 h-4 flex items-center justify-center text-text-tertiary hover:text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary rounded"
+          @click="toggleReplaceMode"
+        >
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path 
+              v-if="!isReplaceMode"
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2" 
+              d="M9 5l7 7-7 7"
+            />
+            <path 
+              v-else
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2" 
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+        
+        <label for="search-input" class="text-sm text-text-primary whitespace-nowrap">
           Find:
         </label>
         <div class="relative flex-1">
@@ -35,9 +60,9 @@
               Aa
             </button>
             
-            <!-- Whole Word Toggle -->
+            <!-- Whole word Toggle -->
             <button
-              title="Match Whole Word"
+              title="Match Whole word"
               type="button"
               class="w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none touch-manipulation"
               :class="{ 'bg-surface-quaternary text-text-primary': isWholeWord }"
@@ -91,8 +116,7 @@
 
         <!-- Match Counter -->
         <div
-class="text-xs lg:text-sm whitespace-nowrap flex-shrink-0 min-w-0 px-1 lg:px-2"
-             :class="matchCountText === 'No results' ? 'text-red-400' : 'text-text-tertiary'">
+class="text-xs lg:text-sm whitespace-nowrap flex-shrink-0 min-w-0 px-1 lg:px-2 text-text-primary">
           {{ matchCountText }}
         </div>
 
@@ -109,6 +133,59 @@ class="text-xs lg:text-sm whitespace-nowrap flex-shrink-0 min-w-0 px-1 lg:px-2"
       </div>
     </div>
 
+    <!-- Replace Row (conditionally shown) -->
+    <div v-if="isReplaceMode" class="flex flex-col lg:flex-row lg:items-center px-2 lg:px-4 py-1 lg:py-2 gap-2 lg:gap-3">
+      <!-- Replace Input Row -->
+      <div class="flex items-center space-x-1 lg:space-x-2 flex-1 min-w-0">
+        <!-- Spacer to align with find input -->
+        <div class="w-4"/>
+        
+        <label for="replace-input" class="text-sm text-text-primary whitespace-nowrap">
+          Replace:
+        </label>
+        <div class="relative flex-1">
+          <input
+            id="replace-input"
+            ref="replaceInputRef"
+            v-model="replaceTerm"
+            type="text"
+            placeholder="Replace with..."
+            class="w-full px-2 lg:px-3 py-1 text-sm bg-dark-surface rounded text-text-primary placeholder-text-tertiary focus:outline-none"
+            :disabled="!hasMatches"
+            style="box-shadow: none; outline: none;"
+            @keydown="handleReplaceKeydown"
+            @focus="handleInputFocus"
+            @blur="handleInputBlur"
+          >
+        </div>
+      </div>
+
+      <!-- Replace Buttons Row -->
+      <div class="flex items-center space-x-1 lg:space-x-2 flex-shrink-0">
+        <!-- Replace Button -->
+        <button
+          title="Replace current match"
+          type="button"
+          class="px-2 py-1 text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+          :disabled="!hasMatches"
+          @click="replaceCurrent"
+        >
+          Replace
+        </button>
+        
+        <!-- Replace All Button -->
+        <button
+          title="Replace all matches"
+          type="button"
+          class="px-2 py-1 text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+          :disabled="!hasMatches"
+          @click="replaceAll"
+        >
+          Replace All
+        </button>
+      </div>
+    </div>
+
     <!-- Error Message -->
     <div v-if="regexError" class="px-2 lg:px-4 pb-1 lg:pb-2">
       <div class="text-xs text-red-400">{{ regexError }}</div>
@@ -120,16 +197,27 @@ class="text-xs lg:text-sm whitespace-nowrap flex-shrink-0 min-w-0 px-1 lg:px-2"
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { validateRegexPattern } from '~/composables/utils/regex-validator';
 
+// Simple debounce function
+function debounce<T extends (...args: unknown[]) => void>(func: T, wait: number): T {
+  let timeout: NodeJS.Timeout;
+  return ((...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  }) as T;
+}
+
 interface Props {
   markdownText: string;
   textareaRef: HTMLTextAreaElement | null;
   scrollContainer: HTMLElement | null;
+  initialReplaceMode?: boolean;
 }
 
 interface Emits {
   close: [];
   highlight: [matches: Array<{ start: number; end: number }>, currentIndex: number];
   clearHighlight: [];
+  replace: [text: string];
 }
 
 const props = defineProps<Props>();
@@ -137,10 +225,13 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const searchInputRef = ref<HTMLInputElement | null>(null);
+const replaceInputRef = ref<HTMLInputElement | null>(null);
 const searchTerm = ref('');
+const replaceTerm = ref('');
 const currentMatchIndex = ref(0);
 const matches = ref<Array<{ start: number; end: number }>>([]);
 const hasSearched = ref(false);
+const isReplaceMode = ref(false);
 
 const isCaseSensitive = ref(false);
 const isWholeWord = ref(false);
@@ -149,8 +240,7 @@ const regexError = ref('');
 
 const hasMatches = computed(() => matches.value.length > 0);
 const matchCountText = computed(() => {
-  if (!searchTerm.value.trim()) return 'Press Enter to search';
-  if (!hasSearched.value) return 'Press Enter to search';
+  if (!searchTerm.value.trim()) return 'No results';
   if (matches.value.length === 0) return 'No results';
   return `${currentMatchIndex.value + 1} of ${matches.value.length}`;
 });
@@ -274,18 +364,19 @@ const handleSearchKeydown = (event: KeyboardEvent) => {
       event.preventDefault();
       if (!searchTerm.value.trim()) return;
       
-      if (matches.value.length === 0) {
+      // If we have matches, navigate through them
+      if (matches.value.length > 0) {
+        if (event.shiftKey) {
+          findPrevious();
+        } else {
+          findNext();
+        }
+      } else {
+        // If no matches, trigger immediate search (bypass debounce)
         findMatches();
         if (matches.value.length > 0) {
           selectMatch(0);
         }
-        return;
-      }
-      
-      if (event.shiftKey) {
-        findPrevious();
-      } else {
-        findNext();
       }
       break;
     case 'Escape':
@@ -317,20 +408,14 @@ const handleInputBlur = (event: FocusEvent) => {
 const toggleCaseSensitive = () => {
   isCaseSensitive.value = !isCaseSensitive.value;
   if (searchTerm.value.trim()) {
-    findMatches();
-    if (matches.value.length > 0) {
-      selectMatch(0);
-    }
+    debouncedSearch();
   }
 };
 
 const toggleWholeWord = () => {
   isWholeWord.value = !isWholeWord.value;
   if (searchTerm.value.trim()) {
-    findMatches();
-    if (matches.value.length > 0) {
-      selectMatch(0);
-    }
+    debouncedSearch();
   }
 };
 
@@ -338,12 +423,110 @@ const toggleRegex = () => {
   isRegex.value = !isRegex.value;
   regexError.value = '';
   if (searchTerm.value.trim()) {
+    debouncedSearch();
+  }
+};
+
+const toggleReplaceMode = () => {
+  isReplaceMode.value = !isReplaceMode.value;
+  if (isReplaceMode.value) {
+    nextTick(() => {
+      replaceInputRef.value?.focus();
+    });
+  }
+};
+
+const handleReplaceKeydown = (event: KeyboardEvent) => {
+  switch (event.key) {
+    case 'Enter':
+      event.preventDefault();
+      if (event.ctrlKey) {
+        replaceAll();
+      } else {
+        replaceCurrent();
+      }
+      break;
+    case 'Escape':
+      event.preventDefault();
+      closeFindPanel();
+      break;
+  }
+};
+
+const replaceCurrent = () => {
+  if (!hasMatches.value || !props.textareaRef) return;
+  
+  const currentMatch = matches.value[currentMatchIndex.value];
+  if (!currentMatch) return;
+
+  const text = props.markdownText;
+  const newText = text.substring(0, currentMatch.start) + 
+                  replaceTerm.value + 
+                  text.substring(currentMatch.end);
+  
+  emit('replace', newText);
+  
+  // Update matches after replacement
+  const lengthDiff = replaceTerm.value.length - (currentMatch.end - currentMatch.start);
+  
+  // Update all matches that come after the current one
+  for (let i = currentMatchIndex.value + 1; i < matches.value.length; i++) {
+    matches.value[i].start += lengthDiff;
+    matches.value[i].end += lengthDiff;
+  }
+  
+  matches.value.splice(currentMatchIndex.value, 1);
+  
+  if (currentMatchIndex.value >= matches.value.length && matches.value.length > 0) {
+    currentMatchIndex.value = matches.value.length - 1;
+  }
+  
+  if (matches.value.length > 0) {
+    selectMatch(currentMatchIndex.value);
+  } else {
+    emit('clearHighlight');
+  }
+};
+
+const replaceAll = () => {
+  if (!hasMatches.value) return;
+  
+  // Sort matches by position (descending) to replace from end to beginning
+  // This prevents position shifts from affecting later replacements
+  const sortedMatches = [...matches.value].sort((a, b) => b.start - a.start);
+  
+  let text = props.markdownText;
+  
+  for (const match of sortedMatches) {
+    text = text.substring(0, match.start) + 
+           replaceTerm.value + 
+           text.substring(match.end);
+  }
+  
+  emit('replace', text);
+  
+  // Clear all matches and highlights
+  matches.value = [];
+  currentMatchIndex.value = 0;
+  hasSearched.value = false;
+  emit('clearHighlight');
+};
+
+// Debounced search function
+const debouncedSearch = debounce(() => {
+  if (searchTerm.value.trim()) {
     findMatches();
     if (matches.value.length > 0) {
       selectMatch(0);
     }
+  } else {
+    // Clear matches when search term is empty
+    matches.value = [];
+    currentMatchIndex.value = 0;
+    hasSearched.value = false;
+    emit('clearHighlight');
   }
-};
+}, 300);
 
 watch(() => props.markdownText, () => {
   if (searchTerm.value.trim() && matches.value.length > 0) {
@@ -352,14 +535,16 @@ watch(() => props.markdownText, () => {
 });
 
 watch(searchTerm, () => {
-  matches.value = [];
-  currentMatchIndex.value = 0;
-  regexError.value = '';
   hasSearched.value = false;
-  emit('clearHighlight');
+  debouncedSearch();
 });
 
 onMounted(() => {
+  // Initialize replace mode if specified
+  if (props.initialReplaceMode) {
+    isReplaceMode.value = true;
+  }
+  
   nextTick(() => {
     searchInputRef.value?.focus();
   });

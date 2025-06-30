@@ -28,7 +28,7 @@ export function useDataManagement() {
 
       success('All data cleared successfully');
       return true;
-    } catch (err) {
+    } catch {
       error('Failed to clear data');
       return false;
     }
@@ -64,7 +64,7 @@ export function useDataManagement() {
         totalSize,
         keys: Object.keys(storageData)
       };
-    } catch (err) {
+    } catch {
       return null;
     }
   };
@@ -99,7 +99,7 @@ export function useDataManagement() {
       URL.revokeObjectURL(url);
 
       success('Data exported successfully');
-    } catch (err) {
+    } catch {
       error('Failed to export data');
     }
   };

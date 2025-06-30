@@ -170,6 +170,13 @@
                           <span>Find</span>
                           <span class="text-xs text-text-tertiary">Ctrl+Shift+F</span>
                         </button>
+                        <button
+                          class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors flex justify-between items-center"
+                          @click="openFindReplacePanel(); closeAllMenus()"
+                        >
+                          <span>Find & Replace</span>
+                          <span class="text-xs text-text-tertiary">Ctrl+H</span>
+                        </button>
                         <div class="h-px bg-border-secondary mx-2 my-1"/>
                         <button
                           class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors"
@@ -195,9 +202,11 @@
                       :markdown-text="markdownText"
                       :textarea-ref="textareaRef"
                       :scroll-container="mainScrollContainer"
+                      :initial-replace-mode="findPanelReplaceMode"
                       @close="closeFindPanel"
                       @highlight="handleHighlight"
                       @clear-highlight="clearHighlight"
+                      @replace="handleReplace"
                     />
                   </div>
                 </Transition>
@@ -442,7 +451,7 @@ const copyEditorContent = async () => {
   try {
     await navigator.clipboard.writeText(markdownText.value);
     success('Content copied to clipboard!');
-  } catch (err) {
+  } catch {
     error('Failed to copy content');
   }
 };
@@ -483,6 +492,7 @@ const handleAutosaveToggle = async (event: Event) => {
 const fileMenuOpen = ref(false);
 const editMenuOpen = ref(false);
 const findPanelVisible = ref(false);
+const findPanelReplaceMode = ref(false);
 
 const closeAllMenus = () => {
   fileMenuOpen.value = false;
@@ -490,11 +500,22 @@ const closeAllMenus = () => {
 };
 
 const openFindPanel = () => {
+  findPanelReplaceMode.value = false;
+  findPanelVisible.value = true;
+};
+
+const openFindReplacePanel = () => {
+  findPanelReplaceMode.value = true;
   findPanelVisible.value = true;
 };
 
 const closeFindPanel = () => {
   findPanelVisible.value = false;
+  findPanelReplaceMode.value = false;
+};
+
+const handleReplace = (newText: string) => {
+  markdownText.value = newText;
 };
 
 const highlightMatches = ref<Array<{ start: number; end: number }>>([]);
@@ -552,7 +573,7 @@ const { handleKeyboardShortcut } = useKeyboardShortcuts(
   textareaRef,
   autoResizeTextarea,
   { saveFile, importFile },
-  { openFindPanel }
+  { openFindPanel, openFindReplacePanel }
 );
 
 const toggleFileMenu = () => {

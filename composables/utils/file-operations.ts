@@ -124,7 +124,7 @@ export function useFileOperations(options: FileOperationsOptions) {
       markdownText.value = content;
       
       onImportSuccess?.(file.name);
-    } catch (err) {
+    } catch {
       onError?.('Failed to read file');
     }
   };

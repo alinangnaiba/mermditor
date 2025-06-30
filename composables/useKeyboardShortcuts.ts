@@ -419,6 +419,7 @@ export function useKeyboardShortcuts(
   },
   findOperations?: {
     openFindPanel: () => void;
+    openFindReplacePanel: () => void;
   }
 ) {
   const handleKeyboardShortcut = (e: KeyboardEvent) => {
@@ -450,10 +451,19 @@ export function useKeyboardShortcuts(
           break;
         case 'f':
           if (shiftKey && findOperations?.openFindPanel) {
-            // Ctrl+Shift+F: Open find panel
+            // Ctrl+Shift+F: Find
             e.preventDefault();
             e.stopPropagation();
             findOperations.openFindPanel();
+            return;
+          }
+          break;
+        case 'h':
+          if (findOperations?.openFindReplacePanel) {
+            // Ctrl+H: Find & Replace
+            e.preventDefault();
+            e.stopPropagation();
+            findOperations?.openFindReplacePanel();
             return;
           }
           break;
