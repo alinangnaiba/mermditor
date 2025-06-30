@@ -25,10 +25,10 @@ export default {
           quaternary: '#475569', // slate-600 - hover states
         },
         'text': {
-          primary: '#ffffff',    // white - primary text
+          primary: '#d2d4d6',    // slate-200 - darker white, more readable
           secondary: '#cbd5e1',  // slate-300 - secondary text
           tertiary: '#94a3b8',   // slate-400 - muted text
-          quaternary: '#64748b', // slate-500 - disabled text
+          quaternary: '#989a9c', // slate-500 - disabled text
         },
         'border': {
           primary: '#334155',    // slate-700 - main borders

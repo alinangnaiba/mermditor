@@ -2,13 +2,12 @@
   <div class="find-replace-panel bg-deep-black border border-border-primary rounded-md shadow-lg max-w-lg">
     <!-- Find Row -->
     <div class="flex flex-col lg:flex-row lg:items-center px-2 lg:px-4 py-1 lg:py-2 gap-2 lg:gap-3">
-      <!-- Search Input Row -->
-      <div class="flex items-center space-x-1 lg:space-x-2 flex-1 min-w-0">
-        <!-- Toggle Arrow Button -->
+      <!-- Toggle Button Column -->
+      <div class="flex items-center justify-start lg:justify-center flex-shrink-0">
         <button
           title="Toggle Replace Mode"
           type="button"
-          class="w-4 h-4 flex items-center justify-center text-text-tertiary hover:text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary rounded"
+          class="w-4 h-4 flex items-center justify-center text-text-primary hover:text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary rounded"
           @click="toggleReplaceMode"
         >
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,6 +27,10 @@
             />
           </svg>
         </button>
+      </div>
+
+      <!-- Search Input Row -->
+      <div class="flex items-center space-x-1 lg:space-x-2 flex-1 min-w-0">
         
         <label for="search-input" class="text-sm text-text-primary whitespace-nowrap">
           Find:
@@ -39,7 +42,7 @@
             v-model="searchTerm"
             type="text"
             placeholder="Find in text..."
-            class="w-full px-2 lg:px-3 py-1 pr-16 lg:pr-20 text-sm bg-dark-surface rounded text-text-primary placeholder-text-tertiary focus:outline-none"
+            class="w-full px-2 lg:px-3 py-1 pr-16 lg:pr-20 text-sm bg-dark-surface rounded text-text-primary placeholder-text-quaternary focus:outline-none"
             :class="{ 'border border-red-500': regexError }"
             style="box-shadow: none; outline: none;"
             @keydown="handleSearchKeydown"
@@ -53,7 +56,7 @@
             <button
               title="Match Case"
               type="button"
-              class="w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none touch-manipulation"
+              class="w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center text-xs rounded text-text-primary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none touch-manipulation"
               :class="{ 'bg-surface-quaternary text-text-primary': isCaseSensitive }"
               @click="toggleCaseSensitive"
             >
@@ -64,7 +67,7 @@
             <button
               title="Match Whole word"
               type="button"
-              class="w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none touch-manipulation"
+              class="w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center text-xs rounded text-text-primary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none touch-manipulation"
               :class="{ 'bg-surface-quaternary text-text-primary': isWholeWord }"
               @click="toggleWholeWord"
             >
@@ -78,7 +81,7 @@
             <button
               title="Use Regular Expression"
               type="button"
-              class="w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none touch-manipulation"
+              class="w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center text-xs rounded text-text-primary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none touch-manipulation"
               :class="{ 'bg-surface-quaternary text-text-primary': isRegex }"
               @click="toggleRegex"
             >
@@ -89,41 +92,44 @@
       </div>
 
       <!-- Navigation Controls Row -->
-      <div class="flex items-center justify-between lg:justify-end space-x-1 lg:space-x-1 flex-shrink-0">
+      <div class="flex items-center space-x-1 lg:space-x-1 flex-shrink-0">
         <!-- Previous Button -->
         <button
           title="Previous match (Shift+Enter)"
-          class="p-1 lg:p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+          class="p-1 lg:p-1 rounded text-text-primary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
           :disabled="!hasMatches"
           @click="findPrevious"
         >
           <svg class="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15l-6-6-6 6"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V9"/>
           </svg>
         </button>
 
         <!-- Next Button -->
         <button
           title="Next match (Enter)"
-          class="p-1 lg:p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+          class="p-1 lg:p-1 rounded text-text-primary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
           :disabled="!hasMatches"
           @click="findNext"
         >
           <svg class="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v10"/>
           </svg>
         </button>
 
         <!-- Match Counter -->
-        <div
-class="text-xs lg:text-sm whitespace-nowrap flex-shrink-0 min-w-0 px-1 lg:px-2 text-text-primary">
+        <div class="text-xs lg:text-sm whitespace-nowrap flex-shrink-0 min-w-0 px-1 lg:px-2 text-text-primary">
           {{ matchCountText }}
         </div>
+      </div>
 
-        <!-- Close Button -->
+      <!-- Close Button Column -->
+      <div class="flex items-center justify-end lg:justify-center flex-shrink-0">
         <button
           title="Close find panel (Escape)"
-          class="p-1 lg:p-1 rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary touch-manipulation"
+          class="p-1 lg:p-1 rounded text-text-primary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary touch-manipulation"
           @click="$emit('close')"
         >
           <svg class="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,9 +143,6 @@ class="text-xs lg:text-sm whitespace-nowrap flex-shrink-0 min-w-0 px-1 lg:px-2 t
     <div v-if="isReplaceMode" class="flex flex-col lg:flex-row lg:items-center px-2 lg:px-4 py-1 lg:py-2 gap-2 lg:gap-3">
       <!-- Replace Input Row -->
       <div class="flex items-center space-x-1 lg:space-x-2 flex-1 min-w-0">
-        <!-- Spacer to align with find input -->
-        <div class="w-4"/>
-        
         <label for="replace-input" class="text-sm text-text-primary whitespace-nowrap">
           Replace:
         </label>
@@ -150,7 +153,7 @@ class="text-xs lg:text-sm whitespace-nowrap flex-shrink-0 min-w-0 px-1 lg:px-2 t
             v-model="replaceTerm"
             type="text"
             placeholder="Replace with..."
-            class="w-full px-2 lg:px-3 py-1 text-sm bg-dark-surface rounded text-text-primary placeholder-text-tertiary focus:outline-none"
+            class="w-full px-2 lg:px-3 py-1 text-sm bg-dark-surface rounded text-text-primary placeholder-text-quaternary focus:outline-none"
             :disabled="!hasMatches"
             style="box-shadow: none; outline: none;"
             @keydown="handleReplaceKeydown"
@@ -166,7 +169,7 @@ class="text-xs lg:text-sm whitespace-nowrap flex-shrink-0 min-w-0 px-1 lg:px-2 t
         <button
           title="Replace current match"
           type="button"
-          class="px-2 py-1 text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+          class="px-2 py-1 text-xs rounded text-text-primary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
           :disabled="!hasMatches"
           @click="replaceCurrent"
         >
@@ -177,7 +180,7 @@ class="text-xs lg:text-sm whitespace-nowrap flex-shrink-0 min-w-0 px-1 lg:px-2 t
         <button
           title="Replace all matches"
           type="button"
-          class="px-2 py-1 text-xs rounded text-text-tertiary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+          class="px-2 py-1 text-xs rounded text-text-primary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
           :disabled="!hasMatches"
           @click="replaceAll"
         >
