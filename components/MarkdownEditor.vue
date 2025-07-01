@@ -114,10 +114,10 @@
             :style="{ width: isPreviewVisible ? editorWidthPercent + '%' : '100%' }"
           >
             <div class="editor-pane border-r border-border-primary bg-deep-black flex flex-col">
-              <!-- Sticky Header Area (Toolbar + Find Panel) -->
-              <div class="sticky top-0 z-40 bg-deep-black">
+              <!-- Sticky Header Area (Toolbar Only) -->
+              <div class="sticky top-0 z-40 bg-deep-black/95 backdrop-blur-sm border-b border-border-primary/50">
                 <!-- Editor Toolbar -->
-                <div class="editor-toolbar flex items-center space-x-4 px-4 py-2 border-b border-border-primary">
+                <div class="editor-toolbar flex items-center space-x-4 px-4 py-2">
                   <!-- File Menu -->
                   <div class="relative">
                     <button
@@ -195,9 +195,13 @@
                   </div>
                 </div>
 
-                <!-- Find/Replace Panel -->
+                <!-- Find/Replace Panel - Floating over content -->
                 <Transition name="slide-down">
-                  <div v-if="findPanelVisible" class="flex justify-end px-4 py-2">
+                  <div 
+                    v-if="findPanelVisible" 
+                    class="find-replace-panel absolute top-full right-4 z-50 bg-deep-black/95 backdrop-blur-sm border border-border-primary rounded-b-md shadow-xl find-replace-floating"
+                    style="min-width: 320px;"
+                  >
                     <FindReplacePanel
                       :markdown-text="markdownText"
                       :textarea-ref="textareaRef"
@@ -601,9 +605,15 @@ onMounted(async () => {
   document.addEventListener('click', (event) => {
     const target = event.target as Element;
     const editorToolbar = document.querySelector('.editor-toolbar');
+    const findPanel = document.querySelector('.find-replace-panel');
     
     if (editorToolbar && !editorToolbar.contains(target)) {
       closeAllMenus();
+    }
+    
+    // Close find panel when clicking outside
+    if (findPanelVisible.value && findPanel && !findPanel.contains(target) && !editorToolbar?.contains(target)) {
+      closeFindPanel();
     }
   });
   autoResizeTextarea();
@@ -637,12 +647,12 @@ const characterCount = computed(() => {
 }
 
 .slide-down-enter-from {
-  transform: translateY(-100%);
+  transform: translateY(-10px);
   opacity: 0;
 }
 
 .slide-down-leave-to {
-  transform: translateY(-100%);
+  transform: translateY(-10px);
   opacity: 0;
 }
 
@@ -654,5 +664,12 @@ const characterCount = computed(() => {
 .text-transparent-with-cursor:focus {
   color: transparent;
   caret-color: #ffffff;
+}
+
+/* Ensure find panel floats properly */
+.find-replace-floating {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  border-radius: 0 0 8px 8px;
 }
 </style>
