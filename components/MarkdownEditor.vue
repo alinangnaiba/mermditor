@@ -308,7 +308,6 @@ import { useDataManagement } from '~/composables/utils/data-management';
 import { useConfirmDialog } from '~/composables/utils/confirm-dialog';
 import ConfirmationDialog from './ConfirmationDialog.vue';
 import FindReplacePanel from './FindReplacePanel.vue';
-// Other composables are auto-imported in Nuxt
 
 const props = defineProps({
   initialMarkdown: {
@@ -437,7 +436,6 @@ const { saveFile, importFile } = useFileOperations({
   }
 });
 
-// Custom toggle function that pre-renders before showing preview
 const customTogglePreviewVisibility = async () => {
   if (isPreviewVisible.value) {
     togglePreviewVisibility();
@@ -605,15 +603,9 @@ onMounted(async () => {
   document.addEventListener('click', (event) => {
     const target = event.target as Element;
     const editorToolbar = document.querySelector('.editor-toolbar');
-    const findPanel = document.querySelector('.find-replace-panel');
-    
+
     if (editorToolbar && !editorToolbar.contains(target)) {
       closeAllMenus();
-    }
-    
-    // Close find panel when clicking outside
-    if (findPanelVisible.value && findPanel && !findPanel.contains(target) && !editorToolbar?.contains(target)) {
-      closeFindPanel();
     }
   });
   autoResizeTextarea();
