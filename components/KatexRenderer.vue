@@ -65,6 +65,16 @@ watch(
 
 onMounted(async () => {
   await renderMath();
+  
+  // Signal that katex has loaded successfully
+  try {
+    const nuxtApp = useNuxtApp();
+    if (nuxtApp.$loading?.setResourceLoaded) {
+      nuxtApp.$loading.setResourceLoaded('katex');
+    }
+  } catch (err) {
+    console.error('Error updating katex loading state:', err);
+  }
 });
 </script>
 
