@@ -108,11 +108,11 @@ const diagramStyle = computed(() => ({
 }));
 
 const zoomIn = () => {
-  scale.value = Math.min(scale.value * 1.2, 3); // Max zoom 3x
+  scale.value = Math.min(scale.value * 1.2, 3);
 };
 
 const zoomOut = () => {
-  scale.value = Math.max(scale.value / 1.2, 0.2); // Min zoom 0.2x
+  scale.value = Math.max(scale.value / 1.2, 0.2);
 };
 
 const reset = () => {
@@ -121,13 +121,12 @@ const reset = () => {
 };
 
 const handleMouseDown = (event: MouseEvent) => {
-  if (event.button !== 0) return; // Only pan with left mouse button
+  if (event.button !== 0) return;
   isPanning.value = true;
   startPanPosition.value = {
     x: event.clientX - pan.value.x,
     y: event.clientY - pan.value.y,
   };
-  // Prevent text selection while dragging
   event.preventDefault();
 };
 
@@ -170,7 +169,6 @@ onMounted(async () => {
 watch(
   () => props.code,
   async () => {
-    // Reset zoom/pan when code changes, as the diagram might be different
     reset();
     await renderMermaidDiagram();
   },

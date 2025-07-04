@@ -676,7 +676,6 @@ onUnmounted(() => {
   }
 });
 
-// Page-specific SEO meta tags
 useSeoMeta({
   title: 'Tool Guide - merMDitor | Markdown, Mermaid & LaTeX Syntax Reference',
   description:
@@ -694,7 +693,6 @@ useHead({
   link: [{ rel: 'canonical', href: 'https://www.mermditor.dev/tool-guide' }],
 });
 
-// Structured data for the tool guide page
 useHead({
   script: [
     {

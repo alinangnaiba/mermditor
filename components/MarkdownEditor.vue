@@ -2,26 +2,35 @@
     <!-- Floating Action Bar - Above all panes -->
     <div class="relative z-30 flex justify-center py-2">
       <div class="flex items-center space-x-1 rounded-lg bg-surface-tertiary/95 shadow-lg backdrop-blur-sm border border-border-primary">
-        <!-- Copy Content Button -->
+        <!-- Autosave Checkbox -->
+        <label class="flex items-center space-x-2 px-3 py-2 cursor-pointer">
+          <input
+            type="checkbox"
+            :checked="isAutosaveEnabled"
+            class="w-4 h-4 text-accent-primary bg-surface-quaternary border-border-primary rounded focus:ring-accent-primary focus:ring-2"
+            @change="handleAutosaveToggle"
+          >
+          <span class="text-sm text-text-secondary">Autosave</span>
+        </label>
+
+        <!-- Clear Data Button -->
         <button
-          title="Copy content"
-          class="rounded-md p-2 text-text-tertiary transition-colors hover:bg-surface-quaternary hover:text-text-primary focus:bg-surface-quaternary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-          aria-label="Copy editor content" 
-          @click="copyEditorContent"
+          title="Clear all stored data"
+          class="rounded-md p-2 text-text-tertiary transition-colors hover:bg-red-600 hover:text-white focus:bg-red-600 focus:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+          aria-label="Clear all stored data"
+          @click="clearData"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 18 18"
+            viewBox="0 0 20 20"
             width="18"
             height="18"
             fill="currentColor"
             aria-hidden="true"
           >
-            <path d="M3.5 2A1.5 1.5 0 002 3.5v9A1.5 1.5 0 003.5 14H5v-1H3.5a.5.5 0 01-.5-.5v-9a.5.5 0 01.5-.5h7a.5.5 0 01.5.5V4h1V3.5A1.5 1.5 0 0010.5 2h-7z"/>
-            <path d="M7.5 5A1.5 1.5 0 006 6.5v9A1.5 1.5 0 007.5 17h7a1.5 1.5 0 001.5-1.5v-9A1.5 1.5 0 0014.5 5h-7zM7 6.5a.5.5 0 01.5-.5h7a.5.5 0 01.5.5v9a.5.5 0 01-.5.5h-7a.5.5 0 01-.5-.5v-9z"/>
+            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
           </svg>
         </button>
-
         <!-- Divider -->
         <div class="h-6 w-px bg-border-secondary"/>
 
@@ -94,6 +103,7 @@
         </button>
       </div>
     </div>
+
     <!-- Main pane container with single scroll -->
     <div class="flex min-h-0 flex-1 flex-col">
       <div ref="mainScrollContainer" class="main-scroll-container w-full flex-1 overflow-y-auto">
@@ -103,14 +113,136 @@
             class="editor-container transition-width flex flex-col duration-100"
             :style="{ width: isPreviewVisible ? editorWidthPercent + '%' : '100%' }"
           >
-            <div class="editor-pane border-r border-border-primary bg-deep-black">
-              <textarea
-                ref="textareaRef"
-                v-model="markdownText"
-                class="no-scrollbar w-full resize-none bg-transparent p-4 font-mono text-sm leading-relaxed text-text-primary placeholder-text-tertiary outline-none"
-                placeholder="Type your markdown here..."
-                @input="autoResizeTextarea"
-              />
+            <div class="editor-pane border-r border-border-primary bg-deep-black flex flex-col">
+              <!-- Sticky Header Area (Toolbar Only) -->
+              <div class="sticky top-0 z-40 bg-deep-black/95 backdrop-blur-sm border-b border-border-primary/50">
+                <!-- Editor Toolbar -->
+                <div class="editor-toolbar flex items-center space-x-4 px-4 py-2">
+                  <!-- File Menu -->
+                  <div class="relative">
+                    <button
+                      class="text-sm text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary rounded px-2 py-1"
+                      @click="toggleFileMenu"
+                    >
+                      File
+                    </button>
+                    <!-- File Dropdown -->
+                    <div
+                      v-if="fileMenuOpen"
+                      class="absolute top-full left-0 mt-1 w-48 bg-deep-black border border-border-primary rounded-md shadow-lg z-50"
+                    >
+                      <div class="py-1">
+                        <button
+                          class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors"
+                          @click="importFile(); closeAllMenus()"
+                        >
+                          Import
+                        </button>
+                        <button
+                          class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors flex justify-between items-center"
+                          @click="saveFile(); closeAllMenus()"
+                        >
+                          <span>Save</span>
+                          <span class="text-xs text-text-tertiary">Ctrl+S</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Edit Menu -->
+                  <div class="relative">
+                    <button
+                      class="text-sm text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary rounded px-2 py-1"
+                      @click="toggleEditMenu"
+                    >
+                      Edit
+                    </button>
+                    <!-- Edit Dropdown -->
+                    <div
+                      v-if="editMenuOpen"
+                      class="absolute top-full left-0 mt-1 w-40 bg-deep-black border border-border-primary rounded-md shadow-lg z-50"
+                    >
+                      <div class="py-1">
+                        <button
+                          class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors flex justify-between items-center"
+                          @click.stop="openFindPanel(); closeAllMenus();"
+                        >
+                          <span>Find</span>
+                          <span class="text-xs text-text-tertiary">Ctrl+Shift+F</span>
+                        </button>
+                        <button
+                          class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors flex justify-between items-center"
+                          @click.stop="openFindReplacePanel(); closeAllMenus(); "
+                        >
+                          <span>Find & Replace</span>
+                          <span class="text-xs text-text-tertiary">Ctrl+H</span>
+                        </button>
+                        <div class="h-px bg-border-secondary mx-2 my-1"/>
+                        <button
+                          class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors"
+                          @click="copyEditorContent(); closeAllMenus()"
+                        >
+                          Copy
+                        </button>
+                        <button
+                          class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors"
+                          @click="clearContent(); closeAllMenus()"
+                        >
+                          Clear Content
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Find/Replace Panel - Floating over content -->
+                <Transition name="slide-down">
+                  <div 
+                    v-if="findPanelVisible" 
+                    class="find-replace-panel absolute top-full left-4 right-4 lg:left-auto lg:right-4 z-50 bg-deep-black/95 backdrop-blur-sm rounded-b-md shadow-xl find-replace-floating"
+                    style="max-width: min(90vw, 500px); border-top: none;"
+                  >
+                    <FindReplacePanel
+                      :markdown-text="markdownText"
+                      :textarea-ref="textareaRef"
+                      :scroll-container="mainScrollContainer"
+                      :initial-replace-mode="findPanelReplaceMode"
+                      @close="closeFindPanel"
+                      @highlight="handleHighlight"
+                      @clear-highlight="clearHighlight"
+                      @replace="handleReplace"
+                    />
+                  </div>
+                </Transition>
+              </div>
+
+              <!-- Editor Container with Highlighting -->
+              <div class="relative flex-1">
+                <!-- Highlighting Background -->
+                <div
+                  v-if="highlightMatches.length > 0"
+                  ref="highlightLayerRef"
+                  class="absolute inset-0 pointer-events-none z-10 font-mono text-sm leading-relaxed"
+                  style="padding: 1rem; white-space: pre-wrap; word-wrap: break-word;"
+                >
+                  <span
+                    v-for="(segment, index) in highlightedSegments"
+                    :key="index"
+                    :class="segment.isMatch ? (segment.isCurrent ? 'bg-yellow-400 text-black' : 'bg-yellow-200 text-black') : ''"
+                    class="whitespace-pre-wrap"
+                  >{{ segment.text }}</span>
+                </div>
+
+                <!-- Editor Textarea -->
+                <textarea
+                  ref="textareaRef"
+                  v-model="markdownText"
+                  class="no-scrollbar w-full h-full resize-none bg-transparent p-4 font-mono text-sm leading-relaxed text-text-primary placeholder-text-tertiary outline-none relative z-20"
+                  :class="{ 'text-transparent-with-cursor': highlightMatches.length > 0 }"
+                  placeholder="Type your markdown here..."
+                  @input="autoResizeTextarea"
+                />
+              </div>
             </div>
           </div>          <!-- Draggable Divider -->
           <div
@@ -146,17 +278,36 @@
         {{ wordCount }} words | {{ characterCount }} characters
       </div>
       <div class="text-sm text-text-tertiary">
-        <span v-if="lastSaved">Last saved: {{ lastSaved }}</span>
-        <span v-else>Changes saved automatically</span>
+        <span v-if="isAutosaveEnabled">
+          <span v-if="lastSaved">Last saved: {{ lastSaved }}</span>
+          <span v-else>Autosave enabled</span>
+        </span>
+        <span v-else>Autosave disabled</span>
       </div>
     </div>
+
+    <!-- Modern Confirmation Dialog -->
+    <ConfirmationDialog
+      :is-visible="confirmDialog.isVisible.value"
+      :title="confirmDialog.currentOptions.value.title"
+      :message="confirmDialog.currentOptions.value.message"
+      :confirm-text="confirmDialog.currentOptions.value.confirmText"
+      :cancel-text="confirmDialog.currentOptions.value.cancelText"
+      :type="confirmDialog.currentOptions.value.type"
+      @confirm="confirmDialog.handleConfirm"
+      @cancel="confirmDialog.handleCancel"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, computed, toRef } from 'vue'; // Removed nextTick, added toRef
+import { ref, onMounted, onBeforeUnmount, watch, computed, toRef } from 'vue';
 import 'highlight.js/styles/atom-one-dark.css';
-// Composables are auto-imported in Nuxt
+import { useFileOperations } from '~/composables/utils/file-operations';
+import { useDataManagement } from '~/composables/utils/data-management';
+import { useConfirmDialog } from '~/composables/utils/confirm-dialog';
+import ConfirmationDialog from './ConfirmationDialog.vue';
+import FindReplacePanel from './FindReplacePanel.vue';
 
 const props = defineProps({
   initialMarkdown: {
@@ -233,11 +384,14 @@ $$
 $$
 `;
 
-const { markdownText, isEditorVisible, isPreviewVisible, lastSaved, toggleEditorVisibility, togglePreviewVisibility } =
+const confirmDialog = useConfirmDialog();
+
+const { markdownText, isEditorVisible, isPreviewVisible, lastSaved, isAutosaveEnabled, toggleEditorVisibility, togglePreviewVisibility, toggleAutosave } =
   useEditorStateAndPersistence(
     toRef(props, 'initialMarkdown'),
     defaultContent,
-    () => autoResizeTextarea() // Pass autoResizeTextarea as a callback
+    () => autoResizeTextarea(),
+    confirmDialog.showConfirmation
   );
 
 const { editorWidthPercent, previewWidthPercent, startDrag } = usePaneResizer(
@@ -255,12 +409,6 @@ const { autoResizeTextarea } = useTextareaSizing(
   isPreviewVisible
 );
 
-const { handleKeyboardShortcut } = useKeyboardShortcuts(
-  markdownText,
-  textareaRef,
-  autoResizeTextarea
-);
-
 const { renderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(
   markdownText,
   previewContainer,
@@ -269,13 +417,29 @@ const { renderMarkdown, cleanupMarkdownRenderer } = useMarkdownRenderer(
 
 const { success, error } = useToast();
 
-// Custom toggle function that pre-renders before showing preview
+const { clearAllData } = useDataManagement();
+
+const { saveFile, importFile } = useFileOperations({
+  markdownText,
+  onImportSuccess: async (filename: string) => {
+    await autoResizeTextarea();
+    if (isPreviewVisible.value) {
+      await renderMarkdown();
+    }
+    success(`File "${filename}" imported successfully!`);
+  },
+  onSaveSuccess: () => {
+    success('File saved successfully!');
+  },
+  onError: (message: string) => {
+    error(message);
+  }
+});
+
 const customTogglePreviewVisibility = async () => {
   if (isPreviewVisible.value) {
-    // If preview is visible, just hide it (no pre-rendering needed)
     togglePreviewVisibility();
   } else {
-    // If preview is hidden, render before showing
     await renderMarkdown();
     togglePreviewVisibility();
   }
@@ -289,16 +453,144 @@ const copyEditorContent = async () => {
   try {
     await navigator.clipboard.writeText(markdownText.value);
     success('Content copied to clipboard!');
-  } catch (err) {
-    console.error('Failed to copy editor content:', err);
+  } catch {
     error('Failed to copy content');
   }
+};
+
+const clearContent = () => {
+  markdownText.value = '';
+  success('Editor content cleared');
+};
+
+const clearData = async () => {
+  const confirmed = await confirmDialog.showConfirmation({
+    title: 'Clear All Data',
+    message: 'This will delete all your saved content and settings. This action cannot be undone.',
+    confirmText: 'Clear Data',
+    cancelText: 'Cancel'
+  });
+
+  if (confirmed) {
+    const result = clearAllData();
+    if (result) {
+      markdownText.value = defaultContent;
+      isAutosaveEnabled.value = false;
+    }
+  }
+};
+
+const handleAutosaveToggle = async (event: Event) => {
+  const checkbox = event.target as HTMLInputElement;
+  event.preventDefault();
+  
+  const success = await toggleAutosave();
+  
+  if (!success) {
+    checkbox.checked = isAutosaveEnabled.value;
+  }
+};
+
+const fileMenuOpen = ref(false);
+const editMenuOpen = ref(false);
+const findPanelVisible = ref(false);
+const findPanelReplaceMode = ref(false);
+
+const closeAllMenus = () => {
+  fileMenuOpen.value = false;
+  editMenuOpen.value = false;
+};
+
+const openFindPanel = () => {
+  findPanelReplaceMode.value = false;
+  findPanelVisible.value = true;
+};
+
+const openFindReplacePanel = () => {
+  findPanelReplaceMode.value = true;
+  findPanelVisible.value = true;
+};
+
+const closeFindPanel = () => {
+  findPanelVisible.value = false;
+  findPanelReplaceMode.value = false;
+};
+
+const handleReplace = (newText: string) => {
+  markdownText.value = newText;
+};
+
+const highlightMatches = ref<Array<{ start: number; end: number }>>([]);
+const currentHighlightIndex = ref(0);
+const highlightLayerRef = ref<HTMLElement | null>(null);
+
+const handleHighlight = (matches: Array<{ start: number; end: number }>, currentIndex: number) => {
+  highlightMatches.value = matches;
+  currentHighlightIndex.value = currentIndex;
+};
+
+const clearHighlight = () => {
+  highlightMatches.value = [];
+  currentHighlightIndex.value = 0;
+};
+
+const highlightedSegments = computed(() => {
+  if (highlightMatches.value.length === 0) return [];
+  
+  const text = markdownText.value;
+  const segments: Array<{ text: string; isMatch: boolean; isCurrent: boolean }> = [];
+  let lastIndex = 0;
+  
+  highlightMatches.value.forEach((match, index) => {
+    if (match.start > lastIndex) {
+      segments.push({
+        text: text.substring(lastIndex, match.start),
+        isMatch: false,
+        isCurrent: false
+      });
+    }
+    
+    segments.push({
+      text: text.substring(match.start, match.end),
+      isMatch: true,
+      isCurrent: index === currentHighlightIndex.value
+    });
+    
+    lastIndex = match.end;
+  });
+  
+  if (lastIndex < text.length) {
+    segments.push({
+      text: text.substring(lastIndex),
+      isMatch: false,
+      isCurrent: false
+    });
+  }
+  
+  return segments;
+});
+
+const { handleKeyboardShortcut } = useKeyboardShortcuts(
+  markdownText,
+  textareaRef,
+  autoResizeTextarea,
+  { saveFile, importFile },
+  { openFindPanel, openFindReplacePanel }
+);
+
+const toggleFileMenu = () => {
+  editMenuOpen.value = false;
+  fileMenuOpen.value = !fileMenuOpen.value;
+};
+
+const toggleEditMenu = () => {
+  fileMenuOpen.value = false;
+  editMenuOpen.value = !editMenuOpen.value;
 };
 
 watch(
   markdownText,
   () => {
-    // Only render the markdown when the preview pane is visible
     if (isPreviewVisible.value) {
       renderMarkdown();
     }
@@ -308,6 +600,14 @@ watch(
 
 onMounted(async () => {
   document.addEventListener('keydown', handleKeyboardShortcut);
+  document.addEventListener('click', (event) => {
+    const target = event.target as Element;
+    const editorToolbar = document.querySelector('.editor-toolbar');
+
+    if (editorToolbar && !editorToolbar.contains(target)) {
+      closeAllMenus();
+    }
+  });
   autoResizeTextarea();
 });
 
@@ -316,7 +616,6 @@ onBeforeUnmount(() => {
   cleanupMarkdownRenderer();
 });
 
-// Word count computation
 const wordCount = computed(() => {
   if (!markdownText.value) return 0;
   const cleanText = markdownText.value
@@ -328,8 +627,41 @@ const wordCount = computed(() => {
   return cleanText.split(/\s+/).filter((word) => word.length > 0).length;
 });
 
-// Character count computation
 const characterCount = computed(() => {
   return markdownText.value.length;
 });
 </script>
+
+<style scoped>
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.2s ease;
+}
+
+.slide-down-enter-from {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+
+.slide-down-leave-to {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+
+.text-transparent-with-cursor {
+  color: transparent;
+  caret-color: #ffffff;
+}
+
+.text-transparent-with-cursor:focus {
+  color: transparent;
+  caret-color: #ffffff;
+}
+
+/* Ensure find panel floats properly */
+.find-replace-floating {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  border-radius: 0 0 8px 8px;
+}
+</style>

@@ -19,7 +19,6 @@ const props = defineProps<{
   idSuffix?: string
 }>();
 
-// Computed property to determine if this is block math
 const isBlock = computed(() => props.isBlock === true);
 
 const mathContainer = ref<HTMLElement | null>(null);
@@ -33,7 +32,6 @@ const renderMath = async () => {
     
     mathContainer.value.innerHTML = '';
     
-    // Render the math expression
     katex.render(props.code.trim(), mathContainer.value, {
       displayMode: isBlock.value,
       throwOnError: false,
@@ -50,14 +48,12 @@ const renderMath = async () => {
     console.error('KaTeX rendering error:', err);
     error.value = errorMessage;
     
-    // Fallback: show the raw LaTeX code
     if (mathContainer.value) {
       mathContainer.value.innerHTML = `<code class="text-yellow-400">${props.code}</code>`;
     }
   }
 };
 
-// Watch for changes in the math code
 watch(
   () => props.code,
   async () => {

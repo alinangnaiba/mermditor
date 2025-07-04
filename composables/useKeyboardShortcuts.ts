@@ -412,7 +412,15 @@ function handleTabIndent(
 export function useKeyboardShortcuts(
   markdownText: Ref<string>,
   textareaRef: Ref<HTMLTextAreaElement | null>,
-  autoResizeTextarea: () => Promise<void>
+  autoResizeTextarea: () => Promise<void>,
+  fileOperations?: {
+    saveFile: () => Promise<void>;
+    importFile: () => void;
+  },
+  findOperations?: {
+    openFindPanel: () => void;
+    openFindReplacePanel: () => void;
+  }
 ) {
   const handleKeyboardShortcut = (e: KeyboardEvent) => {
     if (!textareaRef.value) return;
@@ -441,11 +449,38 @@ export function useKeyboardShortcuts(
         case 'e': // Inline Code (Ctrl+E)
           result = handleInlineCode(params);
           break;
+        case 'f':
+          if (shiftKey && findOperations?.openFindPanel) {
+            // Ctrl+Shift+F: Find
+            e.preventDefault();
+            e.stopPropagation();
+            findOperations.openFindPanel();
+            return;
+          }
+          break;
+        case 'h':
+          if (findOperations?.openFindReplacePanel) {
+            // Ctrl+H: Find & Replace
+            e.preventDefault();
+            e.stopPropagation();
+            findOperations?.openFindReplacePanel();
+            return;
+          }
+          break;
         case 'i':
           result = handleItalic(params);
           break;
         case 'k':
           result = handleLink(params);
+          break;
+        case 's':
+          if (fileOperations?.saveFile) {
+            // Ctrl+S: Save file
+            e.preventDefault();
+            e.stopPropagation();
+            fileOperations.saveFile();
+            return;
+          }
           break;
         case 'x': // Strikethrough (Ctrl+Shift+X)
           if (shiftKey) result = handleStrikethrough(params);
