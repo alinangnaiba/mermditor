@@ -5,9 +5,23 @@ import hljs from 'highlight.js';
  * Custom markdown-it plugin for code highlighting
  * This plugin highlights code blocks using highlight.js
  */
+
+let hljsMarkedAsLoaded = false;
 export function markdownItHighlight(md: MarkdownIt) {
-  // Save the original renderer
   const originalFence = md.renderer.rules.fence!.bind(md.renderer.rules);
+  if (!hljsMarkedAsLoaded && typeof window !== 'undefined') {
+    hljsMarkedAsLoaded = true;
+    setTimeout(() => {
+      try {
+        const nuxtApp = (window as any)?.__nuxtApp || (window as any)?.$nuxt;
+        if (nuxtApp?.$loading?.setResourceLoaded) {
+          nuxtApp.$loading.setResourceLoaded('hljs');
+        }
+      } catch (err) {
+        console.error('Error updating hljs loading state:', err);
+      }
+    }, 0);
+  }
 
   md.renderer.rules.fence = (tokens, idx, options, env, self) => {
     const token = tokens[idx];

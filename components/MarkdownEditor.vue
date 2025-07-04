@@ -608,7 +608,18 @@ onMounted(async () => {
       closeAllMenus();
     }
   });
-  autoResizeTextarea();
+  
+  // Signal that the editor component is ready
+  try {
+    const nuxtApp = useNuxtApp();
+    if (nuxtApp.$loading?.setResourceLoaded) {
+      nuxtApp.$loading.setResourceLoaded('markdownIt');
+    }
+  } catch (err) {
+    console.error('Error updating loading state:', err);
+  }
+  
+  await autoResizeTextarea();
 });
 
 onBeforeUnmount(() => {

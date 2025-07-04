@@ -164,6 +164,15 @@ const renderMermaidDiagram = async () => {
 
 onMounted(async () => {
   await renderMermaidDiagram();
+  
+  try {
+    const nuxtApp = useNuxtApp();
+    if (nuxtApp.$loading?.setResourceLoaded) {
+      nuxtApp.$loading.setResourceLoaded('mermaid');
+    }
+  } catch (err) {
+    console.error('Error updating mermaid loading state:', err);
+  }
 });
 
 watch(

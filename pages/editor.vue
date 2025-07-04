@@ -27,10 +27,22 @@
     </header>
 
     <div class="relative min-h-0 flex-grow">
-      <MarkdownEditor />
+      <!-- Loading overlay shown immediately -->
+      <LoadingOverlay :is-loading="isLoading" />
+      
+      <Suspense @resolve="finishLoading">
+        <template #default>
+          <LazyMarkdownEditor />
+        </template>
+        <template #fallback>
+          <!-- Empty fallback since we have our custom loading overlay -->
+          <div></div>
+        </template>
+      </Suspense>
+      
       <NuxtLink
         to="/feedback"
-        class="group fixed bottom-6 right-6 z-50 rounded-full bg-surface-tertiary p-2 text-text-primary shadow-lg transition-colors hover:bg-surface-quaternary focus:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
+        class="group fixed bottom-6 right-6 z-40 rounded-full bg-surface-tertiary p-2 text-text-primary shadow-lg transition-colors hover:bg-surface-quaternary focus:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
         title="Get Help or Send Feedback"
         :aria-label="'Get Help or Send Feedback'"
       >
@@ -59,6 +71,50 @@
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue';
+
+// Get access to the loading state plugin
+const { $loading } = useNuxtApp();
+const isLoading = ref(true);
+
+// Handle Suspense resolution
+const finishLoading = () => {
+  if ($loading) {
+    const allResourcesLoaded = Object.values($loading.resourcesLoaded.value).every(val => val);
+    
+    if (allResourcesLoaded) {
+      setTimeout(() => {
+        isLoading.value = false;
+      }, 500);
+    } else {
+      const unwatch = watch(() => $loading.isAppLoading.value, (newVal) => {
+        if (newVal === false) {
+          setTimeout(() => {
+            isLoading.value = false;
+          }, 500);
+          unwatch();
+        }
+      });
+    }
+  } else {
+    setTimeout(() => {
+      isLoading.value = false;
+    }, 1000);
+  }
+};
+
+onMounted(() => {
+  if (import.meta.client) {
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.performance) {
+        const perfData = window.performance.timing;
+        const loadTime = perfData.domContentLoadedEventEnd - perfData.navigationStart;
+        console.log(`Initial page load time: ${loadTime}ms`);
+      }
+    });
+  }
+});
+
 useSeoMeta({
   title: 'Markdown Editor - merMDitor | Free Online Editor with Mermaid Support',
   description:
