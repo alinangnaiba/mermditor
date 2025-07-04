@@ -165,14 +165,14 @@
                       <div class="py-1">
                         <button
                           class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors flex justify-between items-center"
-                          @click="openFindPanel(); closeAllMenus()"
+                          @click.stop="openFindPanel(); closeAllMenus();"
                         >
                           <span>Find</span>
                           <span class="text-xs text-text-tertiary">Ctrl+Shift+F</span>
                         </button>
                         <button
                           class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-surface-quaternary transition-colors flex justify-between items-center"
-                          @click="openFindReplacePanel(); closeAllMenus()"
+                          @click.stop="openFindReplacePanel(); closeAllMenus(); "
                         >
                           <span>Find & Replace</span>
                           <span class="text-xs text-text-tertiary">Ctrl+H</span>
@@ -199,8 +199,8 @@
                 <Transition name="slide-down">
                   <div 
                     v-if="findPanelVisible" 
-                    class="find-replace-panel absolute top-full right-4 z-50 bg-deep-black/95 backdrop-blur-sm border border-border-primary rounded-b-md shadow-xl find-replace-floating"
-                    style="min-width: 320px;"
+                    class="find-replace-panel absolute top-full left-4 right-4 lg:left-auto lg:right-4 z-50 bg-deep-black/95 backdrop-blur-sm rounded-b-md shadow-xl find-replace-floating"
+                    style="max-width: min(90vw, 500px); border-top: none;"
                   >
                     <FindReplacePanel
                       :markdown-text="markdownText"
@@ -308,7 +308,6 @@ import { useDataManagement } from '~/composables/utils/data-management';
 import { useConfirmDialog } from '~/composables/utils/confirm-dialog';
 import ConfirmationDialog from './ConfirmationDialog.vue';
 import FindReplacePanel from './FindReplacePanel.vue';
-// Other composables are auto-imported in Nuxt
 
 const props = defineProps({
   initialMarkdown: {
@@ -437,7 +436,6 @@ const { saveFile, importFile } = useFileOperations({
   }
 });
 
-// Custom toggle function that pre-renders before showing preview
 const customTogglePreviewVisibility = async () => {
   if (isPreviewVisible.value) {
     togglePreviewVisibility();
@@ -605,15 +603,9 @@ onMounted(async () => {
   document.addEventListener('click', (event) => {
     const target = event.target as Element;
     const editorToolbar = document.querySelector('.editor-toolbar');
-    const findPanel = document.querySelector('.find-replace-panel');
-    
+
     if (editorToolbar && !editorToolbar.contains(target)) {
       closeAllMenus();
-    }
-    
-    // Close find panel when clicking outside
-    if (findPanelVisible.value && findPanel && !findPanel.contains(target) && !editorToolbar?.contains(target)) {
-      closeFindPanel();
     }
   });
   autoResizeTextarea();

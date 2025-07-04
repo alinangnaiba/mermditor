@@ -1,5 +1,5 @@
 <template>
-  <div class="find-replace-panel bg-deep-black border border-border-primary rounded-md shadow-lg max-w-lg">
+  <div class="find-replace-panel border border-border-primary rounded-md shadow-lg max-w-lg">
     <!-- Mobile Layout: Five Rows -->
     <div class="lg:hidden flex flex-col p-1 gap-1">
       <!-- Row 1: Find Input -->
@@ -118,7 +118,7 @@
           title="Replace current match"
           type="button"
           class="px-1.5 py-0.5 text-xs rounded text-text-primary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
-          :disabled="!hasMatches"
+          :disabled="!hasMatches || !replaceTerm.trim()"
           @click="replaceCurrent"
         >
           Replace
@@ -129,7 +129,7 @@
           title="Replace all matches"
           type="button"
           class="px-1.5 py-0.5 text-xs rounded text-text-primary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
-          :disabled="!hasMatches"
+          :disabled="!hasMatches || !replaceTerm.trim()"
           @click="replaceAll"
         >
           Replace All
@@ -323,7 +323,7 @@
               title="Replace current match"
               type="button"
               class="px-2 py-1 text-xs rounded text-text-primary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="!hasMatches"
+              :disabled="!hasMatches || !replaceTerm.trim()"
               @click="replaceCurrent"
             >
               Replace
@@ -334,7 +334,7 @@
               title="Replace all matches"
               type="button"
               class="px-2 py-1 text-xs rounded text-text-primary hover:text-text-primary hover:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="!hasMatches"
+              :disabled="!hasMatches || !replaceTerm.trim()"
               @click="replaceAll"
             >
               Replace All
@@ -369,7 +369,6 @@
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { validateRegexPattern } from '~/composables/utils/regex-validator';
 
-// Simple debounce function
 function debounce<T extends (...args: unknown[]) => void>(func: T, wait: number): T {
   let timeout: NodeJS.Timeout;
   return ((...args: Parameters<T>) => {
@@ -536,7 +535,6 @@ const handleSearchKeydown = (event: KeyboardEvent) => {
       event.preventDefault();
       if (!searchTerm.value.trim()) return;
       
-      // If we have matches, navigate through them
       if (matches.value.length > 0) {
         if (event.shiftKey) {
           findPrevious();
@@ -544,7 +542,6 @@ const handleSearchKeydown = (event: KeyboardEvent) => {
           findNext();
         }
       } else {
-        // If no matches, trigger immediate search (bypass debounce)
         findMatches();
         if (matches.value.length > 0) {
           selectMatch(0);
@@ -612,6 +609,7 @@ const handleReplaceKeydown = (event: KeyboardEvent) => {
   switch (event.key) {
     case 'Enter':
       event.preventDefault();
+      if (!replaceTerm.value.trim()) return;
       if (event.ctrlKey) {
         replaceAll();
       } else {
@@ -626,8 +624,8 @@ const handleReplaceKeydown = (event: KeyboardEvent) => {
 };
 
 const replaceCurrent = () => {
-  if (!hasMatches.value || !props.textareaRef) return;
-  
+  if (!hasMatches.value || !props.textareaRef || !replaceTerm.value.trim()) return;
+
   const currentMatch = matches.value[currentMatchIndex.value];
   if (!currentMatch) return;
 
@@ -635,24 +633,22 @@ const replaceCurrent = () => {
   const newText = text.substring(0, currentMatch.start) + 
                   replaceTerm.value + 
                   text.substring(currentMatch.end);
-  
+
   emit('replace', newText);
-  
-  // Update matches after replacement
+
   const lengthDiff = replaceTerm.value.length - (currentMatch.end - currentMatch.start);
-  
-  // Update all matches that come after the current one
+
   for (let i = currentMatchIndex.value + 1; i < matches.value.length; i++) {
     matches.value[i].start += lengthDiff;
     matches.value[i].end += lengthDiff;
   }
-  
+
   matches.value.splice(currentMatchIndex.value, 1);
-  
+
   if (currentMatchIndex.value >= matches.value.length && matches.value.length > 0) {
     currentMatchIndex.value = matches.value.length - 1;
   }
-  
+
   if (matches.value.length > 0) {
     selectMatch(currentMatchIndex.value);
   } else {
@@ -661,8 +657,8 @@ const replaceCurrent = () => {
 };
 
 const replaceAll = () => {
-  if (!hasMatches.value) return;
-  
+  if (!hasMatches.value || !replaceTerm.value.trim()) return;
+
   // Sort matches by position (descending) to replace from end to beginning
   // This prevents position shifts from affecting later replacements
   const sortedMatches = [...matches.value].sort((a, b) => b.start - a.start);
@@ -677,14 +673,12 @@ const replaceAll = () => {
   
   emit('replace', text);
   
-  // Clear all matches and highlights
   matches.value = [];
   currentMatchIndex.value = 0;
   hasSearched.value = false;
   emit('clearHighlight');
 };
 
-// Debounced search function
 const debouncedSearch = debounce(() => {
   if (searchTerm.value.trim()) {
     findMatches();
@@ -692,7 +686,6 @@ const debouncedSearch = debounce(() => {
       selectMatch(0);
     }
   } else {
-    // Clear matches when search term is empty
     matches.value = [];
     currentMatchIndex.value = 0;
     hasSearched.value = false;
@@ -712,7 +705,6 @@ watch(searchTerm, () => {
 });
 
 onMounted(() => {
-  // Initialize replace mode if specified
   if (props.initialReplaceMode) {
     isReplaceMode.value = true;
   }
