@@ -5,24 +5,24 @@ export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@nuxtjs/tailwindcss', '@nuxtjs/sitemap'],
   css: ['~/assets/css/tailwind.css', '~/assets/css/global.css'],app: {
     head: {
-      title: 'merMDitor - Free Markdown Editor with Mermaid Diagrams | No Signup Required',
+      title: 'merMDitor - Free Markdown Editor with Mermaid Diagrams & LaTeX Math | No Signup Required',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Free online Markdown editor with live preview and Mermaid diagram support. Create flowcharts, sequence diagrams, and more. Works entirely in your browser with auto-save. No registration required.' },
-        { name: 'keywords', content: 'markdown editor, mermaid diagrams, online editor, free markdown, flowchart maker, sequence diagram, live preview, browser editor' },
+        { name: 'description', content: 'Free online Markdown editor with live preview, Mermaid diagram support, and LaTeX math rendering. Create flowcharts, sequence diagrams, mathematical equations, and more. Works entirely in your browser with auto-save. No registration required.' },
+        { name: 'keywords', content: 'markdown editor, mermaid diagrams, latex math, katex, online editor, free markdown, flowchart maker, sequence diagram, mathematical equations, live preview, browser editor, math renderer' },
         { name: 'author', content: 'merMDitor' },
         { name: 'robots', content: 'index, follow' },
         // Open Graph
         { property: 'og:type', content: 'website' },
-        { property: 'og:title', content: 'merMDitor - Free Markdown Editor with Mermaid Diagrams' },
-        { property: 'og:description', content: 'Free online Markdown editor with live preview and Mermaid diagram support. Create flowcharts, sequence diagrams, and more. Works entirely in your browser with auto-save.' },
+        { property: 'og:title', content: 'merMDitor - Free Markdown Editor with Mermaid Diagrams & LaTeX Math' },
+        { property: 'og:description', content: 'Free online Markdown editor with live preview, Mermaid diagram support, and LaTeX math rendering. Create flowcharts, sequence diagrams, mathematical equations, and more. Works entirely in your browser with auto-save.' },
         { property: 'og:image', content: '/og-image.png' },        { property: 'og:url', content: 'https://www.mermditor.dev' },
         { property: 'og:site_name', content: 'merMDitor' },
         // Twitter
         { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: 'merMDitor - Free Markdown Editor with Mermaid Diagrams' },
-        { name: 'twitter:description', content: 'Free online Markdown editor with live preview and Mermaid diagram support. No signup required.' },
+        { name: 'twitter:title', content: 'merMDitor - Free Markdown Editor with Mermaid Diagrams & LaTeX Math' },
+        { name: 'twitter:description', content: 'Free online Markdown editor with live preview, Mermaid diagram support, and LaTeX math rendering. No signup required.' },
         { name: 'twitter:image', content: '/og-image.png' },
         // Additional SEO
         { name: 'theme-color', content: '#0f172a' },
