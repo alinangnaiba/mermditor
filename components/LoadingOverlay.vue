@@ -10,7 +10,7 @@
       <div 
         class="absolute inset-0 opacity-5"
         style="background-image: radial-gradient(circle at 25% 25%, #79B5D7 1px, transparent 1px); background-size: 50px 50px;"
-      ></div>
+      />
     </div>
     
     <!-- Loading content -->
@@ -18,7 +18,7 @@
       <!-- Logo and brand -->
       <div class="mb-8">
         <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent-primary/10">
-          <img src="~/assets/logo.png" alt="merMDitor" class="h-10 w-10" />
+          <img src="~/assets/logo.png" alt="merMDitor" class="h-10 w-10" >
         </div>
         <h1 class="text-2xl font-semibold text-accent-primary mb-2">merMDitor</h1>
         <p class="text-text-secondary text-sm">Loading your markdown editor...</p>
@@ -30,15 +30,15 @@
           <!-- Outer ring -->
           <div 
             class="absolute inset-0 rounded-full border-2 border-accent-primary/20"
-          ></div>
+          />
           <!-- Spinning ring -->
           <div 
             class="absolute inset-0 rounded-full border-2 border-transparent border-t-accent-primary animate-spin"
-          ></div>
+          />
           <!-- Inner dot -->
           <div 
             class="absolute inset-2 rounded-full bg-accent-primary/30 animate-pulse"
-          ></div>
+          />
         </div>
       </div>
 
@@ -48,15 +48,15 @@
           <div 
             class="h-1 w-1 rounded-full bg-accent-primary animate-bounce"
             style="animation-delay: 0ms"
-          ></div>
+          />
           <div 
             class="h-1 w-1 rounded-full bg-accent-primary animate-bounce"
             style="animation-delay: 150ms"
-          ></div>
+          />
           <div 
             class="h-1 w-1 rounded-full bg-accent-primary animate-bounce"
             style="animation-delay: 300ms"
-          ></div>
+          />
         </div>
         <p class="mt-4">{{ loadingMessage }}</p>
       </div>

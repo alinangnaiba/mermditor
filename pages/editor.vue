@@ -36,7 +36,7 @@
         </template>
         <template #fallback>
           <!-- Empty fallback since we have our custom loading overlay -->
-          <div></div>
+          <div/>
         </template>
       </Suspense>
       
