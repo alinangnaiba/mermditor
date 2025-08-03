@@ -51,7 +51,7 @@
               >
               diagrams and
               <a
-                href="https://katex.org/"
+                href="https://www.latex-project.org/"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="rounded text-text-tertiary underline transition-colors hover:text-text-secondary focus:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
