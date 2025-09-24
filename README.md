@@ -20,17 +20,17 @@ MerMDitor is a modern, keyboard‑friendly, dark‑themed Markdown editor focuse
 
 ## Core Technologies
 
-| Domain | Technology |
-| ------ | ---------- |
-| Framework | Nuxt 3 (Vue 3, Composition API, SFC) |
-| Styling | Tailwind CSS (utility‑first, dark palette) |
-| Markdown Engine | markdown-it + custom plugins (Mermaid, syntax highlight, math) |
-| Diagrams | Mermaid |
-| Syntax Highlighting | highlight.js (language auto‑detection fallback) |
-| Math (optional) | KaTeX |
-| State & Reactivity | Vue refs, computed, watchers, composables |
-| Performance Aids | Lazy resource marking, ResizeObserver, debounced search |
-| UX Enhancements | Transition groups, floating overlay, precise cursor line tracking |
+| Domain              | Technology                                                        |
+| ------------------- | ----------------------------------------------------------------- |
+| Framework           | Nuxt 3 (Vue 3, Composition API, SFC)                              |
+| Styling             | Tailwind CSS (utility‑first, dark palette)                        |
+| Markdown Engine     | markdown-it + custom plugins (Mermaid, syntax highlight, math)    |
+| Diagrams            | Mermaid                                                           |
+| Syntax Highlighting | highlight.js (language auto‑detection fallback)                   |
+| Math (optional)     | KaTeX                                                             |
+| State & Reactivity  | Vue refs, computed, watchers, composables                         |
+| Performance Aids    | Lazy resource marking, ResizeObserver, debounced search           |
+| UX Enhancements     | Transition groups, floating overlay, precise cursor line tracking |
 
 ## Architectural Overview
 

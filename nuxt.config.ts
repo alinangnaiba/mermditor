@@ -1,53 +1,42 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2025-05-15',
+  compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/eslint', '@nuxtjs/tailwindcss', '@nuxtjs/sitemap'],
-  css: ['~/assets/css/tailwind.css', '~/assets/css/global.css'],app: {
+  modules: ['@nuxtjs/tailwindcss', '@nuxt/eslint'],
+  css: ['~/app/assets/main.css'],
+  alias: {
+    '@': '.',
+    '~': '.',
+  },
+  app: {
     head: {
-      title: 'merMDitor - Free Markdown Editor with Mermaid Diagrams & LaTeX Math | No Signup Required',
+      title: 'merMDitor - Markdown Editor with Mermaid & LaTeX',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Free online Markdown editor with live preview, Mermaid diagram support, and LaTeX math rendering. Create flowcharts, sequence diagrams, mathematical equations, and more. Works entirely in your browser with auto-save. No registration required.' },
-        { name: 'keywords', content: 'markdown editor, mermaid diagrams, latex math, katex, online editor, free markdown, flowchart maker, sequence diagram, mathematical equations, live preview, browser editor, math renderer' },
-        { name: 'author', content: 'merMDitor' },
-        { name: 'robots', content: 'index, follow' },
-        // Open Graph
-        { property: 'og:type', content: 'website' },
-        { property: 'og:title', content: 'merMDitor - Free Markdown Editor with Mermaid Diagrams & LaTeX Math' },
-        { property: 'og:description', content: 'Free online Markdown editor with live preview, Mermaid diagram support, and LaTeX math rendering. Create flowcharts, sequence diagrams, mathematical equations, and more. Works entirely in your browser with auto-save.' },
-        { property: 'og:image', content: '/og-image.png' },        { property: 'og:url', content: 'https://www.mermditor.dev' },
-        { property: 'og:site_name', content: 'merMDitor' },
-        // Twitter
-        { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: 'merMDitor - Free Markdown Editor with Mermaid Diagrams & LaTeX Math' },
-        { name: 'twitter:description', content: 'Free online Markdown editor with live preview, Mermaid diagram support, and LaTeX math rendering. No signup required.' },
-        { name: 'twitter:image', content: '/og-image.png' },
-        // Additional SEO
-        { name: 'theme-color', content: '#0f172a' },
-        { name: 'msapplication-TileColor', content: '#0f172a' }
+        {
+          name: 'description',
+          content: 'A simple Markdown editor with Mermaid diagrams and LaTeX math support',
+        },
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'canonical', href: 'https://www.mermditor.dev' },
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-        { href: 'https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap', rel: 'stylesheet' }
-      ]
-    }  },
-  site: {
-    url: 'https://www.mermditor.dev'
+        { rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css' },
+        {
+          rel: 'stylesheet',
+          href: 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css',
+        },
+      ],
+      script: [
+        { src: 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js', defer: true },
+        {
+          src: 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js',
+          defer: true,
+        },
+        {
+          src: 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js',
+          defer: true,
+        },
+      ],
+    },
   },
-  sitemap: {
-    urls: [
-      '/',
-      '/editor', 
-      '/tool-guide',
-      '/feedback'
-    ]
-  },
-  nitro: {
-    preset: 'vercel'
-  }
-});
+})

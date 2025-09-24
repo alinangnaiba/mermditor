@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-gray-900 text-gray-100;
+  }
+
+  body {
+    @apply bg-gray-900 text-gray-100;
+  }
+}
+
+/* CodeMirror dark theme customizations */
+.cm-editor {
+  @apply border-0 bg-deep-black text-gray-100;
+  height: 100% !important;
+}
+
+.cm-focused {
+  @apply outline-none ring-2 ring-blue-500 ring-opacity-50;
+}
+
+.cm-scroller {
+  height: 100% !important;
+}
+
+.cm-content {
+  @apply p-4;
+  min-height: 100% !important;
+}
+
+.cm-gutters {
+  @apply border-r border-gray-600 bg-gray-700;
+}
+
+.cm-lineNumbers .cm-gutterElement {
+  @apply text-gray-400;
+}
+
+/* Scrollbar styling for dark theme */
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded bg-gray-600;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+/* Code block with language labels */
+.code-block-container {
+  @apply my-6 overflow-hidden rounded-lg border border-gray-700;
+}
+
+.code-block-header {
+  @apply border-b border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-gray-300;
+}
+
+.code-block-language {
+  @apply text-gray-200;
+}
+
+.code-block-container pre {
+  @apply m-0 rounded-none border-0;
+}
+
+/* Mermaid diagram styling */
+.mermaid-container {
+  @apply relative my-6 rounded-lg border border-gray-700 bg-gray-800 p-4;
+}
+
+.mermaid-controls {
+  @apply absolute right-2 top-2 z-10 flex space-x-1;
+}
+
+.mermaid-controls button {
+  @apply flex h-8 w-8 items-center justify-center rounded bg-gray-700 text-gray-200 transition-colors hover:bg-gray-600;
+}
+
+.mermaid-controls button svg {
+  @apply h-4 w-4;
+}
+
+.mermaid-viewport {
+  @apply cursor-grab overflow-hidden;
+  width: 100%;
+  height: auto;
+  min-height: 200px;
+}
+
+.mermaid-viewport.dragging {
+  @apply cursor-grabbing;
+}
+
+.mermaid-diagram {
+  transition: transform 0.2s ease;
+  transform-origin: top left;
+}
+
+.mermaid {
+  @apply flex justify-center;
+}
+
+/* Mermaid Modal */
+.mermaid-modal-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75;
+}
+
+.mermaid-modal-content {
+  @apply relative max-h-screen max-w-6xl overflow-auto rounded-lg bg-gray-800 p-6;
+  width: 90vw;
+  height: 90vh;
+}
+
+.mermaid-modal-close {
+  @apply absolute right-4 top-4 h-8 w-8 rounded bg-gray-700 text-lg font-bold text-gray-200 transition-colors hover:bg-gray-600;
+}
+
+/* KaTeX styling */
+.katex-display {
+  @apply my-4 text-center;
+}
+
+.katex {
+  color: #f3f4f6 !important;
+}
+
+/* Table styling for dark theme */
+.prose table {
+  @apply border-gray-700;
+}
+
+.prose th {
+  @apply border-gray-700 bg-gray-800 text-gray-100;
+}
+
+.prose td {
+  @apply border-gray-700 text-gray-200;
+}
+
+/* Code block improvements */
+.prose pre {
+  @apply border border-gray-700 bg-deep-black shadow-lg;
+}
+
+.prose code {
+  @apply rounded bg-gray-800 px-2 py-1 text-gray-100;
+}
+
+/* Remove borders from code inside pre blocks */
+.prose pre code {
+  @apply rounded-none border-0 bg-transparent p-0;
+}
+
+/* Blockquote styling */
+/* .prose blockquote {
+  @apply border-l-primary-500 bg-gray-800 border border-gray-700 shadow-sm;
+} */
+
+/* Fix hydration mismatch - ensure editor toolbar buttons override Mermaid button styles */
+.editor-toolbar-btn {
+  @apply rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white !important;
+}
