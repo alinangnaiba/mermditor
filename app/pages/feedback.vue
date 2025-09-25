@@ -77,7 +77,6 @@
 </template>
 
 <script setup lang="ts">
-// Page-specific SEO meta tags
 useSeoMeta({
   title: 'Feedback & Support - merMDitor | Report Bugs & Suggest Features',
   description:
@@ -93,7 +92,6 @@ useHead({
   link: [{ rel: 'canonical', href: 'https://www.mermditor.dev/feedback' }],
 })
 
-// Structured data for the feedback page
 useHead({
   script: [
     {

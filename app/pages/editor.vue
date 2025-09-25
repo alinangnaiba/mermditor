@@ -13,15 +13,6 @@
       <div class="mx-auto max-w-full px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between">
           <!-- Logo/Icon and Name -->
-          <!-- <NuxtLink
-            to="/"
-            class="flex items-center space-x-4 hover:opacity-80 transition-opacity"
-          >
-            <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <PhFileText :size="20" />
-            </div>
-            <span class="text-xl font-semibold">merMDitor</span>
-          </NuxtLink> -->
           <NuxtLink
             to="/"
             class="flex items-center rounded transition-opacity hover:opacity-80 focus:opacity-80 focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
@@ -172,7 +163,6 @@ useHead({
   },
 })
 
-// Refs
 const isLoading: Ref<boolean> = ref(true) // Re-enable loading screen
 const editorContainer: Ref<HTMLElement | null> = ref(null)
 const previewContainer: Ref<HTMLElement | null> = ref(null)
@@ -188,10 +178,8 @@ const confirmAutosaveOn: Ref<boolean> = ref(false)
 const confirmAutosaveOff: Ref<boolean> = ref(false)
 const confirmClearData: Ref<boolean> = ref(false)
 
-// Editor instance
 const editorViewRef: Ref<EditorView | null> = ref(null)
 
-// Computed properties
 const wordCount = computed<number>(() => {
   return content.value.trim() ? content.value.trim().split(/\s+/).length : 0
 })
@@ -202,7 +190,6 @@ const charCount = computed<number>(() => {
 
 const renderedContent: Ref<string> = ref('')
 
-// Use composables
 const { renderMarkdown, renderMermaidDiagrams, highlightSyntax } = useMarkdownRenderer()
 const actions = useEditorActions(editorViewRef, content, autosave, lastSaved)
 useKeyboardShortcuts(actions)
@@ -212,7 +199,6 @@ watch(
   content,
   async (newContent) => {
     renderedContent.value = await renderMarkdown(newContent)
-    // Wait for DOM update then render Mermaid diagrams and highlight syntax
     await nextTick()
     await renderMermaidDiagrams()
     highlightSyntax()
@@ -222,8 +208,6 @@ watch(
 
 // Methods
 const onLoadingComplete = (): void => {
-  // This will be called if user clicks or loading screen auto-completes
-  // But we'll also hide it automatically after real initialization
   isLoading.value = false
 }
 
@@ -234,8 +218,8 @@ const initEditor = (): void => {
     basicSetup,
     markdown(),
     oneDark,
-    EditorView.lineWrapping, // Enable text wrapping
-    keymap.of([indentWithTab]), // Enable tab key for indentation
+    EditorView.lineWrapping, 
+    keymap.of([indentWithTab]),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         content.value = update.state.doc.toString()
@@ -269,8 +253,6 @@ const initEditor = (): void => {
     parent: editorContainer.value,
   })
 }
-
-// View toggle methods (not moved to composable since they're UI-specific)
 
 const togglePreview = (): void => {
   showPreview.value = !showPreview.value
@@ -324,7 +306,6 @@ const setupScrollSync = (): void => {
   let isEditorScrolling = false
   let isPreviewScrolling = false
 
-  // Editor scroll handler
   const editorScrollHandler = (): void => {
     if (isPreviewScrolling) return
 
@@ -344,7 +325,6 @@ const setupScrollSync = (): void => {
     }, 50)
   }
 
-  // Preview scroll handler
   const previewScrollHandler = (): void => {
     if (isEditorScrolling) return
 
@@ -380,7 +360,6 @@ const loadSettings = (): void => {
   }
 }
 
-// Load saved content
 const loadContent = (): void => {
   const saved = localStorage.getItem('mermditor-content')
   if (saved) {
@@ -408,7 +387,6 @@ watch(autosave, (newValue) => {
   }
 })
 
-// Autosave toggle with confirmation
 const onAutosaveToggle = (checked: boolean): void => {
   pendingAutosaveValue.value = checked
   if (checked) {
@@ -428,7 +406,6 @@ const confirmEnableAutosave = (): void => {
   autosave.value = true
   confirmAutosaveOn.value = false
   pendingAutosaveValue.value = null
-  // Persist setting immediately
   try {
     localStorage.setItem('mermditor-autosave', 'true')
   } catch {
@@ -449,7 +426,6 @@ const confirmDisableAutosave = (): void => {
   }
 }
 
-// Clear Data button
 const onClearStorageClick = (): void => {
   confirmClearData.value = true
 }
@@ -478,11 +454,9 @@ onMounted(async () => {
   await nextTick()
   initEditor()
 
-  // Setup scroll sync after initial render
   setTimeout(() => {
     setupScrollSync()
 
-    // Hide loading screen after everything is initialized
     setTimeout(() => {
       isLoading.value = false
     }, 500) // Small delay to ensure smooth transition
@@ -493,6 +467,4 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
 })
-
-// Keyboard shortcuts are now handled by useKeyboardShortcuts composable
 </script>

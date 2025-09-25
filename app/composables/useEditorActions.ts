@@ -140,7 +140,7 @@ export const useEditorActions = (
 
     editorView.value.dispatch({
       changes: { from, insert: definitionList },
-      selection: { anchor: from, head: from + 4 }, // Select "Term"
+      selection: { anchor: from, head: from + 4 },
     })
 
     editorView.value.focus()
@@ -188,7 +188,6 @@ export const useEditorActions = (
     insertFormat('^', '^')
   }
 
-  // Import/Export functionality
   const importMarkdownFile = (): void => {
     const input = document.createElement('input')
     input.type = 'file'

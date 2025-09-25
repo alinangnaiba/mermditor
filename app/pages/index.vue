@@ -6,16 +6,12 @@
         <div class="flex h-16 items-center justify-between">
           <!-- Logo/Icon -->
           <div class="flex items-center">
-            <!-- <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-              <PhFileText :size="20" />
-            </div> -->
             <NuxtLink
               to="/"
               class="flex items-center rounded transition-opacity hover:opacity-80 focus:opacity-80 focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
             >
-              <img src="../assets/images/logo.png" alt="merMDitor Logo" class="mr-3 h-8" />
+              <img src="../assets/images/logo.png" alt="merMDitor Logo" class="mr-3 h-8"></img>
             </NuxtLink>
-            <!-- <span class="text-xl font-semibold text-accent-primary">merMDitor</span> -->
           </div>
 
           <!-- Navigation -->
@@ -46,7 +42,7 @@
               src="../assets/images/logo.png"
               alt="merMDitor Logo"
               class="mb-4 h-10 sm:h-12 md:mb-0 md:mr-4 md:h-14 lg:h-16"
-            />
+            ></img>
             merMDitor
           </h1>
           <p class="mb-6 text-xl text-text-secondary sm:text-2xl md:text-3xl">
@@ -232,7 +228,6 @@ import {
 } from '@phosphor-icons/vue'
 import type { Component } from 'vue'
 
-// Feature interface
 interface Feature {
   title: string
   description: string
@@ -240,10 +235,8 @@ interface Feature {
   iconBg: string
 }
 
-// Carousel state
 const currentSlide = ref<number>(0)
 
-// Features data organized into slides (4 features per slide)
 const features: Feature[] = [
   {
     title: 'Markdown Support',
@@ -309,7 +302,6 @@ const slides = computed<Feature[][]>(() => {
   return slidesArray
 })
 
-// Carousel methods
 const nextSlide = (): void => {
   if (currentSlide.value < slides.value.length - 1) {
     currentSlide.value++
@@ -326,7 +318,6 @@ const goToSlide = (index: number): void => {
   currentSlide.value = index
 }
 
-// Auto-advance carousel
 let autoAdvanceInterval: ReturnType<typeof setInterval> | null = null
 
 const startAutoAdvance = (): void => {
@@ -336,7 +327,7 @@ const startAutoAdvance = (): void => {
     } else {
       currentSlide.value = 0
     }
-  }, 5000) // Change slide every 5 seconds
+  }, 6000) // Change slide every 6 seconds
 }
 
 const stopAutoAdvance = (): void => {
@@ -346,7 +337,6 @@ const stopAutoAdvance = (): void => {
   }
 }
 
-// Lifecycle
 onMounted(() => {
   startAutoAdvance()
 })

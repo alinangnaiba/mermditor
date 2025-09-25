@@ -3,7 +3,6 @@ import { markedEmoji } from 'marked-emoji'
 import { emojiMapping } from '../utils/emojiMapping'
 import mermaid from 'mermaid'
 
-// Extend Window interface to include KaTeX and Prism
 declare global {
   interface Window {
     katex: {
@@ -50,7 +49,6 @@ export const useMarkdownRenderer = () => {
   let mermaidInitialized: boolean = false
   const mermaidCache = new Map<string, MermaidCache>()
 
-  // Configure marked with comprehensive emoji support
   marked.use(
     markedEmoji({
       emojis: emojiMapping,
@@ -125,10 +123,8 @@ export const useMarkdownRenderer = () => {
 
       // First, process LaTeX so caret/tilde transformations don't affect math
       html = await processLatex(html)
-
       // Process extended markdown syntax after LaTeX has rendered
       html = processExtendedSyntax(html)
-
       // Then, add language labels to remaining code blocks (excluding mermaid which was already processed)
       html = html.replace(
         /<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g,
@@ -203,16 +199,11 @@ export const useMarkdownRenderer = () => {
 
   const processLatex = async (html: string): Promise<string> => {
     if (!import.meta.client) return html
-
-    // Wait for KaTeX to load
     await waitForKatex()
-
     if (window.katex) {
-      // First, preserve code blocks by replacing them with placeholders
       const codeBlocks: string[] = []
       let codeBlockIndex = 0
 
-      // Preserve <pre><code>...</code></pre> blocks
       html = html.replace(/<pre><code[^>]*>[\s\S]*?<\/code><\/pre>/g, (match) => {
         const placeholder = `__CODE_BLOCK_${codeBlockIndex}__`
         codeBlocks[codeBlockIndex] = match
@@ -220,7 +211,6 @@ export const useMarkdownRenderer = () => {
         return placeholder
       })
 
-      // Preserve <code>...</code> inline blocks
       html = html.replace(/<code[^>]*>[\s\S]*?<\/code>/g, (match) => {
         const placeholder = `__CODE_BLOCK_${codeBlockIndex}__`
         codeBlocks[codeBlockIndex] = match
@@ -228,7 +218,6 @@ export const useMarkdownRenderer = () => {
         return placeholder
       })
 
-      // Process display math ($$...$$)
       html = html.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
         try {
           return `<div class="katex-display">${window.katex.renderToString(math.trim(), { displayMode: true, throwOnError: false })}</div>`
@@ -238,7 +227,6 @@ export const useMarkdownRenderer = () => {
         }
       })
 
-      // Process inline math ($...$)
       html = html.replace(/\$([^$\n]+?)\$/g, (match, math) => {
         try {
           return window.katex.renderToString(math.trim(), {
@@ -251,7 +239,6 @@ export const useMarkdownRenderer = () => {
         }
       })
 
-      // Restore code blocks
       for (let i = 0; i < codeBlocks.length; i++) {
         const codeBlock = codeBlocks[i]
         if (codeBlock !== undefined) {
@@ -264,7 +251,6 @@ export const useMarkdownRenderer = () => {
   }
 
   const processExtendedSyntax = (html: string): string => {
-    // Task lists (GitHub-style checkboxes)
     html = html.replace(/^(\s*)-\s+\[([ x])\]\s+(.+)$/gm, (match, indent, checked, text) => {
       const isChecked = checked === 'x'
       return `${indent}<label class="flex items-center space-x-2 text-gray-200">
@@ -316,37 +302,28 @@ export const useMarkdownRenderer = () => {
     for (const element of mermaidElements) {
       const content = element.textContent?.trim() || ''
       const currentContent = element.getAttribute('data-content')
-
-      // Skip if content hasn't changed
       if (currentContent === content && element.hasAttribute('data-processed')) {
         continue
       }
 
       try {
-        // Check cache first
         let cached = mermaidCache.get(content)
 
         if (cached) {
-          // Use cached SVG
           element.innerHTML = cached.svg
           element.id = cached.id
         } else {
-          // Render new diagram
           const id = element.id || 'mermaid-' + Math.random().toString(36).substring(2, 11)
           element.id = id
 
           const { svg } = await mermaid.render(id + '-svg', content)
           element.innerHTML = svg
-
-          // Cache the result
           mermaidCache.set(content, { svg, id })
         }
 
-        // Mark as processed and store content
         element.setAttribute('data-processed', 'true')
         element.setAttribute('data-content', content)
 
-        // Setup controls (this will also restore zoom/pan state if cached)
         setupMermaidControls(element)
       } catch (error) {
         console.error('Mermaid rendering error:', error)
@@ -357,7 +334,6 @@ export const useMarkdownRenderer = () => {
         element.setAttribute('data-processed', 'true')
         element.setAttribute('data-content', content)
 
-        // Cache error state to avoid repeated rendering attempts
         mermaidCache.set(content, { svg: errorHTML, id: element.id })
       }
     }
@@ -374,11 +350,9 @@ export const useMarkdownRenderer = () => {
     const resetBtn = container.querySelector('.mermaid-reset')
     const modalBtn = container.querySelector('.mermaid-modal')
 
-    // Get content to check for cached control state
     const content = mermaidElement.textContent?.trim() || ''
     const cached = mermaidCache.get(content)
 
-    // Initialize or restore zoom/pan state
     let currentZoom = cached?.controls?.zoom || 1
     let panX = cached?.controls?.panX || 0
     let panY = cached?.controls?.panY || 0
@@ -400,7 +374,6 @@ export const useMarkdownRenderer = () => {
       }
     }
 
-    // Apply initial transform if restoring from cache
     updateTransform()
 
     // Zoom controls
@@ -424,7 +397,6 @@ export const useMarkdownRenderer = () => {
       saveControlState()
     })
 
-    // Modal functionality
     modalBtn?.addEventListener('click', () => {
       createMermaidModal(mermaidElement.outerHTML)
     })
@@ -467,27 +439,20 @@ export const useMarkdownRenderer = () => {
         if (viewport) {
           viewport.classList.remove('dragging')
         }
-        saveControlState() // Save pan state when dragging ends
+        saveControlState()
       }
     })
   }
 
   const createMermaidModal = (diagramHTML: string): void => {
-    // Create modal overlay
     const overlay = document.createElement('div')
     overlay.className = 'mermaid-modal-overlay'
-
-    // Create modal content
     const content = document.createElement('div')
     content.className = 'mermaid-modal-content'
-
-    // Add close button
     const closeBtn = document.createElement('button')
     closeBtn.className = 'mermaid-modal-close'
     closeBtn.innerHTML = '×'
     closeBtn.onclick = () => overlay.remove()
-
-    // Add diagram
     const diagramContainer = document.createElement('div')
     diagramContainer.innerHTML = diagramHTML
 
@@ -495,12 +460,10 @@ export const useMarkdownRenderer = () => {
     content.appendChild(diagramContainer)
     overlay.appendChild(content)
 
-    // Close on overlay click
     overlay.onclick = (e) => {
       if (e.target === overlay) overlay.remove()
     }
 
-    // Close on Escape key
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         overlay.remove()
@@ -518,12 +481,9 @@ export const useMarkdownRenderer = () => {
 
   const highlightSyntax = (): void => {
     if (!import.meta.client || !window.Prism) return
-
-    // Find all code blocks that haven't been highlighted yet
     const codeBlocks = document.querySelectorAll('pre code:not(.prism-highlighted)')
 
     codeBlocks.forEach((block) => {
-      // Mark as processed to avoid double highlighting
       block.classList.add('prism-highlighted')
 
       // Apply Prism highlighting
@@ -537,8 +497,6 @@ export const useMarkdownRenderer = () => {
 
     try {
       let html = await marked.parse(String(content))
-
-      // Process extended syntax but skip mermaid and latex for examples
       html = processExtendedSyntax(html)
 
       return html
@@ -561,12 +519,11 @@ export const useMarkdownRenderer = () => {
               throwOnError: false,
             })
           } catch {
-            return _m // fallback to original segment
+            return _m
           }
         })
       }
 
-      // If contains any $$...$$, process blocks by splitting and rendering
       if (/\$\$[\s\S]*?\$\$/.test(latex)) {
         const parts = String(latex)
           .split(/(\$\$[\s\S]*?\$\$)/g)
@@ -585,13 +542,11 @@ export const useMarkdownRenderer = () => {
                 return trimmed
               }
             }
-            // Non-block text may contain inline $...$
             return renderInlineSegment(part)
           })
           .join('')
       }
 
-      // No $$ blocks. If block mode requested, render the entire string as a single block expression
       if (isBlock) {
         try {
           return window.katex.renderToString(String(latex).trim(), {
@@ -603,7 +558,6 @@ export const useMarkdownRenderer = () => {
         }
       }
 
-      // Otherwise, process inline $...$ within the text
       return renderInlineSegment(String(latex))
     } catch {
       return latex

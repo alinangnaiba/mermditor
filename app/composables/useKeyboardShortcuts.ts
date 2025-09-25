@@ -5,7 +5,6 @@ export const useKeyboardShortcuts = (actions: EditorActions) => {
   const handleKeydown = (e: KeyboardEvent): void => {
     if (e.ctrlKey || e.metaKey) {
       switch (e.key) {
-        // Text formatting
         case 'b':
           e.preventDefault()
           actions.insertFormat('**', '**')
@@ -36,8 +35,6 @@ export const useKeyboardShortcuts = (actions: EditorActions) => {
             actions.insertFormat('`', '`') // Ctrl+` for inline code
           }
           break
-
-        // Extended formatting
         case 'h':
           if (e.shiftKey) {
             e.preventDefault()
@@ -62,8 +59,6 @@ export const useKeyboardShortcuts = (actions: EditorActions) => {
             actions.insertDefinitionList() // Ctrl+Shift+D for definition list
           }
           break
-
-        // Subscript/Superscript
         case '=':
           if (e.shiftKey) {
             e.preventDefault()
@@ -76,8 +71,6 @@ export const useKeyboardShortcuts = (actions: EditorActions) => {
             actions.insertSubscript() // Ctrl+Shift+- for subscript
           }
           break
-
-        // Import/Export
         case 'o':
           e.preventDefault()
           actions.importMarkdownFile() // Ctrl+O for open/import
@@ -91,7 +84,6 @@ export const useKeyboardShortcuts = (actions: EditorActions) => {
             actions.saveContent() // Ctrl+S for save
           }
           break
-
         // Headings
         case '1':
           e.preventDefault()

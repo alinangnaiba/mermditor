@@ -1,4 +1,4 @@
-// Complete GitHub emoji shortcode to Unicode mapping
+// GitHub markdown emoji markup shortcode to Unicode mapping
 // Based on https://gist.github.com/rxaviers/7360908
 export const emojiMapping: Record<string, string> = {
   // People

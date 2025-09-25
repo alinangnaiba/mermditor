@@ -35,7 +35,6 @@
     <!-- Main Content -->
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <h1 class="mb-8 text-4xl font-bold">Tool Guide</h1>
-
       <!-- Navigation Tabs -->
       <div class="mb-8 border-b border-gray-700">
         <nav class="-mb-px flex space-x-8">
@@ -54,11 +53,9 @@
           </button>
         </nav>
       </div>
-
       <!-- Tab Content -->
       <GuideContent :active-tab="activeTab" />
     </div>
-
     <!-- Footer -->
     <AppFooter />
   </div>
