@@ -938,27 +938,34 @@ $$\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{bmatrix}$$"
       <h3 class="mb-4 text-xl font-semibold text-white">Editor Features</h3>
       <ul class="space-y-3 text-gray-300">
         <li>
-          • <strong class="text-white">Line Numbers:</strong> Automatically displayed for easy
-          navigation
+          •
+          <strong class="text-white">Line Numbers:</strong>
+          Automatically displayed for easy navigation
         </li>
         <li>
-          • <strong class="text-white">Auto-completion:</strong> Markdown syntax suggestions as you
-          type
+          •
+          <strong class="text-white">Auto-completion:</strong>
+          Markdown syntax suggestions as you type
         </li>
         <li>
-          • <strong class="text-white">Find & Replace:</strong> Use Ctrl+F to search within your
-          document
+          •
+          <strong class="text-white">Find & Replace:</strong>
+          Use Ctrl+F to search within your document
         </li>
         <li>
-          • <strong class="text-white">Syntax Highlighting:</strong> Markdown, Mermaid, and LaTeX
-          syntax are highlighted
+          •
+          <strong class="text-white">Syntax Highlighting:</strong>
+          Markdown, Mermaid, and LaTeX syntax are highlighted
         </li>
         <li>
-          • <strong class="text-white">Live Preview:</strong> See your rendered content in real-time
+          •
+          <strong class="text-white">Live Preview:</strong>
+          See your rendered content in real-time
         </li>
         <li>
-          • <strong class="text-white">Synchronized Scrolling:</strong> Editor and preview panes
-          scroll together
+          •
+          <strong class="text-white">Synchronized Scrolling:</strong>
+          Editor and preview panes scroll together
         </li>
       </ul>
 
@@ -972,52 +979,52 @@ $$\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{bmatrix}$$"
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import type { Ref } from 'vue'
-import MarkdownExample from './MarkdownExample.vue'
-import LatexExample from './LatexExample.vue'
-import MermaidExample from './MermaidExample.vue'
+  import { ref } from 'vue'
+  import type { Ref } from 'vue'
+  import MarkdownExample from './MarkdownExample.vue'
+  import LatexExample from './LatexExample.vue'
+  import MermaidExample from './MermaidExample.vue'
 
-interface Props {
-  activeTab?: string
-}
+  interface Props {
+    activeTab?: string
+  }
 
-const props = withDefaults(defineProps<Props>(), {
-  activeTab: 'markdown',
-})
+  const props = withDefaults(defineProps<Props>(), {
+    activeTab: 'markdown',
+  })
 
-// Use the activeTab prop to show/hide sections
-const currentActiveTab = computed(() => props.activeTab)
+  // Use the activeTab prop to show/hide sections
+  const currentActiveTab = computed(() => props.activeTab)
 
-// Section navigation for each tab
-const activeMarkdownSection: Ref<string> = ref('headers')
-const activeMermaidSection: Ref<string> = ref('flowchart')
-const activeLatexSection: Ref<string> = ref('inline')
+  // Section navigation for each tab
+  const activeMarkdownSection: Ref<string> = ref('headers')
+  const activeMermaidSection: Ref<string> = ref('flowchart')
+  const activeLatexSection: Ref<string> = ref('inline')
 
-const markdownSections = [
-  { id: 'headers', name: 'Headers' },
-  { id: 'formatting', name: 'Text Formatting' },
-  { id: 'lists', name: 'Lists' },
-  { id: 'links', name: 'Links & Images' },
-  { id: 'code', name: 'Code' },
-  { id: 'tables', name: 'Tables' },
-  { id: 'blockquotes', name: 'Blockquotes' },
-  { id: 'extended', name: 'Extended Syntax' },
-]
+  const markdownSections = [
+    { id: 'headers', name: 'Headers' },
+    { id: 'formatting', name: 'Text Formatting' },
+    { id: 'lists', name: 'Lists' },
+    { id: 'links', name: 'Links & Images' },
+    { id: 'code', name: 'Code' },
+    { id: 'tables', name: 'Tables' },
+    { id: 'blockquotes', name: 'Blockquotes' },
+    { id: 'extended', name: 'Extended Syntax' },
+  ]
 
-const mermaidSections = [
-  { id: 'flowchart', name: 'Flowchart' },
-  { id: 'sequence', name: 'Sequence Diagram' },
-  { id: 'class', name: 'Class Diagram' },
-  { id: 'gantt', name: 'Gantt Chart' },
-]
+  const mermaidSections = [
+    { id: 'flowchart', name: 'Flowchart' },
+    { id: 'sequence', name: 'Sequence Diagram' },
+    { id: 'class', name: 'Class Diagram' },
+    { id: 'gantt', name: 'Gantt Chart' },
+  ]
 
-const latexSections = [
-  { id: 'inline', name: 'Inline Math' },
-  { id: 'block', name: 'Block Math' },
-  { id: 'symbols', name: 'Symbols' },
-  { id: 'operators', name: 'Operators' },
-  { id: 'fractions', name: 'Fractions & Roots' },
-  { id: 'matrices', name: 'Matrices' },
-]
+  const latexSections = [
+    { id: 'inline', name: 'Inline Math' },
+    { id: 'block', name: 'Block Math' },
+    { id: 'symbols', name: 'Symbols' },
+    { id: 'operators', name: 'Operators' },
+    { id: 'fractions', name: 'Fractions & Roots' },
+    { id: 'matrices', name: 'Matrices' },
+  ]
 </script>

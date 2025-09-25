@@ -1,5 +1,5 @@
 <template>
-  <div class="relative">
+  <div class="relative" data-emoji-picker>
     <button
       class="rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
       title="Insert Emoji"
@@ -97,8 +97,9 @@
       <!-- Shortcode info -->
       <div class="mt-4 border-t border-gray-600 pt-4">
         <p class="text-xs text-gray-400">
-          Tip: You can also type <code class="rounded bg-gray-800 px-1">:emoji_name:</code> in the
-          editor
+          Tip: You can also type
+          <code class="rounded bg-gray-800 px-1">:emoji_name:</code>
+          in the editor
         </p>
       </div>
     </div>
@@ -106,419 +107,420 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { PhSmiley, PhMagnifyingGlass, PhX } from '@phosphor-icons/vue'
-import { emojiMapping } from '../utils/emojiMapping'
+  import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+  import { PhSmiley, PhMagnifyingGlass, PhX } from '@phosphor-icons/vue'
+  import { emojiMapping } from '../utils/emojiMapping'
 
-interface EmojiItem {
-  shortcode: string
-  unicode: string
-}
-
-interface Props {
-  actions: {
-    // eslint-disable-next-line no-unused-vars
-    insertEmoji: (emojiText: string) => void
+  interface EmojiItem {
+    shortcode: string
+    unicode: string
   }
-}
 
-const props = defineProps<Props>()
-
-const showEmojiPicker = ref(false)
-const searchQuery = ref('')
-const activeCategory = ref('Faces')
-const searchInput = ref<HTMLInputElement>()
-
-const RECENT_EMOJIS_KEY = 'mermditor-recent-emojis'
-
-const allEmojis = computed(() => {
-  return Object.entries(emojiMapping).map(([shortcode, unicode]) => ({
-    shortcode,
-    unicode,
-  }))
-})
-
-const emojiCategories = [
-  {
-    name: 'Faces',
-    icon: '😀',
-    keywords: [
-      'smile',
-      'happy',
-      'joy',
-      'laugh',
-      'grin',
-      'blush',
-      'wink',
-      'cry',
-      'angry',
-      'love',
-      'heart_eyes',
-      'kiss',
-      'tongue',
-      'sleeping',
-      'mask',
-      'sunglasses',
-      'confused',
-      'worried',
-      'relieved',
-      'satisfied',
-      'neutral',
-      'expressionless',
-      'unamused',
-      'sweat',
-      'weary',
-      'pensive',
-      'disappointed',
-      'confounded',
-      'fearful',
-      'persevere',
-      'sob',
-      'astonished',
-      'scream',
-      'tired',
-      'rage',
-      'triumph',
-      'sleepy',
-      'yum',
-      'dizzy',
-      'imp',
-      'smiling_imp',
-      'innocent',
-      'alien',
-    ],
-  },
-  {
-    name: 'Gestures',
-    icon: '👍',
-    keywords: [
-      'thumbsup',
-      'thumbsdown',
-      'ok_hand',
-      'punch',
-      'fist',
-      'wave',
-      'hand',
-      'raised_hand',
-      'open_hands',
-      'point_up',
-      'point_down',
-      'point_left',
-      'point_right',
-      'raised_hands',
-      'pray',
-      'clap',
-      'muscle',
-      'metal',
-      'walking',
-      'runner',
-      'running',
-      'dancer',
-      'dancers',
-    ],
-  },
-  {
-    name: 'Hearts',
-    icon: '❤️',
-    keywords: [
-      'heart',
-      'yellow_heart',
-      'blue_heart',
-      'purple_heart',
-      'green_heart',
-      'broken_heart',
-      'heartbeat',
-      'heartpulse',
-      'two_hearts',
-      'revolving_hearts',
-      'cupid',
-      'sparkling_heart',
-    ],
-  },
-  {
-    name: 'Animals',
-    icon: '🐶',
-    keywords: [
-      'dog',
-      'cat',
-      'mouse',
-      'hamster',
-      'rabbit',
-      'wolf',
-      'frog',
-      'tiger',
-      'koala',
-      'bear',
-      'pig',
-      'cow',
-      'boar',
-      'monkey',
-      'horse',
-      'camel',
-      'sheep',
-      'elephant',
-      'panda',
-      'snake',
-      'bird',
-      'chicken',
-      'penguin',
-      'turtle',
-      'bug',
-      'honeybee',
-      'ant',
-      'beetle',
-      'snail',
-      'octopus',
-      'fish',
-      'whale',
-      'dolphin',
-    ],
-  },
-  {
-    name: 'Food',
-    icon: '🍎',
-    keywords: [
-      'apple',
-      'orange',
-      'banana',
-      'grapes',
-      'strawberry',
-      'pizza',
-      'hamburger',
-      'fries',
-      'coffee',
-      'tea',
-      'beer',
-      'wine',
-      'cake',
-      'cookie',
-      'chocolate',
-      'candy',
-      'bread',
-      'egg',
-      'meat',
-      'rice',
-      'sushi',
-      'ice_cream',
-    ],
-  },
-  {
-    name: 'Activities',
-    icon: '⚽',
-    keywords: [
-      'soccer',
-      'basketball',
-      'football',
-      'tennis',
-      'golf',
-      'baseball',
-      'rugby',
-      'bowling',
-      'ski',
-      'snowboard',
-      'swimming',
-      'surfing',
-      'bike',
-      'car',
-      'airplane',
-      'rocket',
-      'guitar',
-      'music',
-      'art',
-      'microphone',
-      'headphones',
-    ],
-  },
-  {
-    name: 'Travel',
-    icon: '🚗',
-    keywords: [
-      'car',
-      'bus',
-      'train',
-      'airplane',
-      'rocket',
-      'ship',
-      'bike',
-      'taxi',
-      'police_car',
-      'fire_engine',
-      'ambulance',
-      'truck',
-      'hotel',
-      'house',
-      'office',
-      'school',
-      'hospital',
-      'bank',
-      'church',
-    ],
-  },
-  {
-    name: 'Symbols',
-    icon: '⭐',
-    keywords: [
-      'star',
-      'fire',
-      'sparkles',
-      'boom',
-      'star2',
-      'dizzy',
-      'anger',
-      'exclamation',
-      'question',
-      'zzz',
-      'dash',
-      'sweat_drops',
-      'notes',
-      'musical_note',
-      'heavy_check_mark',
-      'x',
-      'heavy_plus_sign',
-      'heavy_minus_sign',
-      'heavy_multiplication_x',
-      'heavy_division_sign',
-      'arrow_up',
-      'arrow_down',
-      'arrow_left',
-      'arrow_right',
-      'warning',
-      'information_source',
-    ],
-  },
-]
-
-const getEmojisByCategory = (categoryName: string) => {
-  const category = emojiCategories.find((c) => c.name === categoryName)
-  if (!category) return []
-
-  return allEmojis.value.filter((emoji) =>
-    category.keywords.some((keyword) => emoji.shortcode.includes(keyword))
-  )
-}
-
-const recentEmojis = ref<EmojiItem[]>([])
-
-const loadRecentEmojis = () => {
-  try {
-    const stored = localStorage.getItem(RECENT_EMOJIS_KEY)
-    if (stored) {
-      recentEmojis.value = JSON.parse(stored)
+  interface Props {
+    actions: {
+      // eslint-disable-next-line no-unused-vars
+      insertEmoji: (emojiText: string) => void
     }
-  } catch {
-    // Silently fail if localStorage is not available
-  }
-}
-
-const saveRecentEmojis = () => {
-  try {
-    localStorage.setItem(RECENT_EMOJIS_KEY, JSON.stringify(recentEmojis.value))
-  } catch {
-    // Silently fail if localStorage is not available
-  }
-}
-
-const addToRecent = (emoji: EmojiItem) => {
-  const existingIndex = recentEmojis.value.findIndex((e) => e.shortcode === emoji.shortcode)
-  if (existingIndex !== -1) {
-    recentEmojis.value.splice(existingIndex, 1)
   }
 
-  recentEmojis.value.unshift(emoji)
+  const props = defineProps<Props>()
 
-  if (recentEmojis.value.length > 24) {
-    recentEmojis.value = recentEmojis.value.slice(0, 24)
-  }
+  const showEmojiPicker = ref(false)
+  const searchQuery = ref('')
+  const activeCategory = ref('Faces')
+  const searchInput = ref<HTMLInputElement>()
 
-  saveRecentEmojis()
-}
+  const RECENT_EMOJIS_KEY = 'mermditor-recent-emojis'
 
-const searchResults = computed(() => {
-  if (!searchQuery.value.trim()) return []
+  const allEmojis = computed(() => {
+    return Object.entries(emojiMapping).map(([shortcode, unicode]) => ({
+      shortcode,
+      unicode,
+    }))
+  })
 
-  const query = searchQuery.value.toLowerCase().trim()
+  const emojiCategories = [
+    {
+      name: 'Faces',
+      icon: '😀',
+      keywords: [
+        'smile',
+        'happy',
+        'joy',
+        'laugh',
+        'grin',
+        'blush',
+        'wink',
+        'cry',
+        'angry',
+        'love',
+        'heart_eyes',
+        'kiss',
+        'tongue',
+        'sleeping',
+        'mask',
+        'sunglasses',
+        'confused',
+        'worried',
+        'relieved',
+        'satisfied',
+        'neutral',
+        'expressionless',
+        'unamused',
+        'sweat',
+        'weary',
+        'pensive',
+        'disappointed',
+        'confounded',
+        'fearful',
+        'persevere',
+        'sob',
+        'astonished',
+        'scream',
+        'tired',
+        'rage',
+        'triumph',
+        'sleepy',
+        'yum',
+        'dizzy',
+        'imp',
+        'smiling_imp',
+        'innocent',
+        'alien',
+      ],
+    },
+    {
+      name: 'Gestures',
+      icon: '👍',
+      keywords: [
+        'thumbsup',
+        'thumbsdown',
+        'ok_hand',
+        'punch',
+        'fist',
+        'wave',
+        'hand',
+        'raised_hand',
+        'open_hands',
+        'point_up',
+        'point_down',
+        'point_left',
+        'point_right',
+        'raised_hands',
+        'pray',
+        'clap',
+        'muscle',
+        'metal',
+        'walking',
+        'runner',
+        'running',
+        'dancer',
+        'dancers',
+      ],
+    },
+    {
+      name: 'Hearts',
+      icon: '❤️',
+      keywords: [
+        'heart',
+        'yellow_heart',
+        'blue_heart',
+        'purple_heart',
+        'green_heart',
+        'broken_heart',
+        'heartbeat',
+        'heartpulse',
+        'two_hearts',
+        'revolving_hearts',
+        'cupid',
+        'sparkling_heart',
+      ],
+    },
+    {
+      name: 'Animals',
+      icon: '🐶',
+      keywords: [
+        'dog',
+        'cat',
+        'mouse',
+        'hamster',
+        'rabbit',
+        'wolf',
+        'frog',
+        'tiger',
+        'koala',
+        'bear',
+        'pig',
+        'cow',
+        'boar',
+        'monkey',
+        'horse',
+        'camel',
+        'sheep',
+        'elephant',
+        'panda',
+        'snake',
+        'bird',
+        'chicken',
+        'penguin',
+        'turtle',
+        'bug',
+        'honeybee',
+        'ant',
+        'beetle',
+        'snail',
+        'octopus',
+        'fish',
+        'whale',
+        'dolphin',
+      ],
+    },
+    {
+      name: 'Food',
+      icon: '🍎',
+      keywords: [
+        'apple',
+        'orange',
+        'banana',
+        'grapes',
+        'strawberry',
+        'pizza',
+        'hamburger',
+        'fries',
+        'coffee',
+        'tea',
+        'beer',
+        'wine',
+        'cake',
+        'cookie',
+        'chocolate',
+        'candy',
+        'bread',
+        'egg',
+        'meat',
+        'rice',
+        'sushi',
+        'ice_cream',
+      ],
+    },
+    {
+      name: 'Activities',
+      icon: '⚽',
+      keywords: [
+        'soccer',
+        'basketball',
+        'football',
+        'tennis',
+        'golf',
+        'baseball',
+        'rugby',
+        'bowling',
+        'ski',
+        'snowboard',
+        'swimming',
+        'surfing',
+        'bike',
+        'car',
+        'airplane',
+        'rocket',
+        'guitar',
+        'music',
+        'art',
+        'microphone',
+        'headphones',
+      ],
+    },
+    {
+      name: 'Travel',
+      icon: '🚗',
+      keywords: [
+        'car',
+        'bus',
+        'train',
+        'airplane',
+        'rocket',
+        'ship',
+        'bike',
+        'taxi',
+        'police_car',
+        'fire_engine',
+        'ambulance',
+        'truck',
+        'hotel',
+        'house',
+        'office',
+        'school',
+        'hospital',
+        'bank',
+        'church',
+      ],
+    },
+    {
+      name: 'Symbols',
+      icon: '⭐',
+      keywords: [
+        'star',
+        'fire',
+        'sparkles',
+        'boom',
+        'star2',
+        'dizzy',
+        'anger',
+        'exclamation',
+        'question',
+        'zzz',
+        'dash',
+        'sweat_drops',
+        'notes',
+        'musical_note',
+        'heavy_check_mark',
+        'x',
+        'heavy_plus_sign',
+        'heavy_minus_sign',
+        'heavy_multiplication_x',
+        'heavy_division_sign',
+        'arrow_up',
+        'arrow_down',
+        'arrow_left',
+        'arrow_right',
+        'warning',
+        'information_source',
+      ],
+    },
+  ]
 
-  return allEmojis.value
-    .filter(
-      (emoji) => emoji.shortcode.toLowerCase().includes(query) || emoji.unicode.includes(query)
+  const getEmojisByCategory = (categoryName: string) => {
+    const category = emojiCategories.find((c) => c.name === categoryName)
+    if (!category) return []
+
+    return allEmojis.value.filter((emoji) =>
+      category.keywords.some((keyword) => emoji.shortcode.includes(keyword))
     )
-    .slice(0, 64)
-})
-
-const displayedEmojis = computed(() => {
-  if (searchQuery.value.trim()) {
-    return searchResults.value
   }
 
-  return getEmojisByCategory(activeCategory.value)
-})
+  const recentEmojis = ref<EmojiItem[]>([])
 
-const toggleEmojiPicker = async () => {
-  showEmojiPicker.value = !showEmojiPicker.value
+  const loadRecentEmojis = () => {
+    try {
+      const stored = localStorage.getItem(RECENT_EMOJIS_KEY)
+      if (stored) {
+        recentEmojis.value = JSON.parse(stored)
+      }
+    } catch {
+      // Silently fail if localStorage is not available
+    }
+  }
 
-  if (showEmojiPicker.value) {
-    await nextTick()
+  const saveRecentEmojis = () => {
+    try {
+      localStorage.setItem(RECENT_EMOJIS_KEY, JSON.stringify(recentEmojis.value))
+    } catch {
+      // Silently fail if localStorage is not available
+    }
+  }
+
+  const addToRecent = (emoji: EmojiItem) => {
+    const existingIndex = recentEmojis.value.findIndex((e) => e.shortcode === emoji.shortcode)
+    if (existingIndex !== -1) {
+      recentEmojis.value.splice(existingIndex, 1)
+    }
+
+    recentEmojis.value.unshift(emoji)
+
+    if (recentEmojis.value.length > 24) {
+      recentEmojis.value = recentEmojis.value.slice(0, 24)
+    }
+
+    saveRecentEmojis()
+  }
+
+  const searchResults = computed(() => {
+    if (!searchQuery.value.trim()) return []
+
+    const query = searchQuery.value.toLowerCase().trim()
+
+    return allEmojis.value
+      .filter(
+        (emoji) => emoji.shortcode.toLowerCase().includes(query) || emoji.unicode.includes(query)
+      )
+      .slice(0, 64)
+  })
+
+  const displayedEmojis = computed(() => {
+    if (searchQuery.value.trim()) {
+      return searchResults.value
+    }
+
+    return getEmojisByCategory(activeCategory.value)
+  })
+
+  const toggleEmojiPicker = async () => {
+    showEmojiPicker.value = !showEmojiPicker.value
+
+    if (showEmojiPicker.value) {
+      await nextTick()
+      searchInput.value?.focus()
+    }
+  }
+
+  const setActiveCategory = (categoryName: string) => {
+    activeCategory.value = categoryName
+  }
+
+  const clearSearch = () => {
+    searchQuery.value = ''
     searchInput.value?.focus()
   }
-}
 
-const setActiveCategory = (categoryName: string) => {
-  activeCategory.value = categoryName
-}
-
-const clearSearch = () => {
-  searchQuery.value = ''
-  searchInput.value?.focus()
-}
-
-const insertEmoji = (emoji: EmojiItem) => {
-  props.actions.insertEmoji(`:${emoji.shortcode}:`)
-  addToRecent(emoji)
-  showEmojiPicker.value = false
-}
-
-const handleClickOutside = (e: MouseEvent) => {
-  const target = e.target as HTMLElement
-  if (!target.closest('.relative')) {
+  const insertEmoji = (emoji: EmojiItem) => {
+    props.actions.insertEmoji(`:${emoji.shortcode}:`)
+    addToRecent(emoji)
     showEmojiPicker.value = false
   }
-}
 
-onMounted(() => {
-  loadRecentEmojis()
-  document.addEventListener('click', handleClickOutside)
-})
+  const handleClickOutside = (e: MouseEvent) => {
+    const target = e.target as HTMLElement
+    const emojiPickerContainer = target.closest('[data-emoji-picker]')
+    if (!emojiPickerContainer && showEmojiPicker.value) {
+      showEmojiPicker.value = false
+    }
+  }
 
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
+  onMounted(() => {
+    loadRecentEmojis()
+    document.addEventListener('click', handleClickOutside)
+  })
+
+  onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside)
+  })
 </script>
 
 <style scoped>
-/* Custom scrollbar styles */
-.scrollbar-thin {
-  scrollbar-width: thin;
-}
+  /* Custom scrollbar styles */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
 
-.scrollbar-thumb-gray-600::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+  .scrollbar-thumb-gray-600::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
 
-.scrollbar-thumb-gray-600::-webkit-scrollbar-track {
-  background: transparent;
-}
+  .scrollbar-thumb-gray-600::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
-  background-color: #4b5563;
-  border-radius: 3px;
-}
+  .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+    background-color: #4b5563;
+    border-radius: 3px;
+  }
 
-.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb:hover {
-  background-color: #6b7280;
-}
+  .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb:hover {
+    background-color: #6b7280;
+  }
 
-code {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-}
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
 </style>

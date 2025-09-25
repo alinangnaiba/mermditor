@@ -16,18 +16,21 @@
           <NuxtLink
             to="/"
             class="rounded px-2 py-1 text-text-secondary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-            >Home</NuxtLink
           >
+            Home
+          </NuxtLink>
           <NuxtLink
             to="/editor"
             class="rounded px-2 py-1 text-text-secondary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-            >Editor</NuxtLink
           >
+            Editor
+          </NuxtLink>
           <NuxtLink
             to="/guide"
             class="rounded px-2 py-1 text-text-secondary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-            >Tool Guide</NuxtLink
           >
+            Tool Guide
+          </NuxtLink>
         </nav>
       </div>
     </header>
@@ -48,20 +51,20 @@
           <h2 class="mb-3 text-lg font-semibold text-accent-primary">📝 Feedback Guidelines</h2>
           <ul class="space-y-2 text-sm text-text-secondary">
             <li>
-              <strong class="text-text-primary">Bug Reports:</strong> Include steps to reproduce,
-              expected vs actual behavior
+              <strong class="text-text-primary">Bug Reports:</strong>
+              Include steps to reproduce, expected vs actual behavior
             </li>
             <li>
-              <strong class="text-text-primary">Feature Requests:</strong> Describe the problem
-              you're trying to solve
+              <strong class="text-text-primary">Feature Requests:</strong>
+              Describe the problem you're trying to solve
             </li>
             <li>
-              <strong class="text-text-primary">Improvements:</strong> Suggest enhancements to
-              existing functionality
+              <strong class="text-text-primary">Improvements:</strong>
+              Suggest enhancements to existing functionality
             </li>
             <li>
-              <strong class="text-text-primary">Questions:</strong> Ask about usage, features, or
-              technical aspects
+              <strong class="text-text-primary">Questions:</strong>
+              Ask about usage, features, or technical aspects
             </li>
           </ul>
         </div>
@@ -77,34 +80,34 @@
 </template>
 
 <script setup lang="ts">
-useSeoMeta({
-  title: 'Feedback & Support - merMDitor | Report Bugs & Suggest Features',
-  description:
-    'Share your feedback, report bugs, or suggest improvements for merMDitor. Help us make the best Markdown and Mermaid diagram editor.',
-  ogTitle: 'Feedback & Support - merMDitor',
-  ogDescription: 'Share your feedback, report bugs, or suggest improvements for merMDitor.',
-  ogUrl: 'https://www.mermditor.dev/feedback',
-  twitterTitle: 'Feedback & Support - merMDitor',
-  twitterDescription: 'Share your feedback, report bugs, or suggest improvements for merMDitor.',
-})
+  useSeoMeta({
+    title: 'Feedback & Support - merMDitor | Report Bugs & Suggest Features',
+    description:
+      'Share your feedback, report bugs, or suggest improvements for merMDitor. Help us make the best Markdown and Mermaid diagram editor.',
+    ogTitle: 'Feedback & Support - merMDitor',
+    ogDescription: 'Share your feedback, report bugs, or suggest improvements for merMDitor.',
+    ogUrl: 'https://www.mermditor.dev/feedback',
+    twitterTitle: 'Feedback & Support - merMDitor',
+    twitterDescription: 'Share your feedback, report bugs, or suggest improvements for merMDitor.',
+  })
 
-useHead({
-  link: [{ rel: 'canonical', href: 'https://www.mermditor.dev/feedback' }],
-})
+  useHead({
+    link: [{ rel: 'canonical', href: 'https://www.mermditor.dev/feedback' }],
+  })
 
-useHead({
-  script: [
-    {
-      type: 'application/ld+json',
-      innerHTML: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'ContactPage',
-        name: 'merMDitor Feedback & Support',
-        description:
-          'Feedback and support page for merMDitor - Markdown and Mermaid diagram editor',
-        url: 'https://www.mermditor.dev/feedback',
-      }),
-    },
-  ],
-})
+  useHead({
+    script: [
+      {
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'ContactPage',
+          name: 'merMDitor Feedback & Support',
+          description:
+            'Feedback and support page for merMDitor - Markdown and Mermaid diagram editor',
+          url: 'https://www.mermditor.dev/feedback',
+        }),
+      },
+    ],
+  })
 </script>

@@ -40,24 +40,24 @@
 </template>
 
 <script setup lang="ts">
-import { PhX } from '@phosphor-icons/vue'
+  import { PhX } from '@phosphor-icons/vue'
 
-interface Props {
-  isOpen: boolean
-  title?: string
-  message: string
-  confirmText?: string
-  cancelText?: string
-}
+  interface Props {
+    isOpen: boolean
+    title?: string
+    message: string
+    confirmText?: string
+    cancelText?: string
+  }
 
-withDefaults(defineProps<Props>(), {
-  title: 'Please confirm',
-  confirmText: 'Confirm',
-  cancelText: 'Cancel',
-})
+  withDefaults(defineProps<Props>(), {
+    title: 'Please confirm',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+  })
 
-const emit = defineEmits<{
-  confirm: []
-  cancel: []
-}>()
+  const emit = defineEmits<{
+    confirm: []
+    cancel: []
+  }>()
 </script>

@@ -69,124 +69,124 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { PhCheckCircle, PhSpinner, PhCircle } from '@phosphor-icons/vue'
+  import { ref, computed, onMounted, onUnmounted } from 'vue'
+  import { PhCheckCircle, PhSpinner, PhCircle } from '@phosphor-icons/vue'
 
-interface LoadingStep {
-  id: string
-  label: string
-  completed: boolean
-  active: boolean
-}
+  interface LoadingStep {
+    id: string
+    label: string
+    completed: boolean
+    active: boolean
+  }
 
-interface Props {
-  show?: boolean
-}
+  interface Props {
+    show?: boolean
+  }
 
-const props = withDefaults(defineProps<Props>(), {
-  show: true,
-})
+  const props = withDefaults(defineProps<Props>(), {
+    show: true,
+  })
 
-const emit = defineEmits<{
-  'loading-complete': []
-}>()
+  const emit = defineEmits<{
+    'loading-complete': []
+  }>()
 
-const internalShow = ref(true)
-const progress = ref(0)
+  const internalShow = ref(true)
+  const progress = ref(0)
 
-const loadingSteps = ref<LoadingStep[]>([
-  { id: 'dependencies', label: 'Loading dependencies...', completed: false, active: true },
-  { id: 'editor', label: 'Initializing editor...', completed: false, active: false },
-  { id: 'markdown', label: 'Setting up markdown renderer...', completed: false, active: false },
-  { id: 'mermaid', label: 'Loading Mermaid diagrams...', completed: false, active: false },
-  { id: 'ready', label: 'Ready to edit!', completed: false, active: false },
-])
+  const loadingSteps = ref<LoadingStep[]>([
+    { id: 'dependencies', label: 'Loading dependencies...', completed: false, active: true },
+    { id: 'editor', label: 'Initializing editor...', completed: false, active: false },
+    { id: 'markdown', label: 'Setting up markdown renderer...', completed: false, active: false },
+    { id: 'mermaid', label: 'Loading Mermaid diagrams...', completed: false, active: false },
+    { id: 'ready', label: 'Ready to edit!', completed: false, active: false },
+  ])
 
-const loadingText = computed(() => {
-  const activeStep = loadingSteps.value.find((step) => step.active)
-  return activeStep ? activeStep.label : 'Loading...'
-})
+  const loadingText = computed(() => {
+    const activeStep = loadingSteps.value.find((step) => step.active)
+    return activeStep ? activeStep.label : 'Loading...'
+  })
 
-const formattedProgress = computed(() => {
-  return progress.value.toFixed(2)
-})
+  const formattedProgress = computed(() => {
+    return progress.value.toFixed(2)
+  })
 
-let progressInterval: ReturnType<typeof setInterval> | null = null
-let stepInterval: ReturnType<typeof setTimeout> | null = null
+  let progressInterval: ReturnType<typeof setInterval> | null = null
+  let stepInterval: ReturnType<typeof setTimeout> | null = null
 
-const simulateLoading = () => {
-  progressInterval = setInterval(() => {
-    if (progress.value < 100) {
-      const delta = Math.random() * 25
-      const next = Math.min(100, Math.round((progress.value + delta) * 100) / 100)
-      progress.value = next
-    }
-  }, 100)
+  const simulateLoading = () => {
+    progressInterval = setInterval(() => {
+      if (progress.value < 100) {
+        const delta = Math.random() * 25
+        const next = Math.min(100, Math.round((progress.value + delta) * 100) / 100)
+        progress.value = next
+      }
+    }, 100)
 
-  const stepTimings = [300, 200, 200, 200, 100]
+    const stepTimings = [300, 200, 200, 200, 100]
 
-  stepTimings.forEach((timing, index) => {
-    stepInterval = setTimeout(
-      () => {
-        const steps = loadingSteps.value
+    stepTimings.forEach((timing, index) => {
+      stepInterval = setTimeout(
+        () => {
+          const steps = loadingSteps.value
 
-        if (index > 0 && steps[index - 1]) {
-          steps[index - 1]!.completed = true
-          steps[index - 1]!.active = false
-        }
+          if (index > 0 && steps[index - 1]) {
+            steps[index - 1]!.completed = true
+            steps[index - 1]!.active = false
+          }
 
-        if (index < steps.length && steps[index]) {
-          steps[index].active = true
+          if (index < steps.length && steps[index]) {
+            steps[index].active = true
 
-          if (index === steps.length - 1) {
-            setTimeout(() => {
-              if (steps[index]) {
-                steps[index].completed = true
-                steps[index].active = false
-              }
-              progress.value = 100
-
+            if (index === steps.length - 1) {
               setTimeout(() => {
-                internalShow.value = false
+                if (steps[index]) {
+                  steps[index].completed = true
+                  steps[index].active = false
+                }
+                progress.value = 100
 
                 setTimeout(() => {
-                  emit('loading-complete')
-                }, 500) // Match transition duration
-              }, 200)
-            }, timing)
+                  internalShow.value = false
+
+                  setTimeout(() => {
+                    emit('loading-complete')
+                  }, 500) // Match transition duration
+                }, 200)
+              }, timing)
+            }
           }
-        }
-      },
-      stepTimings.slice(0, index + 1).reduce((sum, time) => sum + time, 0)
-    )
-  })
-}
-
-onMounted(() => {
-  if (props.show) {
-    simulateLoading()
+        },
+        stepTimings.slice(0, index + 1).reduce((sum, time) => sum + time, 0)
+      )
+    })
   }
-})
 
-onUnmounted(() => {
-  if (progressInterval) clearInterval(progressInterval)
-  if (stepInterval) clearTimeout(stepInterval)
-})
+  onMounted(() => {
+    if (props.show) {
+      simulateLoading()
+    }
+  })
+
+  onUnmounted(() => {
+    if (progressInterval) clearInterval(progressInterval)
+    if (stepInterval) clearTimeout(stepInterval)
+  })
 </script>
 
 <style scoped>
-@keyframes bounce {
-  0%,
-  80%,
-  100% {
-    transform: translateY(0);
+  @keyframes bounce {
+    0%,
+    80%,
+    100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-10px);
+    }
   }
-  40% {
-    transform: translateY(-10px);
-  }
-}
 
-.animate-bounce {
-  animation: bounce 1s infinite;
-}
+  .animate-bounce {
+    animation: bounce 1s infinite;
+  }
 </style>

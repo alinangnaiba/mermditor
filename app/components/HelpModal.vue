@@ -47,32 +47,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { PhX } from '@phosphor-icons/vue'
-import GuideContent from './GuideContent.vue'
+  import { ref } from 'vue'
+  import { PhX } from '@phosphor-icons/vue'
+  import GuideContent from './GuideContent.vue'
 
-interface Tab {
-  id: string
-  name: string
-}
+  interface Tab {
+    id: string
+    name: string
+  }
 
-interface Props {
-  isOpen: boolean
-}
+  interface Props {
+    isOpen: boolean
+  }
 
-defineProps<Props>()
-const emit = defineEmits(['close'])
+  defineProps<Props>()
+  const emit = defineEmits(['close'])
 
-const activeTab = ref('markdown')
+  const activeTab = ref('markdown')
 
-const tabs: Tab[] = [
-  { id: 'markdown', name: 'Markdown' },
-  { id: 'mermaid', name: 'Mermaid' },
-  { id: 'latex', name: 'LaTeX' },
-  { id: 'shortcuts', name: 'Shortcuts' },
-]
+  const tabs: Tab[] = [
+    { id: 'markdown', name: 'Markdown' },
+    { id: 'mermaid', name: 'Mermaid' },
+    { id: 'latex', name: 'LaTeX' },
+    { id: 'shortcuts', name: 'Shortcuts' },
+  ]
 
-const closeModal = () => {
-  emit('close')
-}
+  const closeModal = () => {
+    emit('close')
+  }
 </script>

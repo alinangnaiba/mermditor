@@ -10,7 +10,7 @@
               to="/"
               class="flex items-center rounded transition-opacity hover:opacity-80 focus:opacity-80 focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
             >
-              <img src="../assets/images/logo.png" alt="merMDitor Logo" class="mr-3 h-8"></img>
+              <img src="../assets/images/logo.png" alt="merMDitor Logo" class="mr-3 h-8" />
             </NuxtLink>
           </div>
 
@@ -42,7 +42,7 @@
               src="../assets/images/logo.png"
               alt="merMDitor Logo"
               class="mb-4 h-10 sm:h-12 md:mb-0 md:mr-4 md:h-14 lg:h-16"
-            ></img>
+            />
             merMDitor
           </h1>
           <p class="mb-6 text-xl text-text-secondary sm:text-2xl md:text-3xl">
@@ -52,16 +52,18 @@
               target="_blank"
               rel="noopener noreferrer"
               class="rounded text-text-tertiary underline transition-colors hover:text-text-secondary focus:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-              >Mermaid</a
             >
+              Mermaid
+            </a>
             diagrams and
             <a
               href="https://www.latex-project.org/"
               target="_blank"
               rel="noopener noreferrer"
               class="rounded text-text-tertiary underline transition-colors hover:text-text-secondary focus:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-              >LaTeX</a
             >
+              LaTeX
+            </a>
             math support
           </p>
           <p class="mb-12 text-lg leading-relaxed text-text-tertiary">
@@ -210,138 +212,138 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import {
-  PhFileText,
-  PhNotePencil,
-  PhTreeStructure,
-  PhFunction,
-  PhBookOpen,
-  PhNotebook,
-  PhGraduationCap,
-  PhEye,
-  PhDownloadSimple,
-  PhCurrencyDollar,
-  PhCaretLeft,
-  PhCaretRight,
-  PhExport,
-} from '@phosphor-icons/vue'
-import type { Component } from 'vue'
+  import { ref, computed, onMounted, onUnmounted } from 'vue'
+  import {
+    PhFileText,
+    PhNotePencil,
+    PhTreeStructure,
+    PhFunction,
+    PhBookOpen,
+    PhNotebook,
+    PhGraduationCap,
+    PhEye,
+    PhDownloadSimple,
+    PhCurrencyDollar,
+    PhCaretLeft,
+    PhCaretRight,
+    PhExport,
+  } from '@phosphor-icons/vue'
+  import type { Component } from 'vue'
 
-interface Feature {
-  title: string
-  description: string
-  icon: Component
-  iconBg: string
-}
-
-const currentSlide = ref<number>(0)
-
-const features: Feature[] = [
-  {
-    title: 'Markdown Support',
-    description:
-      'Full Markdown support with live preview, syntax highlighting, and formatting shortcuts.',
-    icon: PhNotePencil,
-    iconBg: 'bg-blue-500',
-  },
-  {
-    title: 'Mermaid Diagrams',
-    description: 'Create beautiful flowcharts, sequence diagrams, and more with Mermaid syntax.',
-    icon: PhTreeStructure,
-    iconBg: 'bg-green-500',
-  },
-  {
-    title: 'LaTeX Math',
-    description: 'Write complex mathematical expressions and formulas using LaTeX syntax.',
-    icon: PhFunction,
-    iconBg: 'bg-purple-500',
-  },
-  {
-    title: 'Live Preview',
-    description:
-      'Split-pane view with instant preview. See exactly how your markdown will look while you write.',
-    icon: PhEye,
-    iconBg: 'bg-indigo-500',
-  },
-  {
-    title: 'Auto-save',
-    description:
-      'Your work is automatically saved to browser local storage. No accounts, no data sent anywhere.',
-    icon: PhDownloadSimple,
-    iconBg: 'bg-orange-500',
-  },
-  {
-    title: 'Free to use',
-    description: 'No registration, no payments, no limits. Just open it and start writing.',
-    icon: PhCurrencyDollar,
-    iconBg: 'bg-red-500',
-  },
-  {
-    title: 'Built-in help',
-    description:
-      'Quick reference for Markdown, Mermaid, and LaTeX syntax available when you need it.',
-    icon: PhFileText,
-    iconBg: 'bg-cyan-500',
-  },
-  {
-    title: 'Import & Export',
-    description:
-      'Import existing .md files from your device or export your work as Markdown files.',
-    icon: PhExport,
-    iconBg: 'bg-teal-500',
-  },
-]
-
-// Organize features into slides (4 per slide)
-const slides = computed<Feature[][]>(() => {
-  const slidesArray: Feature[][] = []
-  for (let i = 0; i < features.length; i += 4) {
-    slidesArray.push(features.slice(i, i + 4))
+  interface Feature {
+    title: string
+    description: string
+    icon: Component
+    iconBg: string
   }
-  return slidesArray
-})
 
-const nextSlide = (): void => {
-  if (currentSlide.value < slides.value.length - 1) {
-    currentSlide.value++
-  }
-}
+  const currentSlide = ref<number>(0)
 
-const previousSlide = (): void => {
-  if (currentSlide.value > 0) {
-    currentSlide.value--
-  }
-}
+  const features: Feature[] = [
+    {
+      title: 'Markdown Support',
+      description:
+        'Full Markdown support with live preview, syntax highlighting, and formatting shortcuts.',
+      icon: PhNotePencil,
+      iconBg: 'bg-blue-500',
+    },
+    {
+      title: 'Mermaid Diagrams',
+      description: 'Create beautiful flowcharts, sequence diagrams, and more with Mermaid syntax.',
+      icon: PhTreeStructure,
+      iconBg: 'bg-green-500',
+    },
+    {
+      title: 'LaTeX Math',
+      description: 'Write complex mathematical expressions and formulas using LaTeX syntax.',
+      icon: PhFunction,
+      iconBg: 'bg-purple-500',
+    },
+    {
+      title: 'Live Preview',
+      description:
+        'Split-pane view with instant preview. See exactly how your markdown will look while you write.',
+      icon: PhEye,
+      iconBg: 'bg-indigo-500',
+    },
+    {
+      title: 'Auto-save',
+      description:
+        'Your work is automatically saved to browser local storage. No accounts, no data sent anywhere.',
+      icon: PhDownloadSimple,
+      iconBg: 'bg-orange-500',
+    },
+    {
+      title: 'Free to use',
+      description: 'No registration, no payments, no limits. Just open it and start writing.',
+      icon: PhCurrencyDollar,
+      iconBg: 'bg-red-500',
+    },
+    {
+      title: 'Built-in help',
+      description:
+        'Quick reference for Markdown, Mermaid, and LaTeX syntax available when you need it.',
+      icon: PhFileText,
+      iconBg: 'bg-cyan-500',
+    },
+    {
+      title: 'Import & Export',
+      description:
+        'Import existing .md files from your device or export your work as Markdown files.',
+      icon: PhExport,
+      iconBg: 'bg-teal-500',
+    },
+  ]
 
-const goToSlide = (index: number): void => {
-  currentSlide.value = index
-}
-
-let autoAdvanceInterval: ReturnType<typeof setInterval> | null = null
-
-const startAutoAdvance = (): void => {
-  autoAdvanceInterval = setInterval(() => {
-    if (currentSlide.value < slides.value.length - 1) {
-      nextSlide()
-    } else {
-      currentSlide.value = 0
+  // Organize features into slides (4 per slide)
+  const slides = computed<Feature[][]>(() => {
+    const slidesArray: Feature[][] = []
+    for (let i = 0; i < features.length; i += 4) {
+      slidesArray.push(features.slice(i, i + 4))
     }
-  }, 6000) // Change slide every 6 seconds
-}
+    return slidesArray
+  })
 
-const stopAutoAdvance = (): void => {
-  if (autoAdvanceInterval) {
-    clearInterval(autoAdvanceInterval)
-    autoAdvanceInterval = null
+  const nextSlide = (): void => {
+    if (currentSlide.value < slides.value.length - 1) {
+      currentSlide.value++
+    }
   }
-}
 
-onMounted(() => {
-  startAutoAdvance()
-})
+  const previousSlide = (): void => {
+    if (currentSlide.value > 0) {
+      currentSlide.value--
+    }
+  }
 
-onUnmounted(() => {
-  stopAutoAdvance()
-})
+  const goToSlide = (index: number): void => {
+    currentSlide.value = index
+  }
+
+  let autoAdvanceInterval: ReturnType<typeof setInterval> | null = null
+
+  const startAutoAdvance = (): void => {
+    autoAdvanceInterval = setInterval(() => {
+      if (currentSlide.value < slides.value.length - 1) {
+        nextSlide()
+      } else {
+        currentSlide.value = 0
+      }
+    }, 6000) // Change slide every 6 seconds
+  }
+
+  const stopAutoAdvance = (): void => {
+    if (autoAdvanceInterval) {
+      clearInterval(autoAdvanceInterval)
+      autoAdvanceInterval = null
+    }
+  }
+
+  onMounted(() => {
+    startAutoAdvance()
+  })
+
+  onUnmounted(() => {
+    stopAutoAdvance()
+  })
 </script>
