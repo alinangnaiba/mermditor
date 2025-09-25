@@ -147,8 +147,8 @@
                     ><code>[Link text](https://example.com)
 [Link with title](https://example.com "Optional title")
 
-![Alt text](https://via.placeholder.com/150)
-![Alt text](https://via.placeholder.com/150 "Optional title")</code></pre>
+![Alt text](https://picsum.photos/id/40/200/300)
+![Alt text](https://picsum.photos/id/40/200/300 "Here kitty kitty")</code></pre>
                   </div>
                   <div>
                     <h4 class="mb-3 font-medium text-gray-300">Preview</h4>
@@ -157,8 +157,8 @@
                         content='[Link text](https://example.com)
 [Link with title](https://example.com "Optional title")
 
-![Alt text](https://via.placeholder.com/150)
-![Alt text](https://via.placeholder.com/150 "Optional title")'
+![Alt text](https://picsum.photos/id/40/200/300)
+![Alt text](https://picsum.photos/id/40/200/300 "Here kitty kitty")'
                       />
                     </div>
                   </div>
