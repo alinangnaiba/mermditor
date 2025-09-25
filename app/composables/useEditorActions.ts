@@ -53,6 +53,7 @@ export const useEditorActions = (
 
     editorView.value.dispatch({
       changes: { from: line.from, to: line.from, insert: headingText },
+      selection: { anchor: line.from + headingText.length, head: line.from + headingText.length },
     })
 
     editorView.value.focus()
@@ -235,9 +236,11 @@ export const useEditorActions = (
 
   const saveContent = (): void => {
     try {
-      localStorage.setItem('mermditor-content', content.value)
-      localStorage.setItem('mermditor-autosave', autosave.value.toString())
-      lastSaved.value = new Date().toLocaleTimeString()
+      if (autosave.value) {
+        localStorage.setItem('mermditor-content', content.value)
+        localStorage.setItem('mermditor-autosave', autosave.value.toString())
+        lastSaved.value = new Date().toLocaleTimeString()
+      }
     } catch (error) {
       console.error('Error saving content:', error)
     }

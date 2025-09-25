@@ -127,8 +127,8 @@
     />
     <ConfirmModal
       :is-open="confirmClearData"
-      title="Clear saved data?"
-      message="This will delete your saved content from this browser."
+      title="Clear data?"
+      message="This will delete your saved content from this browser and turn autosave off."
       confirm-text="Clear Data"
       cancel-text="Cancel"
       @confirm="confirmClearDataNow"
@@ -163,7 +163,7 @@ useHead({
   },
 })
 
-const isLoading: Ref<boolean> = ref(true) // Re-enable loading screen
+const isLoading: Ref<boolean> = ref(true)
 const editorContainer: Ref<HTMLElement | null> = ref(null)
 const previewContainer: Ref<HTMLElement | null> = ref(null)
 const content: Ref<string> = ref('')
@@ -179,6 +179,8 @@ const confirmAutosaveOff: Ref<boolean> = ref(false)
 const confirmClearData: Ref<boolean> = ref(false)
 
 const editorViewRef: Ref<EditorView | null> = ref(null)
+const customEditorWidth: Ref<number | null> = ref(null)
+const customPreviewWidth: Ref<number | null> = ref(null)
 
 const wordCount = computed<number>(() => {
   return content.value.trim() ? content.value.trim().split(/\s+/).length : 0
@@ -259,12 +261,35 @@ const togglePreview = (): void => {
   if (!showPreview.value && !showEditor.value) {
     showEditor.value = true
   }
+  nextTick(() => applyPaneWidths())
 }
 
 const toggleEditor = (): void => {
   showEditor.value = !showEditor.value
   if (!showEditor.value && !showPreview.value) {
     showPreview.value = true
+  }
+  nextTick(() => applyPaneWidths())
+}
+
+const applyPaneWidths = (): void => {
+  const editorPane = document.querySelector('.editor-pane') as HTMLElement
+  const previewPane = document.querySelector('.preview-pane') as HTMLElement
+
+  if (showEditor.value && showPreview.value && customEditorWidth.value !== null && customPreviewWidth.value !== null) {
+    if (editorPane) {
+      editorPane.style.width = `${customEditorWidth.value}%`
+    }
+    if (previewPane) {
+      previewPane.style.width = `${customPreviewWidth.value}%`
+    }
+  } else {
+    if (editorPane) {
+      editorPane.style.width = ''
+    }
+    if (previewPane) {
+      previewPane.style.width = ''
+    }
   }
 }
 
@@ -294,6 +319,13 @@ const startResize = (e: MouseEvent): void => {
   const handleMouseUp = (): void => {
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
+
+    const editorPercent = (editorPane.offsetWidth / containerWidth) * 100
+    const previewPercent = 100 - editorPercent
+
+    customEditorWidth.value = editorPercent
+    customPreviewWidth.value = previewPercent
+    savePaneWidths()
   }
 
   document.addEventListener('mousemove', handleMouseMove)
@@ -367,6 +399,33 @@ const loadContent = (): void => {
   }
 }
 
+const savePaneWidths = (): void => {
+  try {
+    if (customEditorWidth.value !== null && customPreviewWidth.value !== null) {
+      localStorage.setItem('mermditor-editor-width', customEditorWidth.value.toString())
+      localStorage.setItem('mermditor-preview-width', customPreviewWidth.value.toString())
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error saving pane widths:', error)
+  }
+}
+
+const loadPaneWidths = (): void => {
+  try {
+    const savedEditorWidth = localStorage.getItem('mermditor-editor-width')
+    const savedPreviewWidth = localStorage.getItem('mermditor-preview-width')
+
+    if (savedEditorWidth && savedPreviewWidth) {
+      customEditorWidth.value = parseFloat(savedEditorWidth)
+      customPreviewWidth.value = parseFloat(savedPreviewWidth)
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error loading pane widths:', error)
+  }
+}
+
 // Watchers
 let saveTimeout: ReturnType<typeof setTimeout> | null = null
 
@@ -433,6 +492,11 @@ const onClearStorageClick = (): void => {
 const confirmClearDataNow = (): void => {
   try {
     localStorage.removeItem('mermditor-content')
+    localStorage.removeItem('mermditor-autosave')
+    localStorage.removeItem('mermditor-editor-width')
+    localStorage.removeItem('mermditor-preview-width')
+    localStorage.removeItem('mermditor-recent-emojis')
+    autosave.value = false
   } catch {
     /* ignore storage errors */
   }
@@ -451,11 +515,13 @@ onMounted(async () => {
 
   loadContent()
   loadSettings()
+  loadPaneWidths()
   await nextTick()
   initEditor()
 
   setTimeout(() => {
     setupScrollSync()
+    applyPaneWidths()
 
     setTimeout(() => {
       isLoading.value = false

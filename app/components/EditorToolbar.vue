@@ -219,7 +219,7 @@
 
         <button
           class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-          title="Clear saved data"
+          title="Clear data"
           @click="$emit('clear-storage')"
         >
           <PhBroom :size="16" />
