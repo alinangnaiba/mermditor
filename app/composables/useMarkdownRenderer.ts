@@ -11,6 +11,7 @@ declare global {
         options?: {
           displayMode?: boolean
           throwOnError?: boolean
+          strict?: boolean
         }
       ) => string
     }
@@ -220,7 +221,7 @@ export const useMarkdownRenderer = () => {
 
       html = html.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
         try {
-          return `<div class="katex-display">${window.katex.renderToString(math.trim(), { displayMode: true, throwOnError: false })}</div>`
+          return `<div class="katex-display">${window.katex.renderToString(math.trim(), { displayMode: true, throwOnError: false, strict: false })}</div>`
         } catch (error) {
           console.error('LaTeX display math error:', error)
           return `<div class="text-red-400">LaTeX Error: ${match}</div>`
@@ -232,6 +233,7 @@ export const useMarkdownRenderer = () => {
           return window.katex.renderToString(math.trim(), {
             displayMode: false,
             throwOnError: false,
+            strict: false,
           })
         } catch (error) {
           console.error('LaTeX inline math error:', error)
@@ -517,6 +519,7 @@ export const useMarkdownRenderer = () => {
             return window.katex.renderToString(String(expr).trim(), {
               displayMode: false,
               throwOnError: false,
+              strict: false,
             })
           } catch {
             return _m
@@ -537,6 +540,7 @@ export const useMarkdownRenderer = () => {
                 return window.katex.renderToString(content.trim(), {
                   displayMode: true,
                   throwOnError: false,
+                  strict: false,
                 })
               } catch {
                 return trimmed
@@ -552,6 +556,7 @@ export const useMarkdownRenderer = () => {
           return window.katex.renderToString(String(latex).trim(), {
             displayMode: true,
             throwOnError: false,
+            strict: false,
           })
         } catch {
           return String(latex)
