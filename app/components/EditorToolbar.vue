@@ -61,42 +61,42 @@
             title="Heading 1 (Ctrl+1)"
             @click="actions.insertHeading(1)"
           >
-            H1
+            <PhTextHOne :size="16" />
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
             title="Heading 2 (Ctrl+2)"
             @click="actions.insertHeading(2)"
           >
-            H2
+            <PhTextHTwo :size="16" />
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
             title="Heading 3 (Ctrl+3)"
             @click="actions.insertHeading(3)"
           >
-            H3
+            <PhTextHThree :size="16" />
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
             title="Heading 4 (Ctrl+4)"
             @click="actions.insertHeading(4)"
           >
-            H4
+            <PhTextHFour :size="16" />
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
             title="Heading 5 (Ctrl+5)"
             @click="actions.insertHeading(5)"
           >
-            H5
+            <PhTextHFive :size="16" />
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
             title="Heading 6 (Ctrl+6)"
             @click="actions.insertHeading(6)"
           >
-            H6
+            <PhTextHSix :size="16" />
           </button>
 
           <div class="mx-2 h-6 w-px bg-gray-700" />
@@ -254,6 +254,12 @@ import {
   PhDownloadSimple,
   PhExport,
   PhTextB,
+  PhTextHOne,
+  PhTextHTwo,
+  PhTextHThree,
+  PhTextHFour,
+  PhTextHFive,
+  PhTextHSix,
   PhTextItalic,
   PhTextStrikethrough,
   PhHighlighter,
