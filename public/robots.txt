@@ -1,6 +1,2 @@
 User-Agent: *
-Allow: /
-Disallow: /api/
-
-# Sitemap
-Sitemap: https://www.mermditor.dev/sitemap.xml
+Disallow:
