@@ -67,8 +67,8 @@
 </template>
 
 <style scoped>
-footer {
-  position: relative;
-  width: 100%;
-}
+  footer {
+    position: relative;
+    width: 100%;
+  }
 </style>

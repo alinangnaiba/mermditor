@@ -70,6 +70,7 @@ export const useEditorActions = (
 
     editorView.value.dispatch({
       changes: { from: line.from, to: line.from, insert: listText },
+      selection: { anchor: line.from + listText.length, head: line.from + listText.length },
     })
 
     editorView.value.focus()
@@ -103,6 +104,10 @@ export const useEditorActions = (
 
     editorView.value.dispatch({
       changes: { from: line.from, to: line.from, insert: blockquoteText },
+      selection: {
+        anchor: line.from + blockquoteText.length,
+        head: line.from + blockquoteText.length,
+      },
     })
 
     editorView.value.focus()
@@ -158,6 +163,7 @@ export const useEditorActions = (
 
     editorView.value.dispatch({
       changes: { from: line.from, to: line.from, insert: taskText },
+      selection: { anchor: line.from + taskText.length, head: line.from + taskText.length },
     })
 
     editorView.value.focus()

@@ -170,3 +170,34 @@
 .editor-toolbar-btn {
   @apply rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white !important;
 }
+
+/* Footnote styling for marked-footnote plugin */
+.footnotes {
+  @apply mt-8 border-t border-gray-600 pt-4;
+}
+
+.footnotes ol {
+  @apply list-decimal pl-6 text-sm text-gray-400;
+}
+
+.footnotes li {
+  @apply mb-2;
+}
+
+.footnotes p {
+  @apply m-0;
+}
+
+.footnotes a {
+  @apply text-blue-400 transition-colors hover:text-blue-300;
+}
+
+/* Footnote reference styling */
+a[href^='#fn:'] {
+  @apply text-blue-400 no-underline transition-colors hover:text-blue-300;
+}
+
+/* Footnote back reference styling */
+a[href^='#fnref:'] {
+  @apply ml-2 text-xs text-blue-400 no-underline transition-colors hover:text-blue-300;
+}

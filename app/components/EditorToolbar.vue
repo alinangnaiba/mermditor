@@ -248,66 +248,66 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
-import type { EditorActions } from '../composables/useEditorActions'
-import {
-  PhDownloadSimple,
-  PhExport,
-  PhTextB,
-  PhTextHOne,
-  PhTextHTwo,
-  PhTextHThree,
-  PhTextHFour,
-  PhTextHFive,
-  PhTextHSix,
-  PhTextItalic,
-  PhTextStrikethrough,
-  PhHighlighter,
-  PhCode,
-  PhCodeBlock,
-  PhListBullets,
-  PhListNumbers,
-  PhCheckSquare,
-  PhQuotes,
-  PhNotePencil,
-  PhListMagnifyingGlass,
-  PhTextSubscript,
-  PhTextSuperscript,
-  PhLink,
-  PhImage,
-  PhEye,
-  PhEyeSlash,
-  PhPencilSimple,
-  PhPencilSimpleSlash,
-  PhBroom,
-} from '@phosphor-icons/vue'
-import EmojiPicker from './EmojiPicker.vue'
+  import { onMounted, onUnmounted } from 'vue'
+  import type { EditorActions } from '../composables/useEditorActions'
+  import {
+    PhDownloadSimple,
+    PhExport,
+    PhTextB,
+    PhTextHOne,
+    PhTextHTwo,
+    PhTextHThree,
+    PhTextHFour,
+    PhTextHFive,
+    PhTextHSix,
+    PhTextItalic,
+    PhTextStrikethrough,
+    PhHighlighter,
+    PhCode,
+    PhCodeBlock,
+    PhListBullets,
+    PhListNumbers,
+    PhCheckSquare,
+    PhQuotes,
+    PhNotePencil,
+    PhListMagnifyingGlass,
+    PhTextSubscript,
+    PhTextSuperscript,
+    PhLink,
+    PhImage,
+    PhEye,
+    PhEyeSlash,
+    PhPencilSimple,
+    PhPencilSimpleSlash,
+    PhBroom,
+  } from '@phosphor-icons/vue'
+  import EmojiPicker from './EmojiPicker.vue'
 
-interface Props {
-  actions: EditorActions
-  autosave: boolean
-  showPreview: boolean
-  showEditor: boolean
-}
+  interface Props {
+    actions: EditorActions
+    autosave: boolean
+    showPreview: boolean
+    showEditor: boolean
+  }
 
-defineProps<Props>()
+  defineProps<Props>()
 
-defineEmits<{
-  'toggle-preview': []
-  'toggle-editor': []
-  'update:autosave': [value: boolean]
-  'clear-storage': []
-}>()
+  defineEmits<{
+    'toggle-preview': []
+    'toggle-editor': []
+    'update:autosave': [value: boolean]
+    'clear-storage': []
+  }>()
 
-const handleClickOutside = () => {
-  // Add any global click outside logic here if needed
-}
+  const handleClickOutside = () => {
+    // Add any global click outside logic here if needed
+  }
 
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
+  onMounted(() => {
+    document.addEventListener('click', handleClickOutside)
+  })
 
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
+  onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside)
+  })
 </script>

@@ -62,21 +62,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import type { Ref } from 'vue'
-import GuideContent from '../components/GuideContent.vue'
+  import { ref } from 'vue'
+  import type { Ref } from 'vue'
+  import GuideContent from '../components/GuideContent.vue'
 
-interface Tab {
-  id: string
-  name: string
-}
+  interface Tab {
+    id: string
+    name: string
+  }
 
-const activeTab: Ref<string> = ref('markdown')
+  const activeTab: Ref<string> = ref('markdown')
 
-const tabs: Tab[] = [
-  { id: 'markdown', name: 'Markdown' },
-  { id: 'mermaid', name: 'Mermaid' },
-  { id: 'latex', name: 'LaTeX' },
-  { id: 'shortcuts', name: 'Shortcuts' },
-]
+  const tabs: Tab[] = [
+    { id: 'markdown', name: 'Markdown' },
+    { id: 'mermaid', name: 'Mermaid' },
+    { id: 'latex', name: 'LaTeX' },
+    { id: 'shortcuts', name: 'Shortcuts' },
+  ]
 </script>

@@ -15,10 +15,11 @@ export default withNuxt(
       // Vue rules
       'vue/multi-word-component-names': 'off',
       'vue/no-v-html': 'off',
+      'vue/html-self-closing': 'off',
       'vue/no-parsing-error': 'off', // Temporarily disable for HTML entity issues
 
       // General JavaScript/TypeScript rules
-      'no-console': 'warn',
+      'no-console': 'off',
       'no-debugger': 'error',
       'prefer-const': 'error',
       'no-var': 'error',
