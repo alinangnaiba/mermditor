@@ -62,14 +62,12 @@
             @click="actions.insertHeading(1)"
           >
             <PhTextHOne :size="16" />
-            <PhTextHOne :size="16" />
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
             title="Heading 2 (Ctrl+2)"
             @click="actions.insertHeading(2)"
           >
-            <PhTextHTwo :size="16" />
             <PhTextHTwo :size="16" />
           </button>
           <button
@@ -78,14 +76,12 @@
             @click="actions.insertHeading(3)"
           >
             <PhTextHThree :size="16" />
-            <PhTextHThree :size="16" />
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
             title="Heading 4 (Ctrl+4)"
             @click="actions.insertHeading(4)"
           >
-            <PhTextHFour :size="16" />
             <PhTextHFour :size="16" />
           </button>
           <button
@@ -94,14 +90,12 @@
             @click="actions.insertHeading(5)"
           >
             <PhTextHFive :size="16" />
-            <PhTextHFive :size="16" />
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
             title="Heading 6 (Ctrl+6)"
             @click="actions.insertHeading(6)"
           >
-            <PhTextHSix :size="16" />
             <PhTextHSix :size="16" />
           </button>
 
