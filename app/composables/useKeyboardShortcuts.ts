@@ -4,18 +4,21 @@ import type { EditorActions } from './useEditorActions'
 export const useKeyboardShortcuts = (actions: EditorActions) => {
   const handleKeydown = (e: KeyboardEvent): void => {
     if (e.ctrlKey || e.metaKey) {
-      switch (e.key) {
+      const key = e.key.toLowerCase()
+
+      switch (key) {
         case 'b':
           e.preventDefault()
           actions.insertFormat('**', '**')
           break
         case 'i':
+          e.preventDefault()
+          actions.insertFormat('*', '*') // Ctrl+I for italic
+          break
+        case 'm':
           if (e.shiftKey) {
             e.preventDefault()
-            actions.insertFormat('![](', ')') // Ctrl+Shift+I for image
-          } else {
-            e.preventDefault()
-            actions.insertFormat('*', '*') // Ctrl+I for italic
+            actions.insertFormat('![](', ')') // Ctrl+Shift+M for image
           }
           break
         case 'k':
@@ -27,12 +30,24 @@ export const useKeyboardShortcuts = (actions: EditorActions) => {
           actions.insertBlockquote() // Ctrl+Q for blockquote
           break
         case '`':
+          e.preventDefault()
+            actions.insertFormat('`', '`') // Ctrl+` for inline code
+          break
+        case '~':
+          // Handle Ctrl+Shift+~ 
+          e.preventDefault()
+          actions.insertCodeBlock()
+          break
+        case 'u':
           if (e.shiftKey) {
             e.preventDefault()
-            actions.insertCodeBlock() // Ctrl+Shift+` for code block
-          } else {
+            actions.insertSuperscript() // Ctrl+Shift+U for superscript
+          }
+          break
+        case 'y':
+          if (e.shiftKey) {
             e.preventDefault()
-            actions.insertFormat('`', '`') // Ctrl+` for inline code
+            actions.insertSubscript() // Ctrl+Shift+Y for subscript
           }
           break
         case 'h':
@@ -41,34 +56,16 @@ export const useKeyboardShortcuts = (actions: EditorActions) => {
             actions.insertHighlight() // Ctrl+Shift+H for highlight
           }
           break
-        case 'f':
+        case 'l':
           if (e.shiftKey) {
             e.preventDefault()
-            actions.insertFootnote() // Ctrl+Shift+F for footnote
+            actions.insertTaskList() // Ctrl+Shift+L for task list
           }
           break
-        case 't':
+        case 'r':
           if (e.shiftKey) {
             e.preventDefault()
-            actions.insertTaskList() // Ctrl+Shift+T for task list
-          }
-          break
-        case 'd':
-          if (e.shiftKey) {
-            e.preventDefault()
-            actions.insertDefinitionList() // Ctrl+Shift+D for definition list
-          }
-          break
-        case '=':
-          if (e.shiftKey) {
-            e.preventDefault()
-            actions.insertSuperscript() // Ctrl+Shift+= for superscript
-          }
-          break
-        case '-':
-          if (e.shiftKey) {
-            e.preventDefault()
-            actions.insertSubscript() // Ctrl+Shift+- for subscript
+            actions.insertDefinitionList() // Ctrl+Shift+R for definition list
           }
           break
         case 'o':
@@ -78,13 +75,13 @@ export const useKeyboardShortcuts = (actions: EditorActions) => {
         case 's':
           if (e.shiftKey) {
             e.preventDefault()
-            actions.exportMarkdownFile() // Ctrl+Shift+S for save as/export
+            actions.exportMarkdownFile() // Ctrl+Shift+S for export
           } else {
             e.preventDefault()
             actions.saveContent() // Ctrl+S for save
           }
           break
-        // Headings
+        // Headings - these are safe as they're numbers
         case '1':
           e.preventDefault()
           actions.insertHeading(1)

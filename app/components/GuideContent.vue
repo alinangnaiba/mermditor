@@ -785,8 +785,8 @@ $$\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{bmatrix}$$"
         </div>
         <div class="rounded-lg bg-gray-800 p-4">
           <div class="flex items-center justify-between">
-            <span class="text-gray-200">Strikethrough</span>
-            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + S</kbd>
+            <span class="text-gray-200">Highlight</span>
+            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + H</kbd>
           </div>
         </div>
         <div class="rounded-lg bg-gray-800 p-4">
@@ -797,26 +797,8 @@ $$\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{bmatrix}$$"
         </div>
         <div class="rounded-lg bg-gray-800 p-4">
           <div class="flex items-center justify-between">
-            <span class="text-gray-200">Unordered List</span>
-            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + U</kbd>
-          </div>
-        </div>
-        <div class="rounded-lg bg-gray-800 p-4">
-          <div class="flex items-center justify-between">
-            <span class="text-gray-200">Ordered List</span>
-            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + O</kbd>
-          </div>
-        </div>
-        <div class="rounded-lg bg-gray-800 p-4">
-          <div class="flex items-center justify-between">
             <span class="text-gray-200">Code Block</span>
-            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + C</kbd>
-          </div>
-        </div>
-        <div class="rounded-lg bg-gray-800 p-4">
-          <div class="flex items-center justify-between">
-            <span class="text-gray-200">Table</span>
-            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + T</kbd>
+            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + ~</kbd>
           </div>
         </div>
       </div>
@@ -868,13 +850,13 @@ $$\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{bmatrix}$$"
         <div class="rounded-lg bg-gray-800 p-4">
           <div class="flex items-center justify-between">
             <span class="text-gray-200">Task List</span>
-            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + T</kbd>
+            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + L</kbd>
           </div>
         </div>
         <div class="rounded-lg bg-gray-800 p-4">
           <div class="flex items-center justify-between">
             <span class="text-gray-200">Image</span>
-            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + I</kbd>
+            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + M</kbd>
           </div>
         </div>
       </div>
@@ -883,26 +865,20 @@ $$\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{bmatrix}$$"
       <div class="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div class="rounded-lg bg-gray-800 p-4">
           <div class="flex items-center justify-between">
-            <span class="text-gray-200">Footnote</span>
-            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + F</kbd>
-          </div>
-        </div>
-        <div class="rounded-lg bg-gray-800 p-4">
-          <div class="flex items-center justify-between">
             <span class="text-gray-200">Definition List</span>
-            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + D</kbd>
+            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + R</kbd>
           </div>
         </div>
         <div class="rounded-lg bg-gray-800 p-4">
           <div class="flex items-center justify-between">
             <span class="text-gray-200">Subscript</span>
-            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + -</kbd>
+            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + Y</kbd>
           </div>
         </div>
         <div class="rounded-lg bg-gray-800 p-4">
           <div class="flex items-center justify-between">
             <span class="text-gray-200">Superscript</span>
-            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + =</kbd>
+            <kbd class="rounded bg-gray-700 px-2 py-1 text-sm text-gray-200">Ctrl + Shift + U</kbd>
           </div>
         </div>
       </div>
