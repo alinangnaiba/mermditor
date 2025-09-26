@@ -74,7 +74,7 @@
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Code Block (Ctrl+Shift+`)"
+            title="Code Block (Ctrl+Shift+~)"
             @click="actions.insertCodeBlock()"
           >
             <PhCodeBlock :size="16" />
@@ -100,7 +100,7 @@
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Task List (Ctrl+Shift+T)"
+            title="Task List (Ctrl+Shift+L)"
             @click="actions.insertTaskList()"
           >
             <PhCheckSquare :size="16" />
@@ -119,28 +119,28 @@
           <!-- Extended Features -->
           <button
             class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Footnote (Ctrl+Shift+F)"
+            title="Footnote"
             @click="actions.insertFootnote()"
           >
             <PhNotePencil :size="16" />
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Definition List (Ctrl+Shift+D)"
+            title="Definition List (Ctrl+Shift+R)"
             @click="actions.insertDefinitionList()"
           >
             <PhListMagnifyingGlass :size="16" />
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Subscript (Ctrl+Shift+-)"
+            title="Subscript (Ctrl+Shift+Y)"
             @click="actions.insertSubscript()"
           >
             <PhTextSubscript :size="16" />
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Superscript (Ctrl+Shift+=)"
+            title="Superscript (Ctrl+Shift+U)"
             @click="actions.insertSuperscript()"
           >
             <PhTextSuperscript :size="16" />
@@ -161,7 +161,7 @@
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Image (Ctrl+Shift+I)"
+            title="Image (Ctrl+Shift+M)"
             @click="actions.insertFormat('![](', ')')"
           >
             <PhImage :size="16" />
