@@ -74,7 +74,7 @@
           <div class="flex flex-col justify-center gap-4 sm:flex-row">
             <NuxtLink
               to="/editor"
-              class="rounded-lg bg-accent-hover px-6 py-3 font-medium text-text-secondary transition-colors hover:bg-accent-primary focus:bg-accent-active focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
+              class="rounded-lg bg-accent-active px-6 py-3 font-medium text-text-secondary transition-colors hover:bg-accent-primary focus:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
             >
               Open Editor
             </NuxtLink>
