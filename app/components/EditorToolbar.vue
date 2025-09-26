@@ -20,6 +20,13 @@
           >
             <PhExport :size="16" />
           </button>
+          <button
+            class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+            title="Save As..."
+            @click="showFilenameModal = true"
+          >
+            <PhFloppyDisk :size="16" />
+          </button>
 
           <div class="mx-2 h-6 w-px bg-gray-700" />
 
@@ -45,58 +52,14 @@
           >
             <PhTextStrikethrough :size="16" />
           </button>
+          <!-- Headings -->
+          <HeadingPicker :actions="{ insertHeading: props.actions.insertHeading }" />
           <button
             class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
             title="Highlight (Ctrl+Shift+H)"
             @click="actions.insertHighlight()"
           >
             <PhHighlighter :size="16" />
-          </button>
-
-          <div class="mx-2 h-6 w-px bg-gray-700" />
-
-          <!-- Headings -->
-          <button
-            class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Heading 1 (Ctrl+1)"
-            @click="actions.insertHeading(1)"
-          >
-            <PhTextHOne :size="16" />
-          </button>
-          <button
-            class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Heading 2 (Ctrl+2)"
-            @click="actions.insertHeading(2)"
-          >
-            <PhTextHTwo :size="16" />
-          </button>
-          <button
-            class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Heading 3 (Ctrl+3)"
-            @click="actions.insertHeading(3)"
-          >
-            <PhTextHThree :size="16" />
-          </button>
-          <button
-            class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Heading 4 (Ctrl+4)"
-            @click="actions.insertHeading(4)"
-          >
-            <PhTextHFour :size="16" />
-          </button>
-          <button
-            class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Heading 5 (Ctrl+5)"
-            @click="actions.insertHeading(5)"
-          >
-            <PhTextHFive :size="16" />
-          </button>
-          <button
-            class="editor-toolbar-btn rounded p-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-            title="Heading 6 (Ctrl+6)"
-            @click="actions.insertHeading(6)"
-          >
-            <PhTextHSix :size="16" />
           </button>
 
           <div class="mx-2 h-6 w-px bg-gray-700" />
@@ -142,6 +105,9 @@
           >
             <PhCheckSquare :size="16" />
           </button>
+
+          <div class="mx-2 h-6 w-px bg-gray-700" />
+
           <button
             class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
             title="Blockquote (Ctrl+Q)"
@@ -149,8 +115,6 @@
           >
             <PhQuotes :size="16" />
           </button>
-
-          <div class="mx-2 h-6 w-px bg-gray-700" />
 
           <!-- Extended Features -->
           <button
@@ -182,10 +146,10 @@
             <PhTextSuperscript :size="16" />
           </button>
 
+          <div class="mx-2 h-6 w-px bg-gray-700" />
+
           <!-- Emoji Picker -->
           <EmojiPicker :actions="{ insertEmoji: actions.insertEmoji }" />
-
-          <div class="mx-2 h-6 w-px bg-gray-700" />
 
           <!-- Links & Images -->
           <button
@@ -244,22 +208,25 @@
         </button>
       </div>
     </div>
+
+    <!-- Filename Modal -->
+    <FilenameModal
+      :is-open="showFilenameModal"
+      :default-filename="defaultFilename"
+      @save="handleSaveAs"
+      @cancel="showFilenameModal = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { onMounted, onUnmounted } from 'vue'
+  import { ref, computed, onMounted, onUnmounted } from 'vue'
   import type { EditorActions } from '../composables/useEditorActions'
   import {
     PhDownloadSimple,
     PhExport,
+    PhFloppyDisk,
     PhTextB,
-    PhTextHOne,
-    PhTextHTwo,
-    PhTextHThree,
-    PhTextHFour,
-    PhTextHFive,
-    PhTextHSix,
     PhTextItalic,
     PhTextStrikethrough,
     PhHighlighter,
@@ -282,6 +249,8 @@
     PhBroom,
   } from '@phosphor-icons/vue'
   import EmojiPicker from './EmojiPicker.vue'
+  import FilenameModal from './FilenameModal.vue'
+  import HeadingPicker from './HeadingPicker.vue'
 
   interface Props {
     actions: EditorActions
@@ -290,7 +259,7 @@
     showEditor: boolean
   }
 
-  defineProps<Props>()
+  const props = defineProps<Props>()
 
   defineEmits<{
     'toggle-preview': []
@@ -298,6 +267,17 @@
     'update:autosave': [value: boolean]
     'clear-storage': []
   }>()
+
+  const showFilenameModal = ref(false)
+
+  const defaultFilename = computed(() => {
+    return `document-${new Date().toISOString().split('T')[0]}`
+  })
+
+  const handleSaveAs = (filename: string) => {
+    props.actions.saveAsMarkdownFile(filename)
+    showFilenameModal.value = false
+  }
 
   const handleClickOutside = () => {
     // Add any global click outside logic here if needed
