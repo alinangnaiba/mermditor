@@ -16,6 +16,7 @@ export interface EditorActions {
   insertSuperscript: () => void
   importMarkdownFile: () => void
   exportMarkdownFile: () => void
+  saveAsMarkdownFile: (filename: string) => void
   saveContent: () => void
 }
 
@@ -240,6 +241,19 @@ export const useEditorActions = (
     URL.revokeObjectURL(url)
   }
 
+  const saveAsMarkdownFile = (filename: string): void => {
+    const markdown = content.value
+    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${filename}.md`
+    link.click()
+
+    URL.revokeObjectURL(url)
+  }
+
   const saveContent = (): void => {
     try {
       if (autosave.value) {
@@ -267,6 +281,7 @@ export const useEditorActions = (
     insertSuperscript,
     importMarkdownFile,
     exportMarkdownFile,
+    saveAsMarkdownFile,
     saveContent,
   }
 }
