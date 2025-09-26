@@ -1,164 +1,99 @@
-# MerMDitor - Markdown Editor with Mermaid Support
+# MerMDitor
 
-A lightweight, modern Markdown editor built with Vue 3 and Tailwind CSS that allows you to write and preview Markdown content in real-time. It features special support for Mermaid diagrams, syntax highlighting, and a clean, distraction-free editing experience.
+MerMDitor is a modern, keyboard‑friendly, dark‑themed Markdown editor focused on a smooth writing + instant preview workflow with first‑class diagram and rich text support. It combines a distraction‑reduced editing surface with advanced utilities (find & replace, line numbering, live highlighting, autosave, export/import) while remaining lightweight and fast.
 
-![MerMDitor Screenshot](assets/logo.png)
+## What It Does
 
-## ✨ Features
+- Real‑time Markdown → HTML preview
+- Inline Mermaid diagram authoring (flowcharts, sequence, class, etc.)
+- Code block syntax highlighting
+- (Optional) Mathematical / formula rendering (KaTeX)
+- Accurate find / find & replace with live match highlighting
+- VS Code–style line numbers (only real lines numbered; wrapped soft lines blank)
+- Diff‑free editing overlay: selection & match highlighting rendered behind transparent text layer
+- Responsive layout: dual‑pane (editor + preview) with draggable divider (auto hides on mobile)
+- File operations: import (e.g. `.md`), save, clear, copy
+- Autosave toggle & persisted UI preferences (line numbers, panel visibility)
+- Mobile‑aware panels (adaptive Find/Replace UI)
+- Accessible keyboard shortcuts for core actions
+- Non‑destructive floating Find/Replace panel that stays until explicitly closed
 
-- 📝 **Real-time Markdown Preview**: See your formatted content as you type
-- 📊 **Mermaid Diagram Support**: Create flowcharts, sequence diagrams, and more with Mermaid syntax
-- 🎨 **Syntax Highlighting**: Automatic code block highlighting for various languages
-- 🔄 **Resizable Panels**: Adjust the editor and preview panel sizes to your preference
-- 📊 **Word Count**: Track your document's length with real-time word and character counting
+## Core Technologies
 
-## 🔧 Tech Stack
+| Domain              | Technology                                                        |
+| ------------------- | ----------------------------------------------------------------- |
+| Framework           | Nuxt 3 (Vue 3, Composition API, SFC)                              |
+| Styling             | Tailwind CSS (utility‑first, dark palette)                        |
+| Markdown Engine     | markdown-it + custom plugins (Mermaid, syntax highlight, math)    |
+| Diagrams            | Mermaid                                                           |
+| Syntax Highlighting | highlight.js (language auto‑detection fallback)                   |
+| Math (optional)     | KaTeX                                                             |
+| State & Reactivity  | Vue refs, computed, watchers, composables                         |
+| Performance Aids    | Lazy resource marking, ResizeObserver, debounced search           |
+| UX Enhancements     | Transition groups, floating overlay, precise cursor line tracking |
 
-- 🖼️ **Vue 3**: Progressive JavaScript framework for building modern UI
-- 🎨 **Tailwind CSS**: Utility-first CSS framework for rapid UI development
-- 📝 **markdown-it**: Powerful Markdown parser
-- 📊 **Mermaid**: JavaScript-based diagramming and charting tool
-- ✨ **highlight.js**: Syntax highlighting for code blocks
-- ⚡ **Vite**: Next generation frontend tooling for fast development
+## Architectural Overview
 
-## 💿 Getting Started
+- Single high‑level `MarkdownEditor.vue` orchestrates:
+  - Editor pane (textarea + overlay highlight layer)
+  - Preview pane (renders processed markdown)
+  - Global menus (File / Edit) and feature toggles
+  - Floating Find/Replace panel (separate component)
+- Rendering Pipeline:
+  1. Raw markdown (reactive `markdownText`)
+  2. markdown-it parse & transform (plugins: Mermaid passthrough, code fence highlighting, math)
+  3. Post‑processing (diagram initialization, code block enhancement)
+- Highlight Layer:
+  - Background “shadow” layer replicates text layout for match highlighting while keeping native textarea interactions
+- Line Numbering:
+  - Logical line split (`\n`) only; soft wraps intentionally not counted
+  - Responsive suppression on mobile without mutating persisted preference
+- Find & Replace:
+  - Reactive search term processing (debounced)
+  - Match index tracking & navigation
+  - Case sensitive / whole word / regex modes
+  - Emitted events update highlight overlay
 
-Follow these steps to set up the project locally:
+## Performance Considerations
 
-### Prerequisites
+- Conditional initialization of heavy subsystems (Mermaid, KaTeX, highlighting)
+- Resource “loaded” signaling used by a lightweight loading overlay to improve perceived startup
+- Cached measurement & recalculation only on relevant dimension or content changes
+- Avoids deep reactive structures for large text buffers (plain string ref)
+- Pointer‑events isolation for overlay to keep native selection performance
 
-- Node.js (v16.0.0 or higher)
-- npm or another package manager
+## UX / Accessibility Notes
 
-### Installation
+- Keyboard shortcuts for common actions (find, replace, save, navigation)
+- Non‑intrusive floating utility panel
+- Click‑outside only closes menus (not the active Find/Replace panel)
+- High contrast highlight colors with minimal reliance on hue alone
+- Touch gesture support for pane resizing (mobile friendliness in progress)
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/mdit.git
-   cd mdit
-   ```
+## Current Enhancements in Progress / Potential Refactors
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+- Component decomposition (toolbar, gutter, preview, drag handle) for improved maintainability
+- Dedicated composables: `useEditorState`, `useSearch`, `useLineNumbers`
+- Improved a11y (ARIA roles for menus & panel, focus trapping in overlays)
+- More precise soft‑wrap visual line mapping if future features (e.g. minimap) require it
+- Optional plugin system for custom markdown extensions
+- Persistence layer abstraction (instead of direct `localStorage` usage)
 
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
+## Key Design Principles
 
-4. Open your browser and visit:
-   ```
-   http://localhost:3000
-   ```
+- Do not block typing fluidity (no heavy synchronous transforms in input handlers)
+- Keep preview reactive but defer expensive post‑processing with microtask scheduling
+- Preserve user intent (never silently mutate preferences on viewport change)
+- Explicit close actions (no unexpected panel dismissal)
 
-## 🔗 GitHub Integration Setup (Optional)
+## Screens & States (Conceptual)
 
-The feedback feature allows users to submit suggestions, bug reports, and feature requests directly through the app, which creates GitHub issues automatically.
+- Editor Only
+- Preview Only
+- Split View (resizable)
+- Find Mode / Replace Mode (panel toggles)
+- Loading Overlay (initial resource warm‑up)
 
-### Prerequisites
+---
 
-1. A GitHub repository where you want feedback issues to be created
-2. A GitHub Personal Access Token with repository permissions
-
-### Setup Steps
-
-1. **Create a GitHub Personal Access Token**:
-   - Go to [GitHub Settings > Personal Access Tokens](https://github.com/settings/tokens)
-   - Click "Generate new token" (classic)
-   - Give it a descriptive name like "MerMDitor Feedback"
-   - Select the `repo` scope (or `public_repo` for public repositories)
-   - Copy the generated token
-
-2. **Configure Environment Variables**:
-   - Copy `.env.example` to `.env`:
-     ```bash
-     cp .env.example .env
-     ```
-   - Edit `.env` and add your credentials:
-     ```bash
-     GITHUB_OWNER=your-github-username
-     GITHUB_REPO=your-repository-name
-     GITHUB_TOKEN=your_github_token_here
-     ```
-
-3. **Test the Integration**:
-   - Start the development server: `npm run dev`
-   - Navigate to the Feedback page: `http://localhost:3000/feedback`
-   - Submit a test feedback to verify it creates an issue in your repository
-
-**Note**: The `.env` file is already included in `.gitignore` to keep your credentials secure.
-
-## 💡 Usage Guide
-
-### Basic Usage
-
-1. **Writing Markdown**: Type your markdown content in the left panel
-2. **Real-time Preview**: See the rendered output in the right panel as you type
-3. **Panel Resizing**: Drag the divider between panels to adjust their width
-4. **Auto-save**: Your content is automatically saved to localStorage
-
-### Keyboard Shortcuts
-
-| Action | Shortcut |
-|--------|----------|
-| Bold text | <kbd>Ctrl</kbd> + <kbd>B</kbd> |
-| Italic text | <kbd>Ctrl</kbd> + <kbd>I</kbd> |
-| Insert link | <kbd>Ctrl</kbd> + <kbd>K</kbd> |
-| Insert heading | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>1</kbd> |
-| Save manually | <kbd>Ctrl</kbd> + <kbd>S</kbd> |
-
-### Mermaid Diagram Syntax
-
-Create diagrams by using the Mermaid syntax within code blocks:
-
-````markdown
-```mermaid
-graph TD
-    A[Start] --> B{Is it?}
-    B -->|Yes| C[OK]
-    B -->|No| D[End]
-```
-````
-
-### Building for Production
-
-To build the project for production:
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist` directory.
-
-## 🧩 Project Structure
-
-```
-src/
-  ├── components/                # Vue components
-  │   ├── MarkdownEditor.vue     # Main editor component
-  │   └── MermaidRenderer.vue    # Mermaid diagram renderer
-  ├── plugins/                   # Plugin configurations
-  │   ├── markdownItHighlight.ts # Code syntax highlighting
-  │   ├── markdownItMermaid.ts   # Mermaid diagram processing
-  │   └── mermaid.ts            # Mermaid configuration
-  └── styles/                    
-      └── tailwind.css          # Tailwind CSS configuration
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add some amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-## 📑 License
-
-[MIT](http://opensource.org/licenses/MIT)
-
-Copyright (c) 2025 MerMDitor Team
+MerMDitor aims to provide a fast authoring surface with diagram & advanced text tooling without sacrificing clarity or responsiveness. Further modularization and extensibility layers are planned while maintaining a minimal baseline footprint.
