@@ -1,6 +1,6 @@
-# MerMDitor
+# [merMDitor](https://www.mermditor.dev/)
 
-MerMDitor is a modern, keyboard‑friendly, dark‑themed Markdown editor focused on a smooth writing + instant preview workflow with first‑class diagram and rich text support. It combines a distraction‑reduced editing surface with advanced utilities (find & replace, line numbering, live highlighting, autosave, export/import) while remaining lightweight and fast.
+[merMDitor](https://www.mermditor.dev/) is a modern, keyboard‑friendly, dark‑themed Markdown editor focused on a smooth writing + instant preview workflow with first‑class diagram and rich text support. It combines a distraction‑reduced editing surface with advanced utilities (find & replace, line numbering, live highlighting, autosave, export/import) while remaining lightweight and fast.
 
 ## What It Does
 
@@ -22,7 +22,7 @@ MerMDitor is a modern, keyboard‑friendly, dark‑themed Markdown editor focuse
 
 | Domain              | Technology                                                        |
 | ------------------- | ----------------------------------------------------------------- |
-| Framework           | Nuxt 3 (Vue 3, Composition API, SFC)                              |
+| Framework           | Nuxt 4 (Vue 3, Composition API, SFC)                              |
 | Styling             | Tailwind CSS (utility‑first, dark palette)                        |
 | Markdown Engine     | markdown-it + custom plugins (Mermaid, syntax highlight, math)    |
 | Diagrams            | Mermaid                                                           |
