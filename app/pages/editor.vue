@@ -140,21 +140,17 @@
 <script setup lang="ts">
   import { ref, watch, computed, nextTick, onMounted, onUnmounted } from 'vue'
   import type { Ref } from 'vue'
-  import { EditorView, keymap } from '@codemirror/view'
-  import { basicSetup } from 'codemirror'
-  import { EditorState } from '@codemirror/state'
-  import { indentWithTab } from '@codemirror/commands'
-  import { markdown } from '@codemirror/lang-markdown'
-  import { oneDark } from '@codemirror/theme-one-dark'
+  import type { EditorView as EditorViewType } from '@codemirror/view'
 
   import EditorToolbar from '../components/EditorToolbar.vue'
-  import HelpModal from '../components/HelpModal.vue'
-  import ConfirmModal from '../components/ConfirmModal.vue'
   import LoadingScreen from '../components/LoadingScreen.vue'
   import { useEditorActions } from '../composables/useEditorActions'
   import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
   import { useMarkdownRenderer } from '../composables/useMarkdownRenderer'
   import { PhQuestion } from '@phosphor-icons/vue'
+
+  const HelpModal = defineAsyncComponent(() => import('../components/HelpModal.vue'))
+  const ConfirmModal = defineAsyncComponent(() => import('../components/ConfirmModal.vue'))
 
   // Add page-specific styling to prevent scrolling
   useHead({
@@ -178,7 +174,7 @@
   const confirmAutosaveOff: Ref<boolean> = ref(false)
   const confirmClearData: Ref<boolean> = ref(false)
 
-  const editorViewRef: Ref<EditorView | null> = ref(null)
+  const editorViewRef: Ref<EditorViewType | null> = ref(null)
   const customEditorWidth: Ref<number | null> = ref(null)
   const customPreviewWidth: Ref<number | null> = ref(null)
 
@@ -196,13 +192,23 @@
   const actions = useEditorActions(editorViewRef, content, autosave, lastSaved)
   useKeyboardShortcuts(actions)
 
-  // Watch content changes and render markdown
+  let mermaidTimeout: ReturnType<typeof setTimeout> | null = null
+  const debouncedMermaidRender = async () => {
+    if (mermaidTimeout) {
+      clearTimeout(mermaidTimeout)
+    }
+
+    mermaidTimeout = setTimeout(async () => {
+      await renderMermaidDiagrams()
+    }, 300)
+  }
+
   watch(
     content,
     async (newContent) => {
       renderedContent.value = await renderMarkdown(newContent)
       await nextTick()
-      await renderMermaidDiagrams()
+      await debouncedMermaidRender()
       highlightSyntax()
     },
     { immediate: true }
@@ -213,8 +219,24 @@
     isLoading.value = false
   }
 
-  const initEditor = (): void => {
+  const initEditor = async (): Promise<void> => {
     if (!editorContainer.value) return
+
+    const [
+      { EditorView, keymap },
+      { basicSetup },
+      { EditorState },
+      { indentWithTab },
+      { markdown },
+      { oneDark }
+    ] = await Promise.all([
+      import('@codemirror/view'),
+      import('codemirror'),
+      import('@codemirror/state'),
+      import('@codemirror/commands'),
+      import('@codemirror/lang-markdown'),
+      import('@codemirror/theme-one-dark')
+    ])
 
     const extensions = [
       basicSetup,
@@ -357,9 +379,9 @@
 
       previewElement.scrollTop = scrollPercentage * maxScrollTop
 
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         isEditorScrolling = false
-      }, 50)
+      })
     }
 
     const previewScrollHandler = (): void => {
@@ -376,9 +398,9 @@
 
       editorElement.scrollTop = scrollPercentage * maxScrollTop
 
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         isPreviewScrolling = false
-      }, 50)
+      })
     }
 
     editorViewRef.value.scrollDOM.addEventListener('scroll', editorScrollHandler)
@@ -519,16 +541,15 @@
     loadSettings()
     loadPaneWidths()
     await nextTick()
-    initEditor()
+    await initEditor()
 
-    setTimeout(() => {
-      setupScrollSync()
-      applyPaneWidths()
-
-      setTimeout(() => {
-        isLoading.value = false
-      }, 500) // Small delay to ensure smooth transition
-    }, 500)
+    await nextTick()
+    setupScrollSync()
+    applyPaneWidths()
+    
+    requestAnimationFrame(() => {
+      isLoading.value = false
+    })
   })
 
   // Cleanup
