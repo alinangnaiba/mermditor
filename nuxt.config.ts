@@ -20,6 +20,8 @@ export default defineNuxtConfig({
         },
       ],
       link: [
+        { rel: 'preconnect', href: 'https://cdn.jsdelivr.net', crossorigin: 'anonymous' },
+        { rel: 'dns-prefetch', href: 'https://cdn.jsdelivr.net' },
         { rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css' },
         {
           rel: 'stylesheet',
