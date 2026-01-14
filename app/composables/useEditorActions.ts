@@ -16,6 +16,7 @@ export interface EditorActions {
   insertSuperscript: () => void
   importMarkdownFile: () => void
   exportMarkdownFile: () => void
+  exportPdfFile: () => void
   saveAsMarkdownFile: (filename: string) => void
   saveContent: () => void
 }
@@ -254,6 +255,61 @@ export const useEditorActions = (
     URL.revokeObjectURL(url)
   }
 
+  const exportPdfFile = async (): Promise<void> => {
+    try {
+      const html2pdfModule = await import('html2pdf.js')
+      const html2pdf = html2pdfModule.default
+
+      const element = document.querySelector('.prose')
+      if (!element) return
+
+      // Create a container for the cloned content to control styling for PDF
+      const container = document.createElement('div')
+      container.style.position = 'fixed'
+      container.style.left = '-9999px'
+      container.style.top = '0'
+      container.style.width = '210mm' // A4 width approx
+      container.style.backgroundColor = '#ffffff'
+      container.style.color = '#000000'
+
+      // Clone the content
+      const clone = element.cloneNode(true) as HTMLElement
+
+      // Transform styling for light mode PDF
+      clone.classList.remove('prose-invert')
+      clone.classList.add('prose')
+
+      // Remove any dark mode specific styles that might persist
+      clone.style.backgroundColor = '#ffffff'
+      clone.style.color = '#000000'
+      clone.style.padding = '20px'
+
+      // Ensure content is visible
+      container.appendChild(clone)
+      document.body.appendChild(container)
+
+      const opt = {
+        margin: [10, 10],
+        filename: `document-${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          backgroundColor: '#ffffff',
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      }
+
+      await html2pdf().set(opt).from(clone).save()
+
+      // Cleanup
+      document.body.removeChild(container)
+    } catch (error) {
+      console.error('PDF generation failed:', error)
+    }
+  }
+
   const saveContent = (): void => {
     try {
       if (autosave.value) {
@@ -281,6 +337,7 @@ export const useEditorActions = (
     insertSuperscript,
     importMarkdownFile,
     exportMarkdownFile,
+    exportPdfFile,
     saveAsMarkdownFile,
     saveContent,
   }

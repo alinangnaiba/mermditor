@@ -22,6 +22,13 @@
           </button>
           <button
             class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+            title="Export PDF"
+            @click="actions.exportPdfFile()"
+          >
+            <PhFilePdf :size="16" />
+          </button>
+          <button
+            class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
             title="Save As..."
             @click="showFilenameModal = true"
           >
@@ -225,6 +232,7 @@
   import {
     PhDownloadSimple,
     PhExport,
+    PhFilePdf,
     PhFloppyDisk,
     PhTextB,
     PhTextItalic,
