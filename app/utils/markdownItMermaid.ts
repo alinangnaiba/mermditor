@@ -26,25 +26,25 @@ interface MermaidCache {
 let mermaidInitialized: boolean = false
 const mermaidCache = new Map<string, MermaidCache>()
 
+export const darkThemeVariables: MermaidThemeVariables = {
+  primaryColor: '#3b82f6',
+  primaryTextColor: '#f3f4f6',
+  primaryBorderColor: '#374151',
+  lineColor: '#6b7280',
+  secondaryColor: '#1f2937',
+  tertiaryColor: '#111827',
+  background: '#111827',
+  mainBkg: '#1f2937',
+  secondBkg: '#374151',
+  tertiaryBkg: '#4b5563',
+}
+
 export const initMermaid = (): void => {
   if (!mermaidInitialized && import.meta.client) {
-    const themeVariables: MermaidThemeVariables = {
-      primaryColor: '#3b82f6',
-      primaryTextColor: '#f3f4f6',
-      primaryBorderColor: '#374151',
-      lineColor: '#6b7280',
-      secondaryColor: '#1f2937',
-      tertiaryColor: '#111827',
-      background: '#111827',
-      mainBkg: '#1f2937',
-      secondBkg: '#374151',
-      tertiaryBkg: '#4b5563',
-    }
-
     mermaid.initialize({
       startOnLoad: false,
       theme: 'dark',
-      themeVariables,
+      themeVariables: darkThemeVariables,
     })
     mermaidInitialized = true
   }

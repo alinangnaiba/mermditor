@@ -1,5 +1,7 @@
 import { EditorView } from '@codemirror/view'
 import type { Ref } from 'vue'
+import mermaid from 'mermaid'
+import { darkThemeVariables } from '../utils/markdownItMermaid'
 
 export interface EditorActions {
   insertFormat: (before: string, after: string) => void
@@ -16,6 +18,7 @@ export interface EditorActions {
   insertSuperscript: () => void
   importMarkdownFile: () => void
   exportMarkdownFile: () => void
+  exportPdfFile: () => void
   saveAsMarkdownFile: (filename: string) => void
   saveContent: () => void
 }
@@ -254,6 +257,112 @@ export const useEditorActions = (
     URL.revokeObjectURL(url)
   }
 
+  const exportPdfFile = async (): Promise<void> => {
+    try {
+      const html2pdfModule = await import('html2pdf.js')
+      const html2pdf = html2pdfModule.default
+
+      const element = document.querySelector('.prose')
+      if (!element) return
+
+      // Create a container for the cloned content to control styling for PDF
+      const container = document.createElement('div')
+      container.style.position = 'fixed'
+      container.style.left = '-9999px'
+      container.style.top = '0'
+      container.style.width = '210mm' // A4 width approx
+      container.style.backgroundColor = '#ffffff'
+      container.style.color = '#000000'
+      // Remove max-width constraint for the PDF container to use full A4 width
+      container.style.maxWidth = 'none'
+
+      // Clone the content
+      const clone = element.cloneNode(true) as HTMLElement
+
+      // Transform styling for light mode PDF
+      clone.classList.remove('prose-invert')
+      clone.classList.add('prose', 'prose-pdf')
+      clone.style.maxWidth = 'none'
+
+      // Remove any dark mode specific styles that might persist
+      clone.style.backgroundColor = '#ffffff'
+      clone.style.color = '#000000'
+      clone.style.padding = '20px'
+
+      // Handle Mermaid diagrams - Re-render in light mode
+      const mermaidElements = clone.querySelectorAll('.mermaid')
+      if (mermaidElements.length > 0) {
+        // Switch to light theme for rendering
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'default',
+          themeVariables: {},
+        })
+
+        for (const el of mermaidElements) {
+          const content = el.getAttribute('data-content')
+          if (content) {
+            try {
+              const id = 'mermaid-pdf-' + Math.random().toString(36).substring(2, 11)
+              const { svg } = await mermaid.render(id, content)
+              el.innerHTML = svg
+              // Ensure SVG fits
+              const svgEl = el.querySelector('svg')
+              if (svgEl) {
+                svgEl.style.maxWidth = '100%'
+                svgEl.style.height = 'auto'
+                svgEl.style.backgroundColor = '#ffffff'
+              }
+            } catch (err) {
+              console.warn('Failed to re-render mermaid for PDF:', err)
+            }
+          }
+        }
+
+        // Restore dark theme for the app
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: darkThemeVariables,
+        })
+      }
+
+      // Ensure content is visible
+      container.appendChild(clone)
+      document.body.appendChild(container)
+
+      const opt = {
+        margin: [10, 10],
+        filename: `document-${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          backgroundColor: '#ffffff',
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      }
+
+      await html2pdf().set(opt).from(clone).save()
+
+      // Cleanup
+      document.body.removeChild(container)
+    } catch (error) {
+      console.error('PDF generation failed:', error)
+      // Ensure we restore the theme even if something fails
+      try {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: darkThemeVariables,
+        })
+      } catch (e) {
+        // ignore
+      }
+    }
+  }
+
   const saveContent = (): void => {
     try {
       if (autosave.value) {
@@ -281,6 +390,7 @@ export const useEditorActions = (
     insertSuperscript,
     importMarkdownFile,
     exportMarkdownFile,
+    exportPdfFile,
     saveAsMarkdownFile,
     saveContent,
   }
