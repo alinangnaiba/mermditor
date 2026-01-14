@@ -240,7 +240,7 @@ a[href^='#fnref:'] {
   /* Inline Code Overrides */
   /* Target code elements that are not inside pre blocks */
   .prose-pdf :where(code):not(:where(pre code)) {
-    @apply rounded border border-gray-200 bg-gray-100 px-1 py-0.5 text-sm text-gray-800 !important;
+    @apply rounded border border-gray-200 bg-gray-100 px-1 py-0 text-xs text-gray-800 !important;
     vertical-align: baseline !important;
     /* Ensure line-height is tight to avoid large vertical gaps */
     line-height: 1.25 !important;
