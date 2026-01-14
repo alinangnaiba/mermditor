@@ -31,10 +31,10 @@ export const useKeyboardShortcuts = (actions: EditorActions) => {
           break
         case '`':
           e.preventDefault()
-            actions.insertFormat('`', '`') // Ctrl+` for inline code
+          actions.insertFormat('`', '`') // Ctrl+` for inline code
           break
         case '~':
-          // Handle Ctrl+Shift+~ 
+          // Handle Ctrl+Shift+~
           e.preventDefault()
           actions.insertCodeBlock()
           break

@@ -279,6 +279,10 @@ export const useEditorActions = (
       // Clone the content
       const clone = element.cloneNode(true) as HTMLElement
 
+      // Clean up UI elements that shouldn't appear in PDF
+      const controls = clone.querySelectorAll('.mermaid-controls')
+      controls.forEach((el) => el.remove())
+
       // Transform styling for light mode PDF
       clone.classList.remove('prose-invert')
       clone.classList.add('prose', 'prose-pdf')

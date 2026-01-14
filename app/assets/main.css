@@ -201,3 +201,81 @@ a[href^='#fn:'] {
 a[href^='#fnref:'] {
   @apply ml-2 text-xs text-blue-400 no-underline transition-colors hover:text-blue-300;
 }
+
+/* PDF Export Styling Overrides */
+@layer components {
+  /* Mermaid Overrides */
+  .prose-pdf .mermaid-container {
+    @apply my-4 border-0 bg-transparent p-0 shadow-none !important;
+  }
+
+  .prose-pdf .mermaid-controls {
+    @apply hidden !important;
+  }
+
+  .prose-pdf .mermaid-diagram {
+    /* Reset any transform/zoom for print */
+    transform: none !important;
+  }
+
+  .prose-pdf .mermaid svg {
+    /* Ensure text is black in the SVG if not handled by mermaid render */
+    /* Note: Mermaid handles this mostly via theme config, but we ensure bg is clear */
+    @apply bg-white !important;
+  }
+
+  /* Table Overrides */
+  .prose-pdf table {
+    @apply w-full border-collapse border border-gray-300 !important;
+  }
+
+  .prose-pdf th {
+    @apply border border-gray-300 bg-gray-100 px-4 py-2 font-bold text-black !important;
+  }
+
+  .prose-pdf td {
+    @apply border border-gray-300 bg-white px-4 py-2 text-black !important;
+  }
+
+  /* Inline Code Overrides */
+  /* Target direct code elements, but not those inside pre/code blocks */
+  .prose-pdf :not(pre) > code {
+    @apply rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-sm text-gray-800 !important;
+    vertical-align: baseline !important;
+    line-height: inherit !important;
+  }
+
+  /* Block Code (Pre) Overrides */
+  .prose-pdf pre {
+    @apply my-4 overflow-x-auto rounded border border-gray-200 bg-gray-50 p-4 !important;
+  }
+
+  .prose-pdf pre code {
+    @apply border-0 bg-transparent p-0 text-sm text-gray-800 !important;
+    white-space: pre-wrap !important; /* Wrap long lines in PDF */
+  }
+
+  /* KaTeX Overrides */
+  .prose-pdf .katex {
+    color: #000000 !important;
+  }
+
+  /* Text Color Overrides */
+  .prose-pdf,
+  .prose-pdf p,
+  .prose-pdf li,
+  .prose-pdf h1,
+  .prose-pdf h2,
+  .prose-pdf h3,
+  .prose-pdf h4,
+  .prose-pdf h5,
+  .prose-pdf h6,
+  .prose-pdf strong,
+  .prose-pdf em {
+    color: #000000 !important;
+  }
+
+  .prose-pdf blockquote {
+    @apply border-l-4 border-gray-300 pl-4 italic text-gray-700 !important;
+  }
+}

@@ -125,6 +125,11 @@ export const renderMarkdown = async (content: string): Promise<string> => {
     html = html.replace(
       /<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g,
       (match: string, lang: string, code: string) => {
+        // Skip adding headers to mermaid blocks as they are handled separately
+        if (lang === 'mermaid') {
+          return match
+        }
+
         const languageNames: Record<string, string> = {
           js: 'JavaScript',
           ts: 'TypeScript',

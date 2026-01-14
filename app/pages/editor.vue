@@ -228,14 +228,14 @@
       { EditorState },
       { indentWithTab },
       { markdown },
-      { oneDark }
+      { oneDark },
     ] = await Promise.all([
       import('@codemirror/view'),
       import('codemirror'),
       import('@codemirror/state'),
       import('@codemirror/commands'),
       import('@codemirror/lang-markdown'),
-      import('@codemirror/theme-one-dark')
+      import('@codemirror/theme-one-dark'),
     ])
 
     const extensions = [
@@ -546,7 +546,7 @@
     await nextTick()
     setupScrollSync()
     applyPaneWidths()
-    
+
     requestAnimationFrame(() => {
       isLoading.value = false
     })
