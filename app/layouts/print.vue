@@ -34,6 +34,8 @@ html, body {
 .prose {
   color: #374151 !important; /* gray-700 */
   max-width: none !important;
+  font-size: 12pt !important;
+  line-height: 1.5 !important;
 }
 
 .prose h1, .prose h2, .prose h3, .prose h4, .prose strong, .prose b {
