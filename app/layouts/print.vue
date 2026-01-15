@@ -34,8 +34,8 @@ html, body {
 .prose {
   color: #374151 !important; /* gray-700 */
   max-width: none !important;
-  font-size: 12pt !important;
-  line-height: 1.5 !important;
+  font-size: 11pt !important; /* Standard print text size */
+  line-height: 1.2 !important;
 }
 
 .prose h1, .prose h2, .prose h3, .prose h4, .prose strong, .prose b {
@@ -56,6 +56,7 @@ html, body {
   color: #111827 !important; /* gray-900 */
   background-color: #f3f4f6 !important; /* gray-100 */
   border: 1px solid #e5e7eb !important; /* gray-200 */
+  font-size: 9pt !important; /* Smaller for inline code */
 }
 
 .prose pre {
@@ -63,12 +64,15 @@ html, body {
   border: 1px solid #e5e7eb !important; /* gray-200 */
   color: #1f2937 !important; /* gray-800 */
   box-shadow: none !important;
+  font-size: 9pt !important; /* Smaller font for code blocks */
+  line-height: 1.2 !important; /* Tighter line height for code */
 }
 
 .prose pre code {
   background-color: transparent !important;
   border: none !important;
   color: inherit !important;
+  font-size: inherit !important; /* Inherit from pre */
 }
 
 .prose table {

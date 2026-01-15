@@ -2,12 +2,11 @@
   <div class="flex-shrink-0 border-b border-gray-700 bg-gray-800 px-4 py-2">
     <div class="flex flex-wrap items-end justify-between gap-4">
       <!-- Toolbar Groups -->
-      <div class="flex flex-wrap items-end gap-2">
+      <div class="flex flex-wrap items-end gap-0">
 
         <!-- File Group -->
-        <div class="flex flex-col gap-1">
-          <span class="text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">File</span>
-          <div class="flex items-center gap-1 bg-gray-900/30 p-1 rounded-lg border border-gray-700/50">
+        <div class="flex flex-col bg-gray-900/30 border border-gray-700/50">
+          <div class="flex items-center gap-1 p-1">
             <button
               class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Import Markdown (Ctrl+O)"
@@ -37,12 +36,12 @@
               <PhFloppyDisk :size="18" />
             </button>
           </div>
+          <span class="text-[10px] text-gray-400 font-medium px-1 pb-1 text-center uppercase tracking-wider border-t border-gray-700/30 pt-1">File</span>
         </div>
 
         <!-- Format Group -->
-        <div class="flex flex-col gap-1">
-          <span class="text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">Format</span>
-          <div class="flex items-center gap-1 bg-gray-900/30 p-1 rounded-lg border border-gray-700/50">
+        <div class="flex flex-col bg-gray-900/30 border border-gray-700/50">
+          <div class="flex items-center gap-1 p-1">
             <button
               class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Bold (Ctrl+B)"
@@ -72,12 +71,12 @@
               <PhHighlighter :size="18" />
             </button>
           </div>
+          <span class="text-[10px] text-gray-400 font-medium px-1 pb-1 text-center uppercase tracking-wider border-t border-gray-700/30 pt-1">Format</span>
         </div>
 
         <!-- Structure Group -->
-        <div class="flex flex-col gap-1">
-          <span class="text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">Structure</span>
-          <div class="flex items-center gap-1 bg-gray-900/30 p-1 rounded-lg border border-gray-700/50">
+        <div class="flex flex-col bg-gray-900/30 border border-gray-700/50">
+          <div class="flex items-center gap-1 p-1">
             <HeadingPicker :actions="{ insertHeading: props.actions.insertHeading }" />
             <button
               class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
@@ -101,12 +100,12 @@
               <PhCodeBlock :size="18" />
             </button>
           </div>
+          <span class="text-[10px] text-gray-400 font-medium px-1 pb-1 text-center uppercase tracking-wider border-t border-gray-700/30 pt-1">Structure</span>
         </div>
 
         <!-- Lists Group -->
-        <div class="flex flex-col gap-1">
-          <span class="text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">List</span>
-          <div class="flex items-center gap-1 bg-gray-900/30 p-1 rounded-lg border border-gray-700/50">
+        <div class="flex flex-col bg-gray-900/30 border border-gray-700/50">
+          <div class="flex items-center gap-1 p-1">
             <button
               class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Bullet List"
@@ -136,12 +135,12 @@
               <PhListMagnifyingGlass :size="18" />
             </button>
           </div>
+          <span class="text-[10px] text-gray-400 font-medium px-1 pb-1 text-center uppercase tracking-wider border-t border-gray-700/30 pt-1">List</span>
         </div>
 
         <!-- Insert Group -->
-        <div class="flex flex-col gap-1">
-          <span class="text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">Insert</span>
-          <div class="flex items-center gap-1 bg-gray-900/30 p-1 rounded-lg border border-gray-700/50">
+        <div class="flex flex-col bg-gray-900/30 border border-gray-700/50">
+          <div class="flex items-center gap-1 p-1">
              <button
               class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Link (Ctrl+K)"
@@ -165,12 +164,12 @@
               <PhNotePencil :size="18" />
             </button>
           </div>
+          <span class="text-[10px] text-gray-400 font-medium px-1 pb-1 text-center uppercase tracking-wider border-t border-gray-700/30 pt-1">Insert</span>
         </div>
 
         <!-- Advanced Group -->
-        <div class="flex flex-col gap-1">
-          <span class="text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">Extra</span>
-          <div class="flex items-center gap-1 bg-gray-900/30 p-1 rounded-lg border border-gray-700/50">
+        <div class="flex flex-col bg-gray-900/30 border border-gray-700/50">
+          <div class="flex items-center gap-1 p-1">
             <button
               class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Subscript (Ctrl+Shift+Y)"
@@ -186,6 +185,7 @@
               <PhTextSuperscript :size="18" />
             </button>
           </div>
+          <span class="text-[10px] text-gray-400 font-medium px-1 pb-1 text-center uppercase tracking-wider border-t border-gray-700/30 pt-1">Extra</span>
         </div>
 
       </div>

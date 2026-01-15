@@ -5,15 +5,15 @@
       <h1 class="text-xl font-bold">Print Preview</h1>
       <div class="flex gap-4">
         <button
+          class="px-4 py-2 bg-accent-active hover:bg-accent-primary rounded text-white font-medium flex items-center gap-2"
           @click="handlePrint"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium flex items-center gap-2"
         >
           <PhPrinter :size="20" />
           Print / Save PDF
         </button>
         <button
-          @click="close"
           class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white font-medium"
+          @click="close"
         >
           Close
         </button>
@@ -44,8 +44,8 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { PhPrinter } from '@phosphor-icons/vue'
-import { Previewer, Handler } from 'pagedjs'
-import { initMermaid, renderMermaidDiagrams } from '../utils/markdownItMermaid'
+import { Previewer } from 'pagedjs'
+import { renderMermaidDiagrams } from '../utils/markdownItMermaid'
 
 // Use the print layout
 definePageMeta({
@@ -101,18 +101,15 @@ const initializePreview = async () => {
     // We need to clear previous content if any
     previewContainer.value.innerHTML = ''
 
-    // PagedJS hooks
-    paged.registerHandlers(class extends Handler {
-        afterPreview() {
-            loading.value = false
-        }
+    // Listen for the rendered event to hide loading
+    paged.on('rendered', () => {
+      loading.value = false
     })
 
     // Start preview
     // Note: PagedJS moves content from source to previewContainer
-    // We clone the content to keep the original source intact if needed,
-    // but PagedJS expects to consume it.
-    // We pass empty styles array as styles are already loaded by the layout
+    // We pass the innerHTML as content, empty styles array (styles already loaded),
+    // and the container to render into
     await paged.preview(source.innerHTML, [], previewContainer.value)
   }
 }
