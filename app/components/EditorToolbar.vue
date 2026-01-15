@@ -6,31 +6,31 @@
 
         <!-- File Group -->
         <div class="flex flex-col gap-1">
-          <span class="text-[10px] text-gray-500 font-medium px-1 uppercase tracking-wider">File</span>
+          <span class="text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">File</span>
           <div class="flex items-center gap-1 bg-gray-900/30 p-1 rounded-lg border border-gray-700/50">
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Import Markdown (Ctrl+O)"
               @click="actions.importMarkdownFile()"
             >
               <PhDownloadSimple :size="18" />
             </button>
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Export Markdown (Ctrl+Shift+S)"
               @click="actions.exportMarkdownFile()"
             >
               <PhExport :size="18" />
             </button>
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Export to PDF"
               @click="actions.exportPdf()"
             >
               <PhFilePdf :size="18" />
             </button>
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Save As..."
               @click="showFilenameModal = true"
             >
@@ -41,31 +41,31 @@
 
         <!-- Format Group -->
         <div class="flex flex-col gap-1">
-          <span class="text-[10px] text-gray-500 font-medium px-1 uppercase tracking-wider">Format</span>
+          <span class="text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">Format</span>
           <div class="flex items-center gap-1 bg-gray-900/30 p-1 rounded-lg border border-gray-700/50">
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Bold (Ctrl+B)"
               @click="actions.insertFormat('**', '**')"
             >
               <PhTextB :size="18" />
             </button>
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Italic (Ctrl+I)"
               @click="actions.insertFormat('*', '*')"
             >
               <PhTextItalic :size="18" />
             </button>
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Strikethrough"
               @click="actions.insertFormat('~~', '~~')"
             >
               <PhTextStrikethrough :size="18" />
             </button>
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Highlight (Ctrl+Shift+H)"
               @click="actions.insertHighlight()"
             >
@@ -76,25 +76,25 @@
 
         <!-- Structure Group -->
         <div class="flex flex-col gap-1">
-          <span class="text-[10px] text-gray-500 font-medium px-1 uppercase tracking-wider">Structure</span>
+          <span class="text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">Structure</span>
           <div class="flex items-center gap-1 bg-gray-900/30 p-1 rounded-lg border border-gray-700/50">
             <HeadingPicker :actions="{ insertHeading: props.actions.insertHeading }" />
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Blockquote (Ctrl+Q)"
               @click="actions.insertBlockquote()"
             >
               <PhQuotes :size="18" />
             </button>
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Inline Code (Ctrl+`)"
               @click="actions.insertFormat('`', '`')"
             >
               <PhCode :size="18" />
             </button>
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Code Block (Ctrl+Shift+~)"
               @click="actions.insertCodeBlock()"
             >
@@ -105,31 +105,31 @@
 
         <!-- Lists Group -->
         <div class="flex flex-col gap-1">
-          <span class="text-[10px] text-gray-500 font-medium px-1 uppercase tracking-wider">List</span>
+          <span class="text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">List</span>
           <div class="flex items-center gap-1 bg-gray-900/30 p-1 rounded-lg border border-gray-700/50">
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Bullet List"
               @click="actions.insertList('-')"
             >
               <PhListBullets :size="18" />
             </button>
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Numbered List"
               @click="actions.insertList('1.')"
             >
               <PhListNumbers :size="18" />
             </button>
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Task List (Ctrl+Shift+L)"
               @click="actions.insertTaskList()"
             >
               <PhCheckSquare :size="18" />
             </button>
              <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Definition List (Ctrl+Shift+R)"
               @click="actions.insertDefinitionList()"
             >
@@ -140,17 +140,17 @@
 
         <!-- Insert Group -->
         <div class="flex flex-col gap-1">
-          <span class="text-[10px] text-gray-500 font-medium px-1 uppercase tracking-wider">Insert</span>
+          <span class="text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">Insert</span>
           <div class="flex items-center gap-1 bg-gray-900/30 p-1 rounded-lg border border-gray-700/50">
              <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Link (Ctrl+K)"
               @click="actions.insertFormat('[](', ')')"
             >
               <PhLink :size="18" />
             </button>
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Image (Ctrl+Shift+M)"
               @click="actions.insertFormat('![](', ')')"
             >
@@ -158,7 +158,7 @@
             </button>
             <EmojiPicker :actions="{ insertEmoji: actions.insertEmoji }" />
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Footnote"
               @click="actions.insertFootnote()"
             >
@@ -169,17 +169,17 @@
 
         <!-- Advanced Group -->
         <div class="flex flex-col gap-1">
-          <span class="text-[10px] text-gray-500 font-medium px-1 uppercase tracking-wider">Extra</span>
+          <span class="text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">Extra</span>
           <div class="flex items-center gap-1 bg-gray-900/30 p-1 rounded-lg border border-gray-700/50">
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Subscript (Ctrl+Shift+Y)"
               @click="actions.insertSubscript()"
             >
               <PhTextSubscript :size="18" />
             </button>
             <button
-              class="editor-toolbar-btn rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+              class="editor-toolbar-btn rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
               title="Superscript (Ctrl+Shift+U)"
               @click="actions.insertSuperscript()"
             >
