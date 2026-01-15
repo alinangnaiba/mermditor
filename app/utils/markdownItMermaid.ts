@@ -26,9 +26,15 @@ interface MermaidCache {
 let mermaidInitialized: boolean = false
 const mermaidCache = new Map<string, MermaidCache>()
 
-export const initMermaid = (): void => {
-  if (!mermaidInitialized && import.meta.client) {
-    const themeVariables: MermaidThemeVariables = {
+interface MermaidConfig {
+  theme?: string
+  themeVariables?: Partial<MermaidThemeVariables>
+}
+
+export const initMermaid = (config?: MermaidConfig): void => {
+  // If config is provided, we re-initialize to apply new theme
+  if ((!mermaidInitialized || config) && import.meta.client) {
+    const defaultThemeVariables: MermaidThemeVariables = {
       primaryColor: '#3b82f6',
       primaryTextColor: '#f3f4f6',
       primaryBorderColor: '#374151',
@@ -41,9 +47,13 @@ export const initMermaid = (): void => {
       tertiaryBkg: '#4b5563',
     }
 
+    const themeVariables = config?.themeVariables
+      ? { ...defaultThemeVariables, ...config.themeVariables }
+      : defaultThemeVariables
+
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'dark',
+      theme: config?.theme || 'dark',
       themeVariables,
     })
     mermaidInitialized = true
@@ -87,10 +97,10 @@ export const processMermaidInMarkdown = (html: string): string => {
   )
 }
 
-export const renderMermaidDiagrams = async (): Promise<void> => {
+export const renderMermaidDiagrams = async (config?: MermaidConfig): Promise<void> => {
   if (!import.meta.client) return
 
-  initMermaid()
+  initMermaid(config)
 
   const mermaidElements = document.querySelectorAll('.mermaid')
 
