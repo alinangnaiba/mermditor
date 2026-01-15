@@ -125,6 +125,11 @@ export const renderMarkdown = async (content: string): Promise<string> => {
     html = html.replace(
       /<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g,
       (match: string, lang: string, code: string) => {
+        // Skip wrapping for mermaid diagrams as they are handled by a separate processor
+        if (lang === 'mermaid') {
+          return match
+        }
+
         const languageNames: Record<string, string> = {
           js: 'JavaScript',
           ts: 'TypeScript',
