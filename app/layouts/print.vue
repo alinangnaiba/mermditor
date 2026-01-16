@@ -119,14 +119,7 @@ img, figure, table, .mermaid-container, .code-block-container {
   page-break-inside: avoid;
 }
 
-/* PagedJS Preview Specific Styles */
-.pagedjs_page {
-  background-color: white;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  margin-bottom: 2rem;
-}
-
-/* Styles for the PagedJS Preview UI (Screen) */
+/* PagedJS Preview Specific Styles (Screen) */
 .pagedjs_pages {
   display: flex;
   flex-direction: column;
@@ -143,8 +136,140 @@ img, figure, table, .mermaid-container, .code-block-container {
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
-/* Hide the content source */
+/* Hide the content source on screen */
 .print-content-source {
-  display: none;
+  display: none !important;
+}
+
+/* =============================================
+   PRINT MEDIA STYLES
+   These ensure the browser prints PagedJS pages correctly
+   ============================================= */
+@media print {
+  /* Reset everything for print - remove shadows and backgrounds */
+  *, *::before, *::after {
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide non-print elements */
+  .print\\:hidden,
+  [class*="print:hidden"] {
+    display: none !important;
+  }
+
+  /* Hide the toolbar */
+  .fixed.top-0,
+  .toolbar {
+    display: none !important;
+  }
+
+  /* Hide the original content source */
+  .print-content-source,
+  #print-content {
+    display: none !important;
+  }
+
+  /* Hide loading overlay */
+  .fixed.inset-0,
+  .loading-overlay {
+    display: none !important;
+  }
+
+  /* Reset body/html for print */
+  html, body {
+    background: white !important;
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Reset the main layout container */
+  .print-layout {
+    background: white !important;
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Reset the preview wrapper */
+  .print-preview-wrapper {
+    background: white !important;
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: auto !important;
+    display: block !important;
+  }
+
+  /* Reset preview container */
+  .preview-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    background-color: white !important;
+    display: block !important;
+    width: auto !important;
+  }
+
+  /* Style the PagedJS pages container for print */
+  .pagedjs_pages {
+    background: transparent !important;
+    background-color: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    width: auto !important;
+  }
+
+  /* Each PagedJS page should be a print page */
+  .pagedjs_page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    background: white !important;
+    background-color: white !important;
+    /* Make page fill the print page */
+    width: 100% !important;
+    height: auto !important;
+    position: relative !important;
+    display: block !important;
+  }
+
+  /* Last page shouldn't have break after */
+  .pagedjs_page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  /* Reset the page box container */
+  .pagedjs_pagebox {
+    margin: 0 !important;
+    padding: 0 !important;
+    position: relative !important;
+  }
+
+  /* Page area styles */
+  .pagedjs_area {
+    background: white !important;
+    background-color: white !important;
+  }
+
+  /* Ensure content inside pages prints correctly */
+  .pagedjs_page_content {
+    background: white !important;
+    background-color: white !important;
+  }
+
+  /* Page margin boxes (header/footer area) */
+  .pagedjs_margin {
+    background: transparent !important;
+  }
 }
 </style>

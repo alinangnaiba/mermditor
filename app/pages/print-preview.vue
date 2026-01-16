@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen flex flex-col items-center">
+  <div class="print-preview-wrapper">
     <!-- Toolbar -->
-    <div class="fixed top-0 left-0 right-0 z-50 bg-gray-900 text-white p-4 shadow-lg flex justify-between items-center print:hidden">
+    <div class="toolbar print:hidden">
       <h1 class="text-xl font-bold">Print Preview</h1>
       <div class="flex gap-4">
         <button
@@ -21,7 +21,7 @@
     </div>
 
     <!-- PagedJS Container -->
-    <div ref="previewContainer" class="w-full mt-20 mb-10 flex justify-center">
+    <div ref="previewContainer" class="preview-container">
       <!-- PagedJS will inject content here -->
     </div>
 
@@ -31,7 +31,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-40 print:hidden">
+    <div v-if="loading" class="loading-overlay print:hidden">
       <div class="bg-white p-6 rounded-lg shadow-xl text-gray-900 flex flex-col items-center">
         <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
         <p>Preparing document...</p>
@@ -115,7 +115,15 @@ const initializePreview = async () => {
 }
 
 const handlePrint = () => {
+  // Set document title for default PDF filename
+  const timestamp = Date.now()
+  const originalTitle = document.title
+  document.title = `document - ${timestamp}`
+
   window.print()
+
+  // Restore original title after print dialog closes
+  document.title = originalTitle
 }
 
 const close = () => {
@@ -136,5 +144,75 @@ onMounted(async () => {
 </script>
 
 <style>
-/* Additional print-specific tweaks if needed */
+/* Screen styles for the print preview page */
+.print-preview-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #525659;
+}
+
+.toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: rgb(17 24 39); /* gray-900 */
+  color: white;
+  padding: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.preview-container {
+  width: 100%;
+  margin-top: 5rem;
+  margin-bottom: 2.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(17, 24, 39, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+
+/* Critical print styles - these override everything during print */
+@media print {
+  /* Reset the wrapper */
+  .print-preview-wrapper {
+    min-height: auto !important;
+    background: white !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Hide toolbar */
+  .toolbar {
+    display: none !important;
+  }
+
+  /* Hide loading overlay */
+  .loading-overlay {
+    display: none !important;
+  }
+
+  /* Reset preview container for print */
+  .preview-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    display: block !important;
+  }
+}
 </style>
