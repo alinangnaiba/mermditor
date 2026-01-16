@@ -90,6 +90,16 @@ html, body {
   border-color: #e5e7eb !important; /* gray-200 */
 }
 
+/* KaTeX Math Overrides - Force dark text for print */
+.katex,
+.katex * {
+  color: #111827 !important; /* gray-900 */
+}
+
+.katex-display {
+  color: #111827 !important;
+}
+
 /* Mermaid Diagram Overrides */
 body .mermaid-container {
   background-color: transparent !important;
