@@ -1,5 +1,6 @@
 import { EditorView } from '@codemirror/view'
 import type { Ref } from 'vue'
+import { usePdfExport } from './usePdfExport'
 
 export interface EditorActions {
   insertFormat: (before: string, after: string) => void
@@ -16,6 +17,7 @@ export interface EditorActions {
   insertSuperscript: () => void
   importMarkdownFile: () => void
   exportMarkdownFile: () => void
+  exportPdf: () => void
   saveAsMarkdownFile: (filename: string) => void
   saveContent: () => void
 }
@@ -26,6 +28,8 @@ export const useEditorActions = (
   autosave: Ref<boolean>,
   lastSaved: Ref<string>
 ): EditorActions => {
+  const { exportToPdf } = usePdfExport()
+
   const insertFormat = (before: string, after: string): void => {
     if (!editorView.value) return
 
@@ -266,6 +270,10 @@ export const useEditorActions = (
     }
   }
 
+  const exportPdf = (): void => {
+    exportToPdf(content.value)
+  }
+
   return {
     insertFormat,
     insertHeading,
@@ -281,6 +289,7 @@ export const useEditorActions = (
     insertSuperscript,
     importMarkdownFile,
     exportMarkdownFile,
+    exportPdf,
     saveAsMarkdownFile,
     saveContent,
   }
