@@ -3,6 +3,40 @@
     <!-- Toolbar -->
     <div class="toolbar print:hidden">
       <h1 class="text-xl font-bold">Print Preview</h1>
+
+      <!-- Settings Controls -->
+      <div class="flex items-center gap-6">
+        <!-- Paper Size -->
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-300">Size:</label>
+          <select
+            v-model="pageSize"
+            class="settings-select"
+            @change="reRenderPreview"
+          >
+            <option value="A4">A4</option>
+            <option value="Letter">Letter</option>
+            <option value="Legal">Legal</option>
+            <option value="A3">A3</option>
+          </select>
+        </div>
+
+        <!-- Margins -->
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-300">Margins:</label>
+          <select
+            v-model="margins"
+            class="settings-select"
+            @change="reRenderPreview"
+          >
+            <option value="narrow">Narrow (10mm)</option>
+            <option value="normal">Normal (20mm)</option>
+            <option value="wide">Wide (30mm)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
       <div class="flex gap-4">
         <button
           class="px-4 py-2 bg-accent-active hover:bg-accent-primary rounded text-white font-medium flex items-center gap-2"
@@ -20,12 +54,12 @@
       </div>
     </div>
 
-    <!-- PagedJS Container -->
-    <div ref="previewContainer" class="preview-container">
+    <!-- PagedJS Container (for screen preview only) -->
+    <div ref="previewContainer" class="preview-container print:hidden">
       <!-- PagedJS will inject content here -->
     </div>
 
-    <!-- Hidden Source Content -->
+    <!-- Source Content (hidden on screen, shown when printing) -->
     <div id="print-content" class="print-content-source">
       <div class="prose max-w-none" v-html="content"></div>
     </div>
@@ -57,6 +91,69 @@ const content = ref('')
 const loading = ref(true)
 const previewContainer = ref<HTMLElement | null>(null)
 
+// Page settings
+type PageSize = 'A4' | 'Letter' | 'Legal' | 'A3'
+type MarginSize = 'narrow' | 'normal' | 'wide'
+
+const pageSize = ref<PageSize>('A4')
+const margins = ref<MarginSize>('normal')
+
+// Generate dynamic @page CSS based on settings
+const getPageStyles = () => {
+  const sizes: Record<PageSize, string> = {
+    'A4': 'A4',
+    'Letter': 'letter',
+    'Legal': 'legal',
+    'A3': 'A3'
+  }
+  const marginValues: Record<MarginSize, string> = {
+    'narrow': '10mm',
+    'normal': '20mm',
+    'wide': '30mm'
+  }
+
+  // Two @page rules:
+  // 1. For PagedJS rendering (with custom margins)
+  // 2. For @media print - zero margins since PagedJS already rendered the margins
+  return `
+    @page {
+      size: ${sizes[pageSize.value]};
+      margin: ${marginValues[margins.value]};
+    }
+
+    @media print {
+      @page {
+        size: ${sizes[pageSize.value]};
+        margin: 0mm;
+      }
+
+      /* Ensure the PagedJS page fills exactly one printed page */
+      .pagedjs_page {
+        width: 100% !important;
+        height: 100vh !important;
+        page-break-after: always !important;
+        break-after: page !important;
+      }
+
+      .pagedjs_page:last-child {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+    }
+  `
+}
+
+// Inject dynamic page styles into document head
+const injectPageStyles = () => {
+  const existingStyle = document.getElementById('dynamic-page-styles')
+  if (existingStyle) existingStyle.remove()
+
+  const styleEl = document.createElement('style')
+  styleEl.id = 'dynamic-page-styles'
+  styleEl.textContent = getPageStyles()
+  document.head.appendChild(styleEl)
+}
+
 const loadContent = () => {
   if (import.meta.client) {
     document.documentElement.classList.remove('dark')
@@ -73,7 +170,10 @@ const loadContent = () => {
 const initializePreview = async () => {
   if (!import.meta.client) return
 
-  // 1. Wait for Vue to render the source content
+  // 1. Inject dynamic page styles
+  injectPageStyles()
+
+  // 2. Wait for Vue to render the source content
   await nextTick()
 
   // 3. Render diagrams in the source container
@@ -112,6 +212,15 @@ const initializePreview = async () => {
     // and the container to render into
     await paged.preview(source.innerHTML, [], previewContainer.value)
   }
+}
+
+// Re-render preview when settings change
+const reRenderPreview = async () => {
+  loading.value = true
+  if (previewContainer.value) {
+    previewContainer.value.innerHTML = ''
+  }
+  await initializePreview()
 }
 
 const handlePrint = () => {
@@ -168,6 +277,26 @@ onMounted(async () => {
   align-items: center;
 }
 
+.settings-select {
+  background-color: rgb(55 65 81); /* gray-700 */
+  border: 1px solid rgb(75 85 99); /* gray-600 */
+  color: white;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.settings-select:hover {
+  background-color: rgb(75 85 99); /* gray-600 */
+}
+
+.settings-select:focus {
+  border-color: rgb(59 130 246); /* blue-500 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
 .preview-container {
   width: 100%;
   margin-top: 5rem;
@@ -207,12 +336,17 @@ onMounted(async () => {
     display: none !important;
   }
 
-  /* Reset preview container for print */
+  /* Show the PagedJS preview container during print */
   .preview-container {
+    display: block !important;
     margin: 0 !important;
     padding: 0 !important;
-    width: auto !important;
-    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Hide the source content - use PagedJS rendered pages */
+  .print-content-source {
+    display: none !important;
   }
 }
 </style>

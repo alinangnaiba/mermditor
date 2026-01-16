@@ -10,17 +10,7 @@
 
 <style>
 /* Print-specific overrides */
-
-@page {
-  margin: 20mm;
-  size: A4;
-
-  @bottom-right {
-    content: counter(page);
-    font-size: 9pt;
-    color: #666;
-  }
-}
+/* Note: @page rules are now dynamically injected in print-preview.vue */
 
 /* Reset body and html backgrounds */
 html, body {
@@ -100,6 +90,25 @@ html, body {
   color: #111827 !important;
 }
 
+/* Task List Overrides - Force dark text for print */
+.prose ul li,
+.prose ol li,
+.prose li.task-list-item,
+.prose .task-list-item {
+  color: #374151 !important; /* gray-700 */
+}
+
+.prose ul li::marker,
+.prose ol li::marker {
+  color: #374151 !important; /* gray-700 */
+}
+
+/* Checkbox styling for print */
+.prose input[type="checkbox"] {
+  accent-color: #2563eb !important; /* blue-600 */
+  border-color: #374151 !important; /* gray-700 */
+}
+
 /* Mermaid Diagram Overrides */
 body .mermaid-container {
   background-color: transparent !important;
@@ -175,11 +184,7 @@ img, figure, table, .mermaid-container, .code-block-container {
     display: none !important;
   }
 
-  /* Hide the original content source */
-  .print-content-source,
-  #print-content {
-    display: none !important;
-  }
+  /* Source content visibility is controlled below with PagedJS rules */
 
   /* Hide loading overlay */
   .fixed.inset-0,
@@ -216,70 +221,38 @@ img, figure, table, .mermaid-container, .code-block-container {
     display: block !important;
   }
 
-  /* Reset preview container */
+  /* Print the PagedJS rendered pages */
   .preview-container {
+    display: block !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: white !important;
-    background-color: white !important;
-    display: block !important;
     width: auto !important;
   }
 
-  /* Style the PagedJS pages container for print */
+  /* PagedJS pages container */
   .pagedjs_pages {
-    background: transparent !important;
-    background-color: transparent !important;
+    display: block !important;
+    background: white !important;
     padding: 0 !important;
     margin: 0 !important;
-    display: block !important;
     width: auto !important;
   }
 
-  /* Each PagedJS page should be a print page */
+  /* Each PagedJS page - the key is to NOT add page breaks since pages are already sized correctly */
   .pagedjs_page {
+    display: block !important;
     box-shadow: none !important;
     margin: 0 !important;
-    padding: 0 !important;
-    page-break-after: always !important;
-    break-after: page !important;
     background: white !important;
-    background-color: white !important;
-    /* Make page fill the print page */
-    width: 100% !important;
-    height: auto !important;
-    position: relative !important;
-    display: block !important;
+    /* Let the browser handle natural page flow - don't force breaks */
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  /* Last page shouldn't have break after */
-  .pagedjs_page:last-child {
-    page-break-after: auto !important;
-    break-after: auto !important;
-  }
-
-  /* Reset the page box container */
-  .pagedjs_pagebox {
-    margin: 0 !important;
-    padding: 0 !important;
-    position: relative !important;
-  }
-
-  /* Page area styles */
-  .pagedjs_area {
-    background: white !important;
-    background-color: white !important;
-  }
-
-  /* Ensure content inside pages prints correctly */
-  .pagedjs_page_content {
-    background: white !important;
-    background-color: white !important;
-  }
-
-  /* Page margin boxes (header/footer area) */
-  .pagedjs_margin {
-    background: transparent !important;
+  /* Hide the source content - we use PagedJS rendered pages */
+  .print-content-source,
+  #print-content {
+    display: none !important;
   }
 }
 </style>
