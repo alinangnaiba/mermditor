@@ -8,138 +8,25 @@
 // No external CSS import to avoid loading issues
 </script>
 
-<style>
-/* Print-specific overrides */
-
-@page {
-  margin: 20mm;
-  size: A4;
-
-  @bottom-right {
-    content: counter(page);
-    font-size: 9pt;
-    color: #666;
-  }
-}
-
-/* Reset body and html backgrounds */
-html, body {
-  background-color: white !important;
-  color: black !important;
-  height: auto !important;
-  overflow: visible !important;
-}
-
-/* Typography Overrides (Force Light Mode) */
-.prose {
-  color: #374151 !important; /* gray-700 */
-  max-width: none !important;
-  font-size: 11pt !important; /* Standard print text size */
-  line-height: 1.2 !important;
-}
-
-.prose h1, .prose h2, .prose h3, .prose h4, .prose strong, .prose b {
-  color: #111827 !important; /* gray-900 */
-}
-
-.prose a {
-  color: #2563eb !important; /* blue-600 */
-  text-decoration: underline;
-}
-
-.prose blockquote {
-  color: #4b5563 !important; /* gray-600 */
-  border-left-color: #e5e7eb !important; /* gray-200 */
-}
-
-.prose code {
-  color: #111827 !important; /* gray-900 */
-  background-color: #f3f4f6 !important; /* gray-100 */
-  border: 1px solid #e5e7eb !important; /* gray-200 */
-  font-size: 9pt !important; /* Smaller for inline code */
-}
-
-.prose pre {
-  background-color: #f9fafb !important; /* gray-50 */
-  border: 1px solid #e5e7eb !important; /* gray-200 */
-  color: #1f2937 !important; /* gray-800 */
-  box-shadow: none !important;
-  font-size: 9pt !important; /* Smaller font for code blocks */
-  line-height: 1.2 !important; /* Tighter line height for code */
-}
-
-.prose pre code {
-  background-color: transparent !important;
-  border: none !important;
-  color: inherit !important;
-  font-size: inherit !important; /* Inherit from pre */
-}
-
-.prose table {
-  border-color: #e5e7eb !important; /* gray-200 */
-}
-
-.prose th {
-  background-color: #f9fafb !important; /* gray-50 */
-  color: #111827 !important; /* gray-900 */
-  border-color: #e5e7eb !important; /* gray-200 */
-}
-
-.prose td {
-  color: #374151 !important; /* gray-700 */
-  border-color: #e5e7eb !important; /* gray-200 */
-}
-
-/* KaTeX Math Overrides - Force dark text for print */
-.katex,
-.katex * {
-  color: #111827 !important; /* gray-900 */
-}
-
-.katex-display {
-  color: #111827 !important;
-}
-
-/* Mermaid Diagram Overrides */
-body .mermaid-container {
-  background-color: transparent !important;
-  border: none !important;
-  margin: 1em 0 !important;
-  box-shadow: none !important;
-}
-
-/* Hide UI elements during print if they leak through */
-body .mermaid-controls,
-body .code-block-header {
-  display: none !important;
-}
-
-body .code-block-container {
-  border: 1px solid #e5e7eb !important;
-  border-radius: 4px !important;
-  overflow: hidden;
-}
-
-/* Ensure pages break correctly */
-h1, h2, h3, h4, h5, h6 {
-  page-break-after: avoid;
-}
-
-img, figure, table, .mermaid-container, .code-block-container {
-  page-break-inside: avoid;
-}
+<style scoped>
+/*
+ * IMPORTANT: This style block is scoped to prevent CSS leaking to other pages.
+ * All styles here only apply when the print layout is active.
+ *
+ * Note: :deep() is used for styles that need to penetrate into child components.
+ */
 
 /* PagedJS Preview Specific Styles (Screen) */
-.pagedjs_pages {
+:deep(.pagedjs_pages) {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 2rem;
-  background-color: #525659; /* Standard PDF viewer background */
+  background-color: #525659;
   width: 100%;
 }
 
-.pagedjs_page {
+:deep(.pagedjs_page) {
   background-color: white;
   margin-bottom: 20px;
   flex: none;
@@ -147,139 +34,235 @@ img, figure, table, .mermaid-container, .code-block-container {
 }
 
 /* Hide the content source on screen */
-.print-content-source {
-  display: none !important;
+:deep(.print-content-source) {
+  display: none;
+}
+</style>
+
+<style>
+/*
+ * Global styles that MUST be unscoped:
+ * - @media print rules (browser print needs these globally)
+ * - html/body resets for print layout pages
+ *
+ * These are wrapped in .print-layout to scope them to this layout only.
+ */
+
+/* Only apply these styles when print-layout is present */
+.print-layout {
+  background-color: white;
+  color: black;
+  min-height: 100vh;
+}
+
+/* Typography for print layout - scoped to .print-layout */
+.print-layout .prose {
+  color: #374151; /* gray-700 */
+  max-width: none;
+  font-size: 11pt;
+  line-height: 1.2;
+}
+
+.print-layout .prose h1,
+.print-layout .prose h2,
+.print-layout .prose h3,
+.print-layout .prose h4,
+.print-layout .prose strong,
+.print-layout .prose b {
+  color: #111827; /* gray-900 */
+}
+
+.print-layout .prose a {
+  color: #2563eb; /* blue-600 */
+  text-decoration: underline;
+}
+
+.print-layout .prose blockquote {
+  color: #4b5563; /* gray-600 */
+  border-left-color: #e5e7eb; /* gray-200 */
+}
+
+.print-layout .prose code {
+  color: #111827; /* gray-900 */
+  background-color: #f3f4f6; /* gray-100 */
+  border: 1px solid #e5e7eb; /* gray-200 */
+  font-size: 9pt;
+}
+
+.print-layout .prose pre {
+  background-color: #f9fafb; /* gray-50 */
+  border: 1px solid #e5e7eb; /* gray-200 */
+  color: #1f2937; /* gray-800 */
+  box-shadow: none;
+  font-size: 9pt;
+  line-height: 1.2;
+}
+
+.print-layout .prose pre code {
+  background-color: transparent;
+  border: none;
+  color: inherit;
+  font-size: inherit;
+}
+
+.print-layout .prose table {
+  border-color: #e5e7eb; /* gray-200 */
+}
+
+.print-layout .prose th {
+  background-color: #f9fafb; /* gray-50 */
+  color: #111827; /* gray-900 */
+  border-color: #e5e7eb; /* gray-200 */
+}
+
+.print-layout .prose td {
+  color: #374151; /* gray-700 */
+  border-color: #e5e7eb; /* gray-200 */
+}
+
+/* KaTeX Math - scoped to .print-layout */
+.print-layout .katex,
+.print-layout .katex * {
+  color: #111827; /* gray-900 */
+}
+
+.print-layout .katex-display {
+  color: #111827;
+}
+
+/* Task Lists - scoped to .print-layout */
+.print-layout .prose ul li,
+.print-layout .prose ol li,
+.print-layout .prose li.task-list-item,
+.print-layout .prose .task-list-item {
+  color: #374151; /* gray-700 */
+}
+
+.print-layout .prose ul li::marker,
+.print-layout .prose ol li::marker {
+  color: #374151; /* gray-700 */
+}
+
+.print-layout .prose input[type="checkbox"] {
+  accent-color: #2563eb; /* blue-600 */
+  border-color: #374151; /* gray-700 */
+}
+
+/* Mermaid Diagrams - scoped to .print-layout */
+.print-layout .mermaid-container {
+  background-color: transparent;
+  border: none;
+  margin: 1em 0;
+  box-shadow: none;
+}
+
+.print-layout .mermaid-controls,
+.print-layout .code-block-header {
+  display: none;
+}
+
+.print-layout .code-block-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Page break hints - scoped to .print-layout */
+.print-layout h1,
+.print-layout h2,
+.print-layout h3,
+.print-layout h4,
+.print-layout h5,
+.print-layout h6 {
+  page-break-after: avoid;
+}
+
+.print-layout img,
+.print-layout figure,
+.print-layout table,
+.print-layout .mermaid-container,
+.print-layout .code-block-container {
+  page-break-inside: avoid;
 }
 
 /* =============================================
    PRINT MEDIA STYLES
-   These ensure the browser prints PagedJS pages correctly
+   These are for @media print and need to be global
+   but are still scoped via .print-layout where possible
    ============================================= */
 @media print {
-  /* Reset everything for print - remove shadows and backgrounds */
-  *, *::before, *::after {
+  /* Reset everything for print */
+  .print-layout *,
+  .print-layout *::before,
+  .print-layout *::after {
     box-shadow: none !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
   /* Hide non-print elements */
-  .print\\:hidden,
-  [class*="print:hidden"] {
+  .print-layout .print\:hidden,
+  .print-layout [class*="print:hidden"] {
     display: none !important;
   }
 
   /* Hide the toolbar */
-  .fixed.top-0,
-  .toolbar {
-    display: none !important;
-  }
-
-  /* Hide the original content source */
-  .print-content-source,
-  #print-content {
+  .print-layout .toolbar {
     display: none !important;
   }
 
   /* Hide loading overlay */
-  .fixed.inset-0,
-  .loading-overlay {
+  .print-layout .loading-overlay {
     display: none !important;
-  }
-
-  /* Reset body/html for print */
-  html, body {
-    background: white !important;
-    background-color: white !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    height: auto !important;
-    overflow: visible !important;
   }
 
   /* Reset the main layout container */
   .print-layout {
     background: white !important;
-    background-color: white !important;
     margin: 0 !important;
     padding: 0 !important;
   }
 
   /* Reset the preview wrapper */
-  .print-preview-wrapper {
+  .print-layout .print-preview-wrapper {
     background: white !important;
-    background-color: white !important;
     margin: 0 !important;
     padding: 0 !important;
     min-height: auto !important;
     display: block !important;
   }
 
-  /* Reset preview container */
-  .preview-container {
+  /* Print the PagedJS rendered pages */
+  .print-layout .preview-container {
+    display: block !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: auto !important;
+  }
+
+  /* PagedJS pages container */
+  .print-layout .pagedjs_pages {
+    display: block !important;
     background: white !important;
-    background-color: white !important;
-    display: block !important;
-    width: auto !important;
-  }
-
-  /* Style the PagedJS pages container for print */
-  .pagedjs_pages {
-    background: transparent !important;
-    background-color: transparent !important;
     padding: 0 !important;
     margin: 0 !important;
-    display: block !important;
     width: auto !important;
   }
 
-  /* Each PagedJS page should be a print page */
-  .pagedjs_page {
+  /* Each PagedJS page */
+  .print-layout .pagedjs_page {
+    display: block !important;
     box-shadow: none !important;
     margin: 0 !important;
-    padding: 0 !important;
-    page-break-after: always !important;
-    break-after: page !important;
     background: white !important;
-    background-color: white !important;
-    /* Make page fill the print page */
-    width: 100% !important;
-    height: auto !important;
-    position: relative !important;
-    display: block !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  /* Last page shouldn't have break after */
-  .pagedjs_page:last-child {
-    page-break-after: auto !important;
-    break-after: auto !important;
-  }
-
-  /* Reset the page box container */
-  .pagedjs_pagebox {
-    margin: 0 !important;
-    padding: 0 !important;
-    position: relative !important;
-  }
-
-  /* Page area styles */
-  .pagedjs_area {
-    background: white !important;
-    background-color: white !important;
-  }
-
-  /* Ensure content inside pages prints correctly */
-  .pagedjs_page_content {
-    background: white !important;
-    background-color: white !important;
-  }
-
-  /* Page margin boxes (header/footer area) */
-  .pagedjs_margin {
-    background: transparent !important;
+  /* Hide the source content - we use PagedJS rendered pages */
+  .print-layout .print-content-source,
+  .print-layout #print-content {
+    display: none !important;
   }
 }
 </style>
