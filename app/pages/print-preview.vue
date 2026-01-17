@@ -98,36 +98,137 @@ type MarginSize = 'narrow' | 'normal' | 'wide'
 const pageSize = ref<PageSize>('A4')
 const margins = ref<MarginSize>('normal')
 
-// Generate dynamic @page CSS based on settings
-const getPageStyles = () => {
-  const sizes: Record<PageSize, string> = {
-    'A4': 'A4',
-    'Letter': 'letter',
-    'Legal': 'legal',
-    'A3': 'A3'
-  }
-  const marginValues: Record<MarginSize, string> = {
-    'narrow': '10mm',
-    'normal': '20mm',
-    'wide': '30mm'
-  }
+// Page size and margin values
+const pageSizes: Record<PageSize, string> = {
+  'A4': 'A4',
+  'Letter': 'letter',
+  'Legal': 'legal',
+  'A3': 'A3'
+}
+const marginValues: Record<MarginSize, string> = {
+  'narrow': '10mm',
+  'normal': '20mm',
+  'wide': '30mm'
+}
 
-  // Two @page rules:
-  // 1. For PagedJS rendering (with custom margins)
-  // 2. For @media print - zero margins since PagedJS already rendered the margins
+// Generate @page CSS for PagedJS (passed as stylesheet to preview())
+const getPageStylesForPagedJS = () => {
   return `
     @page {
-      size: ${sizes[pageSize.value]};
+      size: ${pageSizes[pageSize.value]};
       margin: ${marginValues[margins.value]};
     }
 
+    /* Typography */
+    .prose {
+      color: #374151;
+      max-width: none;
+      font-size: 11pt;
+      line-height: 1.2;
+    }
+
+    .prose h1, .prose h2, .prose h3, .prose h4, .prose strong, .prose b {
+      color: #111827;
+    }
+
+    .prose a {
+      color: #2563eb;
+      text-decoration: underline;
+    }
+
+    .prose blockquote {
+      color: #4b5563;
+      border-left-color: #e5e7eb;
+    }
+
+    .prose code {
+      color: #111827;
+      background-color: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      font-size: 9pt;
+    }
+
+    .prose pre {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      color: #1f2937;
+      box-shadow: none;
+      font-size: 9pt;
+      line-height: 1.2;
+    }
+
+    .prose pre code {
+      background-color: transparent;
+      border: none;
+      color: inherit;
+      font-size: inherit;
+    }
+
+    .prose table {
+      border-color: #e5e7eb;
+    }
+
+    .prose th {
+      background-color: #f9fafb;
+      color: #111827;
+      border-color: #e5e7eb;
+    }
+
+    .prose td {
+      color: #374151;
+      border-color: #e5e7eb;
+    }
+
+    /* KaTeX Math */
+    .katex, .katex * {
+      color: #111827;
+    }
+
+    /* Task Lists */
+    .prose ul li,
+    .prose ol li,
+    .prose li.task-list-item,
+    .prose .task-list-item {
+      color: #374151;
+    }
+
+    .prose input[type="checkbox"] {
+      accent-color: #2563eb;
+    }
+
+    /* Mermaid Diagrams */
+    .mermaid-container {
+      background-color: transparent;
+      border: none;
+      margin: 1em 0;
+      box-shadow: none;
+    }
+
+    .mermaid-controls,
+    .code-block-header {
+      display: none;
+    }
+
+    /* Page breaks */
+    h1, h2, h3, h4, h5, h6 {
+      page-break-after: avoid;
+    }
+
+    img, figure, table, .mermaid-container, .code-block-container {
+      page-break-inside: avoid;
+    }
+  `
+}
+
+// Generate @media print CSS for window.print() (injected into document head)
+const getPrintMediaStyles = () => {
+  return `
     @media print {
       @page {
-        size: ${sizes[pageSize.value]};
+        size: ${pageSizes[pageSize.value]};
         margin: 0mm;
       }
 
-      /* Ensure the PagedJS page fills exactly one printed page */
       .pagedjs_page {
         width: 100% !important;
         height: 100vh !important;
@@ -143,14 +244,28 @@ const getPageStyles = () => {
   `
 }
 
-// Inject dynamic page styles into document head
-const injectPageStyles = () => {
-  const existingStyle = document.getElementById('dynamic-page-styles')
+// Store current blob URL for cleanup
+let currentBlobUrl: string | null = null
+
+// Create a blob URL for the PagedJS stylesheet
+const createStylesheetBlobUrl = () => {
+  if (currentBlobUrl) {
+    URL.revokeObjectURL(currentBlobUrl)
+  }
+  const cssContent = getPageStylesForPagedJS()
+  const blob = new Blob([cssContent], { type: 'text/css' })
+  currentBlobUrl = URL.createObjectURL(blob)
+  return currentBlobUrl
+}
+
+// Inject print media styles into document head (for window.print())
+const injectPrintMediaStyles = () => {
+  const existingStyle = document.getElementById('dynamic-print-styles')
   if (existingStyle) existingStyle.remove()
 
   const styleEl = document.createElement('style')
-  styleEl.id = 'dynamic-page-styles'
-  styleEl.textContent = getPageStyles()
+  styleEl.id = 'dynamic-print-styles'
+  styleEl.textContent = getPrintMediaStyles()
   document.head.appendChild(styleEl)
 }
 
@@ -170,8 +285,8 @@ const loadContent = () => {
 const initializePreview = async () => {
   if (!import.meta.client) return
 
-  // 1. Inject dynamic page styles
-  injectPageStyles()
+  // 1. Inject print media styles for window.print()
+  injectPrintMediaStyles()
 
   // 2. Wait for Vue to render the source content
   await nextTick()
@@ -193,7 +308,7 @@ const initializePreview = async () => {
     }
   })
 
-  // 4. Run Paged.js
+  // 4. Run Paged.js with our complete stylesheet
   const paged = new Previewer()
   const source = document.querySelector('#print-content')
 
@@ -207,10 +322,10 @@ const initializePreview = async () => {
     })
 
     // Start preview
-    // Note: PagedJS moves content from source to previewContainer
-    // We pass the innerHTML as content, empty styles array (styles already loaded),
-    // and the container to render into
-    await paged.preview(source.innerHTML, [], previewContainer.value)
+    // Pass our complete stylesheet as a blob URL - this avoids PagedJS parsing
+    // all document stylesheets (which can fail on complex Tailwind selectors)
+    const stylesheetUrl = createStylesheetBlobUrl()
+    await paged.preview(source.innerHTML, [stylesheetUrl], previewContainer.value)
   }
 }
 
