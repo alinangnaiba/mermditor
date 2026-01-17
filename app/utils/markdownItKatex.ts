@@ -69,7 +69,8 @@ export const processLatex = async (html: string): Promise<string> => {
     })
 
     // Process inline math ($...$)
-    html = html.replace(/\$([^$\n]+?)\$/g, (match, math) => {
+    // Skip currency patterns: $10, $10.00, $.99, $1,000 (when $ is followed by digits/decimals)
+    html = html.replace(/\$(?![\d.,]+[\d\s\-\)])([^$\n]+?)\$/g, (match, math) => {
       try {
         return window.katex.renderToString(math.trim(), {
           displayMode: false,
@@ -100,7 +101,8 @@ export const renderLatexExample = (latex: string, isBlock: boolean = false): str
 
     const renderInlineSegment = (text: string): string => {
       // Replace $...$ inline math (no newline inside)
-      return text.replace(/\$([^$\n]+?)\$/g, (_m, expr) => {
+      // Skip currency patterns: $10, $10.00, $.99, $1,000
+      return text.replace(/\$(?![\d.,]+[\d\s\-\)])([^$\n]+?)\$/g, (_m, expr) => {
         try {
           return window.katex.renderToString(String(expr).trim(), {
             displayMode: false,
