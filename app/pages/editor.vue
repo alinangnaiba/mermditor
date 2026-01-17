@@ -148,6 +148,7 @@
   import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
   import { useMarkdownRenderer } from '../composables/useMarkdownRenderer'
   import { PhQuestion } from '@phosphor-icons/vue'
+  import { sanitizeHtml } from '../utils/sanitizer'
 
   const HelpModal = defineAsyncComponent(() => import('../components/HelpModal.vue'))
   const ConfirmModal = defineAsyncComponent(() => import('../components/ConfirmModal.vue'))
@@ -421,7 +422,7 @@
   const loadContent = (): void => {
     const saved = localStorage.getItem('mermditor-content')
     if (saved) {
-      content.value = saved
+      content.value = sanitizeHtml(saved)
     }
   }
 

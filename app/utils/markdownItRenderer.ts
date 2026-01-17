@@ -84,6 +84,9 @@ export const createMarkdownItInstance = async (): Promise<MarkdownIt> => {
   // Custom renderer for task lists to match dark theme
   md.renderer.rules.list_item_open = function (tokens, idx, options, env, renderer) {
     const token = tokens[idx]
+    if (!token) {
+      return renderer.renderToken(tokens, idx, options)
+    }
     const isTaskList = token.attrGet('class')?.includes('task-list-item')
 
     if (isTaskList) {
@@ -96,6 +99,9 @@ export const createMarkdownItInstance = async (): Promise<MarkdownIt> => {
   // Custom renderer for checkboxes in task lists
   md.renderer.rules.html_inline = function (tokens, idx) {
     const token = tokens[idx]
+    if (!token) {
+      return ''
+    }
     const content = token.content
 
     if (content.includes('type="checkbox"')) {

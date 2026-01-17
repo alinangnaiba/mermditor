@@ -8,6 +8,7 @@ import {
 } from '../utils/markdownItMermaid'
 import { processLatex, renderLatexExample } from '../utils/markdownItKatex'
 import { highlightSyntax } from '../utils/syntaxHighlighter'
+import { sanitizeHtml } from '../utils/sanitizer'
 
 export const useMarkdownRenderer = () => {
   const renderMarkdownContent = async (content: string): Promise<string> => {
@@ -23,7 +24,8 @@ export const useMarkdownRenderer = () => {
       // Step 3: Process LaTeX math expressions
       html = await processLatex(html)
 
-      return html
+      // Step 4: Sanitize final HTML
+      return sanitizeHtml(html)
     } catch (error) {
       console.error('Markdown rendering error:', error)
       return '<p class="text-red-400">Error rendering markdown</p>'
@@ -36,7 +38,7 @@ export const useMarkdownRenderer = () => {
 
     try {
       const html = await renderMarkdown(content)
-      return html
+      return sanitizeHtml(html)
     } catch (error) {
       console.error('Example markdown rendering error:', error)
       return '<p class="text-red-400">Error rendering example</p>'

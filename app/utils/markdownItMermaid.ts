@@ -1,4 +1,5 @@
 import mermaid from 'mermaid'
+import { sanitizeSvg } from './sanitizer'
 
 interface MermaidThemeVariables {
   primaryColor: string
@@ -27,7 +28,7 @@ let mermaidInitialized: boolean = false
 const mermaidCache = new Map<string, MermaidCache>()
 
 interface MermaidConfig {
-  theme?: string
+  theme?: 'default' | 'base' | 'dark' | 'forest' | 'neutral' | 'null'
   themeVariables?: Partial<MermaidThemeVariables>
 }
 
@@ -115,15 +116,16 @@ export const renderMermaidDiagrams = async (config?: MermaidConfig): Promise<voi
       let cached = mermaidCache.get(content)
 
       if (cached) {
-        element.innerHTML = cached.svg
+        element.innerHTML = sanitizeSvg(cached.svg)
         element.id = cached.id
       } else {
         const id = element.id || 'mermaid-' + Math.random().toString(36).substring(2, 11)
         element.id = id
 
         const { svg } = await mermaid.render(id + '-svg', content)
-        element.innerHTML = svg
-        mermaidCache.set(content, { svg, id })
+        const sanitizedSvg = sanitizeSvg(svg)
+        element.innerHTML = sanitizedSvg
+        mermaidCache.set(content, { svg: sanitizedSvg, id })
       }
 
       element.setAttribute('data-processed', 'true')
@@ -287,7 +289,8 @@ export const renderMermaidExample = async (mermaidCode: string): Promise<string>
     initMermaid()
     const id = 'mermaid-example-' + Math.random().toString(36).substring(2, 11)
     const { svg } = await mermaid.render(id, mermaidCode)
-    return `<div class="mermaid-example">${svg}</div>`
+    const sanitizedSvg = sanitizeSvg(svg)
+    return `<div class="mermaid-example">${sanitizedSvg}</div>`
   } catch (error) {
     console.warn('Mermaid example rendering error:', error)
     return '<div class="text-gray-400">Diagram would render here</div>'

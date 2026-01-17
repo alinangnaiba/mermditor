@@ -80,6 +80,7 @@ import { useRouter } from 'vue-router'
 import { PhPrinter } from '@phosphor-icons/vue'
 import { Previewer } from 'pagedjs'
 import { renderMermaidDiagrams } from '../utils/markdownItMermaid'
+import { sanitizeHtml } from '../utils/sanitizer'
 
 // Use the print layout
 definePageMeta({
@@ -274,7 +275,7 @@ const loadContent = () => {
     document.documentElement.classList.remove('dark')
     const storedContent = localStorage.getItem('mermditor-print-content')
     if (storedContent) {
-      content.value = storedContent
+      content.value = sanitizeHtml(storedContent)
     } else {
       // Fallback or redirect if no content
       router.push('/editor')
