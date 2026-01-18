@@ -215,7 +215,7 @@ const getPageStylesForPagedJS = () => {
       page-break-after: avoid;
     }
 
-    img, figure, table, .mermaid-container, .code-block-container {
+    img, figure, table, .code-block-container {
       page-break-inside: avoid;
     }
   `
