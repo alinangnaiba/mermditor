@@ -295,6 +295,9 @@ const initializePreview = async () => {
   // 3. Render diagrams in the source container
   await renderMermaidDiagrams({
     theme: 'default',
+    startOnLoad: false,
+    htmlLabels: false,
+    flowchart: { htmlLabels: false },
     themeVariables: {
       primaryColor: '#2563eb', // blue-600
       primaryTextColor: '#111827', // gray-900

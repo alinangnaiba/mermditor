@@ -31,6 +31,7 @@ const mermaidCache = new Map<string, MermaidCache>()
 interface MermaidConfig {
   theme?: 'default' | 'base' | 'dark' | 'forest' | 'neutral' | 'null'
   themeVariables?: Partial<MermaidThemeVariables>
+  [key: string]: any
 }
 
 /**
@@ -63,14 +64,17 @@ export const initMermaid = async (config?: MermaidConfig): Promise<void> => {
       tertiaryBkg: '#4b5563',
     }
 
-    const themeVariables = config?.themeVariables
-      ? { ...defaultThemeVariables, ...config.themeVariables }
+    const { theme, themeVariables: configThemeVariables, ...otherConfig } = config || {}
+
+    const themeVariables = configThemeVariables
+      ? { ...defaultThemeVariables, ...configThemeVariables }
       : defaultThemeVariables
 
     mermaid.initialize({
       startOnLoad: false,
-      theme: config?.theme || 'dark',
+      theme: theme || 'dark',
       themeVariables,
+      ...otherConfig,
     })
     mermaidInitialized = true
   }
