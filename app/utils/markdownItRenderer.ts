@@ -1,5 +1,6 @@
 import MarkdownIt from 'markdown-it'
 import { emojiMapping } from './emojiMapping'
+import { mathPlugin } from './markdownItMathPlugin'
 
 let mdInstance: MarkdownIt | null = null
 
@@ -14,6 +15,9 @@ export const createMarkdownItInstance = async (): Promise<MarkdownIt> => {
     typographer: true,
     breaks: false,
   })
+
+  // Register math plugin before other plugins to protect math content
+  md.use(mathPlugin)
 
   try {
     // Dynamically import plugins to handle ESM/CommonJS issues
