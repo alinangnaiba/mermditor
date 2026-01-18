@@ -43,15 +43,6 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Log API usage
-    console.log({
-      timestamp: new Date().toISOString(),
-      action: 'github_issue_create',
-      type: sanitizedType,
-      ip: event.node.req.headers['x-forwarded-for'] || 
-          event.node.req.socket.remoteAddress || 'unknown',
-    })
-
     const issueTitle = `[${sanitizedType.toUpperCase()}] ${sanitizedTitle}`
     const issueBody = formatIssueBody(sanitizedType, sanitizedDescription, sanitizedEmail)
     const issueLabels = [sanitizedType.toLowerCase(), 'user-feedback']
