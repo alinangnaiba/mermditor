@@ -1,7 +1,7 @@
 <template>
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 transition-opacity duration-500"
-    :class="{ 'opacity-0': !internalShow }"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 transition-opacity duration-300"
+    :class="{ 'opacity-0 pointer-events-none': !internalShow }"
   >
     <div class="text-center">
       <!-- Logo -->
@@ -35,56 +35,22 @@
       <!-- Loading Text -->
       <div class="text-gray-300">
         <p class="mb-2">{{ loadingText }}</p>
-        <div class="mx-auto h-2 w-64 overflow-hidden rounded-full bg-gray-700">
-          <div
-            class="h-full rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
-            :style="{ width: `${formattedProgress}%` }"
-          />
-        </div>
-        <p class="mt-2 text-sm text-gray-500">{{ formattedProgress }}% complete</p>
-      </div>
-
-      <!-- Loading Steps -->
-      <div class="mx-auto mt-8 max-w-md text-left">
-        <div class="space-y-2">
-          <div
-            v-for="step in loadingSteps"
-            :key="step.id"
-            :class="[
-              'flex items-center space-x-3 text-sm transition-opacity duration-300',
-              step.completed ? 'text-green-400' : step.active ? 'text-blue-400' : 'text-gray-500',
-            ]"
-          >
-            <div class="flex-shrink-0">
-              <PhCheckCircle v-if="step.completed" :size="16" />
-              <PhSpinner v-else-if="step.active" :size="16" class="animate-spin" />
-              <PhCircle v-else :size="16" />
-            </div>
-            <span>{{ step.label }}</span>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, onUnmounted } from 'vue'
-  import { PhCheckCircle, PhSpinner, PhCircle } from '@phosphor-icons/vue'
-
-  interface LoadingStep {
-    id: string
-    label: string
-    completed: boolean
-    active: boolean
-  }
+  import { ref, computed, watch, onMounted } from 'vue'
 
   interface Props {
     show?: boolean
+    step?: string
   }
 
   const props = withDefaults(defineProps<Props>(), {
     show: true,
+    step: 'Loading...',
   })
 
   const emit = defineEmits<{
@@ -92,85 +58,25 @@
   }>()
 
   const internalShow = ref(true)
-  const progress = ref(0)
 
-  const loadingSteps = ref<LoadingStep[]>([
-    { id: 'dependencies', label: 'Loading dependencies...', completed: false, active: true },
-    { id: 'editor', label: 'Initializing editor...', completed: false, active: false },
-    { id: 'markdown', label: 'Setting up markdown renderer...', completed: false, active: false },
-    { id: 'mermaid', label: 'Loading Mermaid diagrams...', completed: false, active: false },
-    { id: 'ready', label: 'Ready to edit!', completed: false, active: false },
-  ])
+  const loadingText = computed(() => props.step)
 
-  const loadingText = computed(() => {
-    const activeStep = loadingSteps.value.find((step) => step.active)
-    return activeStep ? activeStep.label : 'Loading...'
-  })
-
-  const formattedProgress = computed(() => {
-    return progress.value.toFixed(2)
-  })
-
-  let progressInterval: ReturnType<typeof setInterval> | null = null
-  let stepInterval: ReturnType<typeof setTimeout> | null = null
-
-  const simulateLoading = () => {
-    progressInterval = setInterval(() => {
-      if (progress.value < 100) {
-        const delta = Math.random() * 25
-        const next = Math.min(100, Math.round((progress.value + delta) * 100) / 100)
-        progress.value = next
+  // Watch for show prop changes to handle fade out
+  watch(
+    () => props.show,
+    (newShow) => {
+      if (!newShow) {
+        internalShow.value = false
+        // Emit after transition completes
+        setTimeout(() => {
+          emit('loading-complete')
+        }, 300)
       }
-    }, 100)
-
-    const stepTimings = [300, 200, 200, 200, 100]
-
-    stepTimings.forEach((timing, index) => {
-      stepInterval = setTimeout(
-        () => {
-          const steps = loadingSteps.value
-
-          if (index > 0 && steps[index - 1]) {
-            steps[index - 1]!.completed = true
-            steps[index - 1]!.active = false
-          }
-
-          if (index < steps.length && steps[index]) {
-            steps[index].active = true
-
-            if (index === steps.length - 1) {
-              setTimeout(() => {
-                if (steps[index]) {
-                  steps[index].completed = true
-                  steps[index].active = false
-                }
-                progress.value = 100
-
-                setTimeout(() => {
-                  internalShow.value = false
-
-                  setTimeout(() => {
-                    emit('loading-complete')
-                  }, 500) // Match transition duration
-                }, 200)
-              }, timing)
-            }
-          }
-        },
-        stepTimings.slice(0, index + 1).reduce((sum, time) => sum + time, 0)
-      )
-    })
-  }
+    }
+  )
 
   onMounted(() => {
-    if (props.show) {
-      simulateLoading()
-    }
-  })
-
-  onUnmounted(() => {
-    if (progressInterval) clearInterval(progressInterval)
-    if (stepInterval) clearTimeout(stepInterval)
+    internalShow.value = props.show
   })
 </script>
 

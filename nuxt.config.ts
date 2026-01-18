@@ -19,42 +19,14 @@ export default defineNuxtConfig({
           content: 'A simple Markdown editor with Mermaid diagrams and LaTeX math support',
         },
       ],
+      // CDN resources removed - KaTeX and Prism.js are now loaded dynamically via NPM packages
+      // This improves FCP by eliminating render-blocking CSS
       link: [
+        // Keep preconnect for Prism autoloader language definitions (loaded on-demand)
         { rel: 'preconnect', href: 'https://cdn.jsdelivr.net', crossorigin: 'anonymous' },
         { rel: 'dns-prefetch', href: 'https://cdn.jsdelivr.net' },
-        { 
-          rel: 'stylesheet', 
-          href: 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css',
-          integrity: 'sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV',
-          crossorigin: 'anonymous'
-        },
-        {
-          rel: 'stylesheet',
-          href: 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css',
-          integrity: 'sha384-vs7+jbztHoMto5Yd/yinM4/y2DOkPLt0fATcN+j+G4ANY2z4faIzZIOMkpBmWdc4g==',
-          crossorigin: 'anonymous'
-        },
       ],
-      script: [
-        { 
-          src: 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js', 
-          defer: true,
-          integrity: 'sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8',
-          crossorigin: 'anonymous'
-        },
-        {
-          src: 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js',
-          defer: true,
-          integrity: 'sha384-457emw+Nq5s7K1g4J2Q6WZ5DdYxWYqHZZyT7rQy8XrFbF6kI8vM0J+g+V93GjO98',
-          crossorigin: 'anonymous'
-        },
-        {
-          src: 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js',
-          defer: true,
-          integrity: 'sha384-37W3F0YCCQ0tJfBfZcI2MqHqgF6oVg0q8N39DgDq0Jf4Q9t3FqS9d02y6e1eRjL9',
-          crossorigin: 'anonymous'
-        },
-      ],
+      script: [],
     },
   },
   nitro: {
@@ -63,22 +35,22 @@ export default defineNuxtConfig({
         headers: {
           'Content-Security-Policy': [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-            "img-src 'self' data: https:",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data: https: blob:",
             "font-src 'self' data:",
-            "connect-src 'self' https://api.github.com",
+            "connect-src 'self' https://api.github.com https://va.vercel-scripts.com blob:",
             "frame-ancestors 'none'",
             "base-uri 'self'",
-            "form-action 'self'"
+            "form-action 'self'",
           ].join('; '),
           'X-Content-Type-Options': 'nosniff',
           'X-Frame-Options': 'DENY',
           'X-XSS-Protection': '1; mode=block',
           'Referrer-Policy': 'strict-origin-when-cross-origin',
-          'Permissions-Policy': 'geolocation=(), microphone=(), camera=()'
-        }
-      }
-    }
-  }
+          'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+        },
+      },
+    },
+  },
 })
