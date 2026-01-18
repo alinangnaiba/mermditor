@@ -205,6 +205,25 @@ const getPageStylesForPagedJS = () => {
       box-shadow: none;
     }
 
+    .mermaid-viewport {
+      overflow: visible !important;
+      height: auto !important;
+      min-height: auto !important;
+    }
+
+    .mermaid-diagram {
+      transform: none !important;
+    }
+
+    .mermaid {
+      display: block !important;
+    }
+
+    .mermaid svg {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
     .mermaid-controls,
     .code-block-header {
       display: none;
