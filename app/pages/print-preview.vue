@@ -205,6 +205,25 @@ const getPageStylesForPagedJS = () => {
       box-shadow: none;
     }
 
+    .mermaid-viewport {
+      overflow: visible !important;
+      height: auto !important;
+      min-height: auto !important;
+    }
+
+    .mermaid-diagram {
+      transform: none !important;
+    }
+
+    .mermaid {
+      display: block !important;
+    }
+
+    .mermaid svg {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
     .mermaid-controls,
     .code-block-header {
       display: none;
@@ -215,7 +234,7 @@ const getPageStylesForPagedJS = () => {
       page-break-after: avoid;
     }
 
-    img, figure, table, .mermaid-container, .code-block-container {
+    img, figure, table, .code-block-container {
       page-break-inside: avoid;
     }
   `
@@ -295,6 +314,9 @@ const initializePreview = async () => {
   // 3. Render diagrams in the source container
   await renderMermaidDiagrams({
     theme: 'default',
+    startOnLoad: false,
+    htmlLabels: false,
+    flowchart: { htmlLabels: false },
     themeVariables: {
       primaryColor: '#2563eb', // blue-600
       primaryTextColor: '#111827', // gray-900
