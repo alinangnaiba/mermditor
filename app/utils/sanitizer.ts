@@ -21,6 +21,12 @@ export const sanitizeHtml = (html: string): string => {
       'sub', 'sup', 'mark', 'del', 'ins', 'small',
       'dl', 'dt', 'dd', 'hr', 'input', 'label',
       'button', 'details', 'summary', 'figure', 'figcaption',
+      // MathML elements for KaTeX rendering
+      'math', 'semantics', 'mrow', 'mi', 'mo', 'mn', 'ms', 'mtext',
+      'mspace', 'msqrt', 'mroot', 'mfrac', 'msub', 'msup', 'msubsup',
+      'munder', 'mover', 'munderover', 'mtable', 'mtr', 'mtd',
+      'menclose', 'mphantom', 'mpadded', 'mglyph', 'annotation',
+      'annotation-xml',
     ],
     ALLOWED_ATTR: [
       'href', 'src', 'alt', 'title', 'class', 'id', 'name',
@@ -36,6 +42,12 @@ export const sanitizeHtml = (html: string): string => {
       'xlink:href', 'clip-path', 'mask', 'filter',
       'data-processed', 'data-content', 'type', 'checked', 'disabled',
       'target', 'rel', 'colspan', 'rowspan', 'open', 'aria-label', 'role',
+      // MathML and KaTeX attributes
+      'aria-hidden', 'encoding', 'mathvariant', 'stretchy', 'fence',
+      'separator', 'accent', 'accentunder', 'lspace', 'rspace',
+      'linethickness', 'scriptlevel', 'displaystyle', 'largeop',
+      'movablelimits', 'symmetric', 'maxsize', 'minsize', 'voffset',
+      'xmlns:xlink',
     ],
     ALLOW_DATA_ATTR: true,
     ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
