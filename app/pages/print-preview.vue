@@ -80,6 +80,7 @@ import { useRouter } from 'vue-router'
 import { PhPrinter } from '@phosphor-icons/vue'
 import { Previewer } from 'pagedjs'
 import { renderMermaidDiagrams } from '../utils/markdownItMermaid'
+import { sanitizeHtml } from '../utils/sanitizer'
 
 // Use the print layout
 definePageMeta({
@@ -204,6 +205,25 @@ const getPageStylesForPagedJS = () => {
       box-shadow: none;
     }
 
+    .mermaid-viewport {
+      overflow: visible !important;
+      height: auto !important;
+      min-height: auto !important;
+    }
+
+    .mermaid-diagram {
+      transform: none !important;
+    }
+
+    .mermaid {
+      display: block !important;
+    }
+
+    .mermaid svg {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
     .mermaid-controls,
     .code-block-header {
       display: none;
@@ -214,7 +234,7 @@ const getPageStylesForPagedJS = () => {
       page-break-after: avoid;
     }
 
-    img, figure, table, .mermaid-container, .code-block-container {
+    img, figure, table, .code-block-container {
       page-break-inside: avoid;
     }
   `
@@ -274,7 +294,7 @@ const loadContent = () => {
     document.documentElement.classList.remove('dark')
     const storedContent = localStorage.getItem('mermditor-print-content')
     if (storedContent) {
-      content.value = storedContent
+      content.value = sanitizeHtml(storedContent)
     } else {
       // Fallback or redirect if no content
       router.push('/editor')
@@ -294,6 +314,9 @@ const initializePreview = async () => {
   // 3. Render diagrams in the source container
   await renderMermaidDiagrams({
     theme: 'default',
+    startOnLoad: false,
+    htmlLabels: false,
+    flowchart: { htmlLabels: false },
     themeVariables: {
       primaryColor: '#2563eb', // blue-600
       primaryTextColor: '#111827', // gray-900

@@ -1,113 +1,129 @@
-declare global {
-  interface Window {
-    katex: {
-      renderToString: (
-        tex: string,
-        options?: {
-          displayMode?: boolean
-          throwOnError?: boolean
-          strict?: boolean
-        }
-      ) => string
-    }
+import type { KatexOptions } from 'katex'
+
+// Lazy-loaded KaTeX module
+let katexModule: typeof import('katex').default | null = null
+let katexCssLoaded = false
+
+/**
+ * Dynamically loads KaTeX library and CSS only when needed.
+ * This eliminates the render-blocking CDN CSS and replaces polling with proper async loading.
+ */
+const loadKatex = async (): Promise<typeof import('katex').default> => {
+  if (katexModule) return katexModule
+
+  // Load KaTeX module
+  const katex = await import('katex')
+  katexModule = katex.default
+
+  // Load CSS only once
+  if (!katexCssLoaded && import.meta.client) {
+    await import('katex/dist/katex.min.css')
+    katexCssLoaded = true
   }
+
+  return katexModule
 }
 
-export const waitForKatex = (): Promise<void> => {
-  return new Promise((resolve) => {
-    if (import.meta.client && window.katex) {
-      resolve()
-      return
-    }
-
-    const checkKatex = () => {
-      if (window.katex) {
-        resolve()
-      } else {
-        setTimeout(checkKatex, 50)
-      }
-    }
-
-    if (import.meta.client) {
-      checkKatex()
-    } else {
-      resolve()
-    }
-  })
+/**
+ * Check if content contains LaTeX math expressions
+ */
+const containsMath = (html: string): boolean => {
+  return html.includes('$')
 }
 
+/**
+ * Process LaTeX math expressions in HTML content.
+ * Only loads KaTeX if math expressions are detected.
+ */
 export const processLatex = async (html: string): Promise<string> => {
   if (!import.meta.client) return html
-  await waitForKatex()
-  if (window.katex) {
-    const codeBlocks: string[] = []
-    let codeBlockIndex = 0
 
-    // Preserve code blocks during LaTeX processing
-    html = html.replace(/<pre><code[^>]*>[\s\S]*?<\/code><\/pre>/g, (match) => {
-      const placeholder = `__CODE_BLOCK_${codeBlockIndex}__`
-      codeBlocks[codeBlockIndex] = match
-      codeBlockIndex++
-      return placeholder
-    })
+  // Early exit if no math expressions detected
+  if (!containsMath(html)) return html
 
-    html = html.replace(/<code[^>]*>[\s\S]*?<\/code>/g, (match) => {
-      const placeholder = `__CODE_BLOCK_${codeBlockIndex}__`
-      codeBlocks[codeBlockIndex] = match
-      codeBlockIndex++
-      return placeholder
-    })
+  const katex = await loadKatex()
 
-    // Process display math ($$...$$)
-    html = html.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
-      try {
-        return `<div class="katex-display">${window.katex.renderToString(math.trim(), { displayMode: true, throwOnError: false, strict: false })}</div>`
-      } catch (error) {
-        console.error('LaTeX display math error:', error)
-        return `<div class="text-red-400">LaTeX Error: ${match}</div>`
-      }
-    })
+  const codeBlocks: string[] = []
+  let codeBlockIndex = 0
 
-    // Process inline math ($...$)
-    // Skip currency patterns: $10, $10.00, $.99, $1,000 (when $ is followed by digits/decimals)
-    html = html.replace(/\$(?![\d.,]+[\d\s\-\)])([^$\n]+?)\$/g, (match, math) => {
-      try {
-        return window.katex.renderToString(math.trim(), {
-          displayMode: false,
-          throwOnError: false,
-          strict: false,
-        })
-      } catch (error) {
-        console.error('LaTeX inline math error:', error)
-        return `<span class="text-red-400">LaTeX Error: ${match}</span>`
-      }
-    })
+  // Preserve code blocks during LaTeX processing
+  html = html.replace(/<pre><code[^>]*>[\s\S]*?<\/code><\/pre>/g, (match) => {
+    const placeholder = `__CODE_BLOCK_${codeBlockIndex}__`
+    codeBlocks[codeBlockIndex] = match
+    codeBlockIndex++
+    return placeholder
+  })
 
-    // Restore code blocks
-    for (let i = 0; i < codeBlocks.length; i++) {
-      const codeBlock = codeBlocks[i]
-      if (codeBlock !== undefined) {
-        html = html.replace(`__CODE_BLOCK_${i}__`, codeBlock)
-      }
+  html = html.replace(/<code[^>]*>[\s\S]*?<\/code>/g, (match) => {
+    const placeholder = `__CODE_BLOCK_${codeBlockIndex}__`
+    codeBlocks[codeBlockIndex] = match
+    codeBlockIndex++
+    return placeholder
+  })
+
+  const renderOptions: KatexOptions = {
+    throwOnError: false,
+    strict: false,
+  }
+
+  // Process display math ($$...$$)
+  html = html.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
+    try {
+      return `<div class="katex-display">${katex.renderToString(math.trim(), { ...renderOptions, displayMode: true })}</div>`
+    } catch (error) {
+      console.error('LaTeX display math error:', error)
+      return `<div class="text-red-400">LaTeX Error: ${match}</div>`
+    }
+  })
+
+  // Process inline math ($...$)
+  // Skip currency patterns: $10, $10.00, $.99, $1,000 (when $ is followed by digits/decimals)
+  html = html.replace(/\$(?![\d.,]+[\d\s\-\)])([^$\n]+?)\$/g, (match, math) => {
+    try {
+      return katex.renderToString(math.trim(), { ...renderOptions, displayMode: false })
+    } catch (error) {
+      console.error('LaTeX inline math error:', error)
+      return `<span class="text-red-400">LaTeX Error: ${match}</span>`
+    }
+  })
+
+  // Restore code blocks
+  for (let i = 0; i < codeBlocks.length; i++) {
+    const codeBlock = codeBlocks[i]
+    if (codeBlock !== undefined) {
+      html = html.replace(`__CODE_BLOCK_${i}__`, codeBlock)
     }
   }
 
   return html
 }
 
-export const renderLatexExample = (latex: string, isBlock: boolean = false): string => {
+/**
+ * Render a LaTeX example string (used in guide/help pages).
+ * Loads KaTeX on demand.
+ */
+export const renderLatexExample = async (
+  latex: string,
+  isBlock: boolean = false
+): Promise<string> => {
   try {
-    if (!import.meta.client || !window.katex) return latex
+    if (!import.meta.client) return latex
+
+    const katex = await loadKatex()
+
+    const renderOptions: KatexOptions = {
+      throwOnError: false,
+      strict: false,
+    }
 
     const renderInlineSegment = (text: string): string => {
       // Replace $...$ inline math (no newline inside)
       // Skip currency patterns: $10, $10.00, $.99, $1,000
       return text.replace(/\$(?![\d.,]+[\d\s\-\)])([^$\n]+?)\$/g, (_m, expr) => {
         try {
-          return window.katex.renderToString(String(expr).trim(), {
+          return katex.renderToString(String(expr).trim(), {
+            ...renderOptions,
             displayMode: false,
-            throwOnError: false,
-            strict: false,
           })
         } catch {
           return _m
@@ -125,10 +141,9 @@ export const renderLatexExample = (latex: string, isBlock: boolean = false): str
           if (/^\$\$[\s\S]*?\$\$$/.test(trimmed)) {
             const content = trimmed.slice(2, -2)
             try {
-              return window.katex.renderToString(content.trim(), {
+              return katex.renderToString(content.trim(), {
+                ...renderOptions,
                 displayMode: true,
-                throwOnError: false,
-                strict: false,
               })
             } catch {
               return trimmed
@@ -141,10 +156,9 @@ export const renderLatexExample = (latex: string, isBlock: boolean = false): str
 
     if (isBlock) {
       try {
-        return window.katex.renderToString(String(latex).trim(), {
+        return katex.renderToString(String(latex).trim(), {
+          ...renderOptions,
           displayMode: true,
-          throwOnError: false,
-          strict: false,
         })
       } catch {
         return String(latex)

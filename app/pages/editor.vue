@@ -3,7 +3,8 @@
   <div class="relative flex h-screen flex-col overflow-hidden">
     <!-- Loading Overlay (non-blocking DOM) -->
     <LoadingScreen
-      v-if="isLoading"
+      :show="isLoading"
+      :step="loadingStep"
       class="absolute inset-0 z-50"
       @loading-complete="onLoadingComplete"
     />
@@ -148,6 +149,7 @@
   import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
   import { useMarkdownRenderer } from '../composables/useMarkdownRenderer'
   import { PhQuestion } from '@phosphor-icons/vue'
+  import { sanitizeHtml } from '../utils/sanitizer'
 
   const HelpModal = defineAsyncComponent(() => import('../components/HelpModal.vue'))
   const ConfirmModal = defineAsyncComponent(() => import('../components/ConfirmModal.vue'))
@@ -160,6 +162,7 @@
   })
 
   const isLoading: Ref<boolean> = ref(true)
+  const loadingStep: Ref<string> = ref('Initializing...')
   const editorContainer: Ref<HTMLElement | null> = ref(null)
   const previewContainer: Ref<HTMLElement | null> = ref(null)
   const content: Ref<string> = ref('')
@@ -203,16 +206,13 @@
     }, 300)
   }
 
-  watch(
-    content,
-    async (newContent) => {
-      renderedContent.value = await renderMarkdown(newContent)
-      await nextTick()
-      await debouncedMermaidRender()
-      highlightSyntax()
-    },
-    { immediate: true }
-  )
+  // Watch for content changes and re-render (not immediate - initial render happens after editor init)
+  watch(content, async (newContent) => {
+    renderedContent.value = await renderMarkdown(newContent)
+    await nextTick()
+    await debouncedMermaidRender()
+    await highlightSyntax()
+  })
 
   // Methods
   const onLoadingComplete = (): void => {
@@ -421,7 +421,7 @@
   const loadContent = (): void => {
     const saved = localStorage.getItem('mermditor-content')
     if (saved) {
-      content.value = saved
+      content.value = sanitizeHtml(saved)
     }
   }
 
@@ -537,16 +537,30 @@
     checkMobile()
     window.addEventListener('resize', checkMobile)
 
+    // Load saved content and settings
+    loadingStep.value = 'Loading saved content...'
     loadContent()
     loadSettings()
     loadPaneWidths()
+
     await nextTick()
+
+    // Initialize editor
+    loadingStep.value = 'Initializing editor...'
     await initEditor()
 
     await nextTick()
     setupScrollSync()
     applyPaneWidths()
-    
+
+    // Trigger initial markdown render after editor is ready
+    loadingStep.value = 'Rendering preview...'
+    renderedContent.value = await renderMarkdown(content.value)
+    await nextTick()
+    await debouncedMermaidRender()
+    await highlightSyntax()
+
+    // Hide loading screen
     requestAnimationFrame(() => {
       isLoading.value = false
     })

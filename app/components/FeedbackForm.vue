@@ -188,13 +188,24 @@
     issueUrl.value = ''
   }
 
+  // Get CSRF token from cookie
+  const getCsrfToken = (): string | undefined => {
+    if (!import.meta.client) return undefined
+    const match = document.cookie.match(/csrf-token=([^;]+)/)
+    return match ? match[1] : undefined
+  }
+
   const submitSuggestion = async () => {
     isSubmitting.value = true
     error.value = ''
     try {
+      const csrfToken = getCsrfToken()
       const data = (await $fetch('/api/suggestions', {
         method: 'POST',
         body: form.value,
+        headers: csrfToken ? {
+          'x-csrf-token': csrfToken
+        } : {}
       })) as { success: boolean; issueUrl: string; issueNumber: number }
 
       submitted.value = true

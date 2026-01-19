@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
   import { ref, onMounted, watch } from 'vue'
-  import { useMarkdownRenderer } from '../composables/useMarkdownRenderer'
+  import { renderLatexExample } from '../utils/markdownItKatex'
 
   interface Props {
     latex: string
@@ -15,32 +15,9 @@
     isBlock: false,
   })
 
-  const { renderLatexExample } = useMarkdownRenderer()
   const renderedContent = ref('')
 
-  // Wait for KaTeX script to be available on the client
-  const waitForKatex = (): Promise<void> => {
-    return new Promise((resolve) => {
-      if (!import.meta.client) {
-        resolve()
-        return
-      }
-      if ((window as any).katex) {
-        resolve()
-        return
-      }
-      const check = () => {
-        if ((window as any).katex) {
-          resolve()
-        } else {
-          setTimeout(check, 50)
-        }
-      }
-      check()
-    })
-  }
-
-  const renderContent = () => {
+  const renderContent = async () => {
     const input = props.latex || ''
     if (!input) {
       renderedContent.value = ''
@@ -51,22 +28,22 @@
       if (props.isBlock) {
         const parts = input.split(/(\$\$[\s\S]*?\$\$)/g).filter(Boolean)
 
-        const html = parts
-          .map((part) => {
+        const htmlParts = await Promise.all(
+          parts.map(async (part) => {
             const trimmed = part.trim()
             if (/^\$\$[\s\S]*?\$\$$/.test(trimmed)) {
               const content = trimmed.slice(2, -2)
-              return renderLatexExample(content, true)
+              return await renderLatexExample(content, true)
             }
             return trimmed ? `<p>${trimmed.replace(/\n+/g, '<br/>')}</p>` : ''
           })
-          .join('')
+        )
 
-        renderedContent.value = html
+        renderedContent.value = htmlParts.join('')
         return
       }
 
-      renderedContent.value = renderLatexExample(input, false)
+      renderedContent.value = await renderLatexExample(input, false)
     } catch {
       renderedContent.value = input
     }
@@ -74,19 +51,14 @@
 
   watch(
     () => [props.latex, props.isBlock],
-    async () => {
-      if (import.meta.client && !(window as any).katex) {
-        await waitForKatex()
-      }
+    () => {
       renderContent()
     },
     { immediate: true }
   )
 
   onMounted(() => {
-    if (import.meta.client) {
-      waitForKatex().then(renderContent)
-    }
+    renderContent()
   })
 </script>
 

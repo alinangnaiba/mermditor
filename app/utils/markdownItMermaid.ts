@@ -1,4 +1,4 @@
-import mermaid from 'mermaid'
+import { sanitizeSvg } from './sanitizer'
 
 interface MermaidThemeVariables {
   primaryColor: string
@@ -23,17 +23,34 @@ interface MermaidCache {
   }
 }
 
+// Lazy-loaded Mermaid module
+let mermaidModule: typeof import('mermaid').default | null = null
 let mermaidInitialized: boolean = false
 const mermaidCache = new Map<string, MermaidCache>()
 
 interface MermaidConfig {
-  theme?: string
+  theme?: 'default' | 'base' | 'dark' | 'forest' | 'neutral' | 'null'
   themeVariables?: Partial<MermaidThemeVariables>
+  [key: string]: any
 }
 
-export const initMermaid = (config?: MermaidConfig): void => {
+/**
+ * Dynamically loads Mermaid library only when needed.
+ * This saves ~500KB on initial load when no diagrams are present.
+ */
+const loadMermaid = async (): Promise<typeof import('mermaid').default> => {
+  if (mermaidModule) return mermaidModule
+
+  const { default: mermaid } = await import('mermaid')
+  mermaidModule = mermaid
+  return mermaid
+}
+
+export const initMermaid = async (config?: MermaidConfig): Promise<void> => {
   // If config is provided, we re-initialize to apply new theme
   if ((!mermaidInitialized || config) && import.meta.client) {
+    const mermaid = await loadMermaid()
+
     const defaultThemeVariables: MermaidThemeVariables = {
       primaryColor: '#3b82f6',
       primaryTextColor: '#f3f4f6',
@@ -47,14 +64,17 @@ export const initMermaid = (config?: MermaidConfig): void => {
       tertiaryBkg: '#4b5563',
     }
 
-    const themeVariables = config?.themeVariables
-      ? { ...defaultThemeVariables, ...config.themeVariables }
+    const { theme, themeVariables: configThemeVariables, ...otherConfig } = config || {}
+
+    const themeVariables = configThemeVariables
+      ? { ...defaultThemeVariables, ...configThemeVariables }
       : defaultThemeVariables
 
     mermaid.initialize({
       startOnLoad: false,
-      theme: config?.theme || 'dark',
+      theme: theme || 'dark',
       themeVariables,
+      ...otherConfig,
     })
     mermaidInitialized = true
   }
@@ -100,9 +120,14 @@ export const processMermaidInMarkdown = (html: string): string => {
 export const renderMermaidDiagrams = async (config?: MermaidConfig): Promise<void> => {
   if (!import.meta.client) return
 
-  initMermaid(config)
+  const mermaidElements = document.querySelectorAll('.mermaid:not([data-processed])')
 
-  const mermaidElements = document.querySelectorAll('.mermaid')
+  // Early exit if no diagrams to render - don't load Mermaid at all
+  if (mermaidElements.length === 0) return
+
+  // Only load and initialize Mermaid when we have diagrams
+  await initMermaid(config)
+  const mermaid = await loadMermaid()
 
   for (const element of mermaidElements) {
     const content = element.textContent?.trim() || ''
@@ -115,15 +140,16 @@ export const renderMermaidDiagrams = async (config?: MermaidConfig): Promise<voi
       let cached = mermaidCache.get(content)
 
       if (cached) {
-        element.innerHTML = cached.svg
+        element.innerHTML = sanitizeSvg(cached.svg)
         element.id = cached.id
       } else {
         const id = element.id || 'mermaid-' + Math.random().toString(36).substring(2, 11)
         element.id = id
 
         const { svg } = await mermaid.render(id + '-svg', content)
-        element.innerHTML = svg
-        mermaidCache.set(content, { svg, id })
+        const sanitizedSvg = sanitizeSvg(svg)
+        element.innerHTML = sanitizedSvg
+        mermaidCache.set(content, { svg: sanitizedSvg, id })
       }
 
       element.setAttribute('data-processed', 'true')
@@ -284,10 +310,12 @@ export const renderMermaidExample = async (mermaidCode: string): Promise<string>
   if (!import.meta.client) return '<div>Mermaid diagram would render here</div>'
 
   try {
-    initMermaid()
+    await initMermaid()
+    const mermaid = await loadMermaid()
     const id = 'mermaid-example-' + Math.random().toString(36).substring(2, 11)
     const { svg } = await mermaid.render(id, mermaidCode)
-    return `<div class="mermaid-example">${svg}</div>`
+    const sanitizedSvg = sanitizeSvg(svg)
+    return `<div class="mermaid-example">${sanitizedSvg}</div>`
   } catch (error) {
     console.warn('Mermaid example rendering error:', error)
     return '<div class="text-gray-400">Diagram would render here</div>'

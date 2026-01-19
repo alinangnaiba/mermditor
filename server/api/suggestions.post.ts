@@ -1,15 +1,25 @@
+import { validateFeedback, sanitizeInput, validateGitHubToken } from '../utils/validator'
+import rateLimit from '../middleware/rateLimit'
+
 export default defineEventHandler(async (event) => {
+  await rateLimit(event)
   try {
     const body = await readBody(event)
 
-    if (!body.title || !body.description || !body.type) {
+    // Validate input
+    const { valid, errors } = validateFeedback(body)
+    if (!valid) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Missing required fields: title, description, and type are required',
+        statusMessage: 'Validation failed: ' + errors.join(', '),
       })
     }
 
-    const { title, description, type, email } = body
+    // Sanitize inputs
+    const sanitizedTitle = sanitizeInput(body.title)
+    const sanitizedDescription = sanitizeInput(body.description)
+    const sanitizedType = sanitizeInput(body.type)
+    const sanitizedEmail = body.email ? sanitizeInput(body.email) : undefined
 
     const GITHUB_OWNER = process.env.GITHUB_OWNER
     const GITHUB_REPO = process.env.GITHUB_REPO
@@ -17,23 +27,25 @@ export default defineEventHandler(async (event) => {
     const GITHUB_BASE_URL = process.env.GITHUB_BASE_URL
 
     // Validate GitHub configuration
-    if (!GITHUB_TOKEN) {
+    if (!GITHUB_TOKEN || !validateGitHubToken(GITHUB_TOKEN)) {
+      console.error('Invalid GitHub token configuration')
       throw createError({
         statusCode: 500,
-        statusMessage: 'GitHub integration not configured - missing GITHUB_TOKEN',
+        statusMessage: 'Service temporarily unavailable',
       })
     }
 
     if (!GITHUB_OWNER || !GITHUB_REPO) {
+      console.error('Missing GitHub owner or repo configuration')
       throw createError({
         statusCode: 500,
-        statusMessage: 'GitHub integration not configured - missing GITHUB_OWNER or GITHUB_REPO',
+        statusMessage: 'Service temporarily unavailable',
       })
     }
 
-    const issueTitle = `[${type.toUpperCase()}] ${title}`
-    const issueBody = formatIssueBody(type, description, email)
-    const issueLabels = [type.toLowerCase(), 'user-feedback']
+    const issueTitle = `[${sanitizedType.toUpperCase()}] ${sanitizedTitle}`
+    const issueBody = formatIssueBody(sanitizedType, sanitizedDescription, sanitizedEmail)
+    const issueLabels = [sanitizedType.toLowerCase(), 'user-feedback']
 
     const githubUrl = `${GITHUB_BASE_URL}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/issues`
 
@@ -55,9 +67,10 @@ export default defineEventHandler(async (event) => {
     // Handle GitHub API response
     if (!response.ok) {
       const errorData = await response.json()
+      console.error('GitHub API error:', errorData)
       throw createError({
         statusCode: response.status,
-        statusMessage: `GitHub API error: ${errorData.message || response.statusText}`,
+        statusMessage: 'Failed to submit suggestion. Please try again later.',
       })
     }
 
@@ -74,13 +87,10 @@ export default defineEventHandler(async (event) => {
       throw error
     }
 
-    let errorMessage = 'Unknown error'
-    if (typeof error === 'object' && error !== null && 'message' in error) {
-      errorMessage = String((error as { message?: unknown }).message)
-    }
+    console.error('Internal server error:', error)
     throw createError({
       statusCode: 500,
-      statusMessage: `Internal server error: ${errorMessage}`,
+      statusMessage: 'An unexpected error occurred. Please try again later.',
     })
   }
 })

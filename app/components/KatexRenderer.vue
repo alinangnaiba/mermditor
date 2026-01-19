@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
   import { ref, watch, onMounted } from 'vue'
-  import { renderLatexExample, waitForKatex } from '../utils/markdownItKatex'
+  import { renderLatexExample } from '../utils/markdownItKatex'
 
   interface Props {
     latex: string
@@ -33,8 +33,8 @@
     error.value = ''
 
     try {
-      await waitForKatex()
-      renderedLatex.value = renderLatexExample(props.latex.trim(), props.block)
+      // renderLatexExample is now async and handles KaTeX loading internally
+      renderedLatex.value = await renderLatexExample(props.latex.trim(), props.block)
     } catch (err) {
       error.value = err instanceof Error ? err.message : String(err)
     } finally {

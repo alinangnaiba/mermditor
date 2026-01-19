@@ -1,6 +1,7 @@
 import { EditorView } from '@codemirror/view'
 import type { Ref } from 'vue'
 import { usePdfExport } from './usePdfExport'
+import { sanitizeHtml } from '../utils/sanitizer'
 
 export interface EditorActions {
   insertFormat: (before: string, after: string) => void
