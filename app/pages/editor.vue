@@ -369,6 +369,32 @@
     document.addEventListener('mouseup', handleMouseUp)
   }
 
+  const setupCopyButtons = (): void => {
+    if (!previewContainer.value) return
+
+    previewContainer.value.addEventListener('click', (e: MouseEvent) => {
+      const btn = (e.target as Element).closest('.code-block-copy') as HTMLButtonElement | null
+      if (!btn) return
+
+      const pre = btn.closest('.code-block-container')?.querySelector('pre')
+      if (!pre) return
+
+      const text = pre.textContent ?? ''
+      navigator.clipboard.writeText(text).then(() => {
+        btn.classList.add('copied')
+        const textNode = Array.from(btn.childNodes).find((n) => n.nodeType === Node.TEXT_NODE) as Text | undefined
+        if (textNode) {
+          const original = textNode.textContent
+          textNode.textContent = ' Copied!'
+          setTimeout(() => {
+            btn.classList.remove('copied')
+            textNode.textContent = original
+          }, 2000)
+        }
+      })
+    })
+  }
+
   const setupScrollSync = (): void => {
     if (!editorViewRef.value || !previewContainer.value) return
 
@@ -561,6 +587,7 @@
 
     await nextTick()
     setupScrollSync()
+    setupCopyButtons()
     applyPaneWidths()
 
     // Trigger initial markdown render after editor is ready
