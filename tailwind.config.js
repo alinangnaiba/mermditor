@@ -13,33 +13,33 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Legacy colors (keeping for backward compatibility)
-        'deep-black': '#0a0a0a',
-        'dark-surface': '#1e1e1e',
-        'brand-blue': '#3b82f6',
+        // Design system tokens (aligned with CSS custom properties)
+        'deep-black': '#0c0f14',
+        'dark-surface': '#13171f',
+        'brand-blue': '#4a8eff',
 
-        // Semantic color tokens for consistent theming
+        // Semantic tokens matching CSS vars
         surface: {
-          primary: '#0f172a', // slate-900 - main background
-          secondary: '#1e293b', // slate-800 - secondary surfaces
-          tertiary: '#334155', // slate-700 - elevated surfaces
-          quaternary: '#475569', // slate-600 - hover states
+          primary: '#0c0f14',    // --bg
+          secondary: '#13171f',  // --surface
+          tertiary: '#191e28',   // --raised
+          quaternary: '#232836', // --border
         },
         text: {
-          primary: '#d2d4d6', // slate-200 - darker white, more readable
-          secondary: '#cbd5e1', // slate-300 - secondary text
-          tertiary: '#94a3b8', // slate-400 - muted text
-          quaternary: '#989a9c', // slate-500 - disabled text
+          primary: '#e2e6f0',   // --text
+          secondary: '#8892a4', // --dim
+          tertiary: '#8892a4',  // --dim
+          quaternary: '#505869',// --muted
         },
         border: {
-          primary: '#334155', // slate-700 - main borders
-          secondary: '#475569', // slate-600 - subtle borders
-          accent: '#3b82f6', // blue-500 - accent borders
+          primary: '#232836',   // --border
+          secondary: '#232836',
+          accent: '#4a8eff',    // --accent
         },
         accent: {
-          primary: '#79B5D7', // Custom blue - primary brand
-          hover: '#6BA5C7', // Darker shade for hover state
-          active: '#5D95B7', // Even darker shade for active state
+          primary: '#4a8eff',   // --accent
+          hover: '#5f9fff',
+          active: '#3a7eef',
         },
       },
       fontFamily: {

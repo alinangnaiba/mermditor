@@ -10,35 +10,31 @@
     />
 
     <!-- Header -->
-    <header class="flex-shrink-0 border-b border-gray-700 bg-gray-800">
-      <div class="mx-auto max-w-full px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 items-center justify-between">
-          <!-- Logo/Icon and Name -->
-          <NuxtLink
-            to="/"
-            class="flex items-center rounded transition-opacity hover:opacity-80 focus:opacity-80 focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-          >
-            <img src="../assets/images/logo.png" alt="merMDitor Logo" class="mr-3 h-8" />
-            <h1 class="text-xl font-semibold text-accent-primary">merMDitor</h1>
-          </NuxtLink>
+    <header class="editor-header">
+      <!-- Logo -->
+      <NuxtLink to="/" class="editor-logo">
+        <img src="../assets/images/logo.png" alt="merMDitor Logo" />
+        merMDitor
+      </NuxtLink>
 
-          <!-- Navigation -->
-          <nav class="flex items-center space-x-6">
-            <NuxtLink
-              to="/"
-              class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:text-white"
-            >
-              Home
-            </NuxtLink>
-            <NuxtLink
-              to="/guide"
-              class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:text-white"
-            >
-              Tool Guide
-            </NuxtLink>
-          </nav>
-        </div>
+      <!-- Separator -->
+      <div class="editor-header-sep" />
+
+      <!-- File chip -->
+      <div class="editor-file-chip">
+        <span class="editor-file-dot" :class="{ saved: autosave && lastSaved }" />
+        {{ currentFilename }}
       </div>
+
+      <!-- Spacer -->
+      <div class="editor-header-spacer" />
+
+      <!-- Nav -->
+      <nav class="editor-header-nav">
+        <NuxtLink to="/">Home</NuxtLink>
+        <NuxtLink to="/guide">Guide</NuxtLink>
+        <NuxtLink to="/feedback">Feedback</NuxtLink>
+      </nav>
     </header>
 
     <!-- Toolbar -->
@@ -59,7 +55,7 @@
       <div
         v-show="showEditor"
         :class="showPreview && !isMobile ? 'sm:w-1/2' : 'w-full'"
-        class="editor-pane flex flex-col border-r border-gray-700"
+        class="editor-pane flex flex-col border-r editor-border"
       >
         <div ref="editorContainer" class="h-full min-h-0 flex-1" />
       </div>
@@ -67,7 +63,7 @@
       <!-- Resizer -->
       <div
         v-show="showEditor && showPreview"
-        class="w-1 cursor-col-resize bg-gray-700 transition-colors hover:bg-gray-600"
+        class="editor-resize-handle"
         @mousedown="startResize"
       />
 
@@ -79,30 +75,34 @@
       >
         <!-- Help Button -->
         <button
-          class="absolute right-4 top-4 z-10 rounded-full border border-gray-600 bg-gray-800 p-2 text-gray-400 shadow-lg transition-colors hover:bg-gray-700 hover:text-white"
+          class="editor-help-btn"
           title="Quick Reference (shortcuts, syntax, examples)"
           @click="showHelpModal = true"
         >
-          <PhQuestion :size="16" />
+          ?
         </button>
 
-        <div ref="previewContainer" class="flex-1 overflow-auto bg-gray-900 p-4">
+        <div ref="previewContainer" class="editor-preview-inner flex-1 overflow-auto p-4">
           <div class="prose prose-invert max-w-none" v-html="renderedContent" />
         </div>
       </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="flex-shrink-0 border-t border-gray-700 bg-gray-800 px-4 py-2">
-      <div class="flex items-center justify-between text-sm text-gray-400">
-        <div class="flex items-center space-x-4">
-          <span>{{ wordCount }} words</span>
-          <span>|</span>
-          <span>{{ charCount }} characters</span>
-        </div>
-        <div v-if="lastSaved">Last saved: {{ lastSaved }}</div>
+    <!-- Status Bar -->
+    <div class="editor-status">
+      <div class="editor-status-group">
+        <span v-if="autosave && lastSaved" class="editor-status-saved">
+          <span class="editor-status-dot" />Saved {{ lastSaved }}
+        </span>
+        <span v-else class="editor-status-item">
+          <strong>{{ wordCount }}</strong> words · <strong>{{ charCount }}</strong> chars
+        </span>
       </div>
-    </footer>
+      <div class="editor-status-group">
+        <span class="editor-status-item">{{ cursorInfo }}</span>
+        <span class="editor-status-item">UTF-8</span>
+      </div>
+    </div>
 
     <!-- Help Modal -->
     <HelpModal :is-open="showHelpModal" @close="showHelpModal = false" />
@@ -148,7 +148,6 @@
   import { useEditorActions } from '../composables/useEditorActions'
   import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
   import { useMarkdownRenderer } from '../composables/useMarkdownRenderer'
-  import { PhQuestion } from '@phosphor-icons/vue'
   import { sanitizeHtml } from '../utils/sanitizer'
 
   const HelpModal = defineAsyncComponent(() => import('../components/HelpModal.vue'))
@@ -188,6 +187,12 @@
   const charCount = computed<number>(() => {
     return content.value.length
   })
+
+  const cursorLine = ref(1)
+  const cursorCol = ref(1)
+  const cursorInfo = computed(() => `Ln ${cursorLine.value}, Col ${cursorCol.value}`)
+
+  const currentFilename = ref('untitled.md')
 
   const renderedContent: Ref<string> = ref('')
 
@@ -248,6 +253,11 @@
         if (update.docChanged) {
           content.value = update.state.doc.toString()
         }
+        // Track cursor position
+        const sel = update.state.selection.main
+        const line = update.state.doc.lineAt(sel.head)
+        cursorLine.value = line.number
+        cursorCol.value = sel.head - line.from + 1
       }),
       EditorView.theme({
         '&': {
@@ -571,3 +581,162 @@
     window.removeEventListener('resize', checkMobile)
   })
 </script>
+
+<style scoped>
+.editor-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 50px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.editor-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--text);
+  text-decoration: none;
+  margin-right: 4px;
+}
+
+.editor-logo img { height: 26px; width: auto; display: block; }
+
+.editor-header-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.editor-file-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.8125rem;
+  color: var(--dim);
+}
+
+.editor-file-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.editor-file-dot.saved {
+  background: var(--green);
+}
+
+.editor-header-spacer { flex: 1; }
+
+.editor-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.editor-header-nav a {
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  color: var(--dim);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.editor-header-nav a:hover {
+  background: var(--raised);
+  color: var(--text);
+}
+
+.editor-border { border-color: var(--border) !important; }
+
+.editor-resize-handle {
+  width: 4px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.editor-resize-handle:hover { background: var(--raised); }
+
+.editor-preview-inner { background: var(--bg); }
+
+.editor-help-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.12s, background 0.12s;
+}
+
+.editor-help-btn:hover {
+  background: var(--raised);
+  color: var(--dim);
+}
+
+/* Status bar */
+.editor-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  height: 24px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.editor-status-group { display: flex; align-items: center; gap: 16px; }
+
+.editor-status-item {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.editor-status-item strong {
+  color: var(--dim);
+  font-weight: 600;
+}
+
+.editor-status-saved {
+  font-size: 0.72rem;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editor-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+}
+</style>

@@ -21,7 +21,7 @@ export const validateFeedback = (body: any): { valid: boolean; errors: string[] 
   }
   
   // Type validation
-  const validTypes = ['Bug Report', 'Feature Request', 'Improvement', 'Question']
+  const validTypes = ['Bug Report', 'Feature Request', 'Improvement', 'Question', 'Other']
   if (body.type && !validTypes.includes(body.type)) {
     errors.push('Invalid feedback type')
   }
