@@ -97,19 +97,20 @@
       <button class="editor-toolbar-btn" title="Superscript (Ctrl+Shift+U)" @click="actions.insertSuperscript()">
         <svg viewBox="0 0 24 24"><path d="M4 19l8-8"/><path d="M12 19 4 11"/><path d="M20 12h-4c0-1.5.44-2 1.5-2.5S20 8.33 20 7c0-.47-.17-.93-.48-1.29a2 2 0 0 0-2.62-.44"/></svg>
       </button>
-      <button class="editor-toolbar-btn" title="Clear data" @click="$emit('clear-storage')">
-        <svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-      </button>
     </div>
 
     <!-- Pane toggles (far right) -->
     <div class="tb-pane-toggles">
+      <button class="editor-toolbar-btn tb-clear-btn" title="Clear data" @click="$emit('clear-storage')">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>
+      <div class="tb-sep" />
       <label class="tb-autosave-label">
         <input
           :checked="autosave"
           type="checkbox"
           class="tb-autosave-check"
-          @change="$emit('update:autosave', ($event.target as HTMLInputElement).checked)"
+          @click.prevent="$emit('update:autosave', !autosave)"
         />
         Autosave
       </label>
@@ -278,5 +279,10 @@
 
 .tb-toggle:hover {
   color: var(--text);
+}
+
+.tb-clear-btn:hover {
+  background: rgba(248, 81, 73, 0.12) !important;
+  color: #f85149 !important;
 }
 </style>
