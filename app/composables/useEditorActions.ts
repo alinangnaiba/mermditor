@@ -1,7 +1,6 @@
 import { EditorView } from '@codemirror/view'
 import type { Ref } from 'vue'
 import { usePdfExport } from './usePdfExport'
-import { sanitizeHtml } from '../utils/sanitizer'
 
 export interface EditorActions {
   insertFormat: (before: string, after: string) => void
@@ -23,11 +22,23 @@ export interface EditorActions {
   saveContent: () => void
 }
 
+interface ImportedMarkdownFile {
+  filename: string
+  content: string
+}
+
+interface EditorActionOptions {
+  getFilename?: () => string
+  onImportMarkdownFile?: (file: ImportedMarkdownFile) => void
+  onSaveContent?: () => void
+}
+
 export const useEditorActions = (
   editorView: Ref<EditorView | null>,
   content: Ref<string>,
   autosave: Ref<boolean>,
-  lastSaved: Ref<string>
+  lastSaved: Ref<string>,
+  options: EditorActionOptions = {}
 ): EditorActions => {
   const { exportToPdf } = usePdfExport()
 
@@ -217,6 +228,14 @@ export const useEditorActions = (
         if (typeof result !== 'string') return
 
         const markdown = result as string
+        if (options.onImportMarkdownFile) {
+          options.onImportMarkdownFile({
+            filename: file.name,
+            content: markdown,
+          })
+          return
+        }
+
         if (editorView.value) {
           const { state } = editorView.value
           editorView.value.dispatch({
@@ -240,7 +259,7 @@ export const useEditorActions = (
 
     const link = document.createElement('a')
     link.href = url
-    link.download = `document-${new Date().toISOString().split('T')[0]}.md`
+    link.download = options.getFilename?.() ?? `document-${new Date().toISOString().split('T')[0]}.md`
     link.click()
 
     URL.revokeObjectURL(url)
@@ -260,6 +279,11 @@ export const useEditorActions = (
   }
 
   const saveContent = (): void => {
+    if (options.onSaveContent) {
+      options.onSaveContent()
+      return
+    }
+
     try {
       if (autosave.value) {
         localStorage.setItem('mermditor-content', content.value)

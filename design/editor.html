@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>merMDitor — Editor</title>
+  <title>merMDitor — Editor Workspace</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -182,6 +182,289 @@
     .body {
       display: flex;
       flex: 1;
+      overflow: hidden;
+    }
+
+    .workspace-pane {
+      width: 258px;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .workspace-head {
+      padding: 10px 12px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ws-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .ws-meta {
+      color: var(--dim);
+      font-size: 0.76rem;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .ctx-actions,
+    .file-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ws-toolbar {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ws-search-shell {
+      display: grid;
+      gap: 6px;
+    }
+
+    .ws-search {
+      width: 100%;
+      height: 28px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--dim);
+      padding: 0 9px;
+      font-size: 0.76rem;
+    }
+
+    .ws-search-meta {
+      color: var(--muted);
+      font-size: 0.68rem;
+      letter-spacing: 0.02em;
+    }
+
+    .tab-close svg,
+    .tree-icon svg,
+    .tree-context-item svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .ws-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 0 12px;
+    }
+
+    .ws-section {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      overflow: visible;
+      margin-bottom: 0;
+    }
+
+    .ws-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      border-bottom: 0;
+      color: var(--muted);
+      font-size: 0.69rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .ws-tree {
+      padding: 2px 8px 10px;
+    }
+
+    .tree-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 28px;
+      padding: 0 8px;
+      border-radius: 4px;
+      color: var(--dim);
+      font-size: 0.78rem;
+      margin-bottom: 2px;
+    }
+
+    .tree-item.folder { color: var(--text); font-weight: 600; }
+    .tree-item.selected-folder {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .tree-item.active {
+      color: #dbe7ff;
+      background: rgba(74, 142, 255, 0.16);
+    }
+
+    .tree-indent-1 { padding-left: 24px; }
+    .tree-indent-2 { padding-left: 40px; }
+    .tree-caret { width: 12px; color: var(--muted); text-align: center; flex-shrink: 0; }
+    .tree-icon {
+      width: 14px;
+      height: 14px;
+      text-align: center;
+      flex-shrink: 0;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tree-icon svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .tree-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tree-badge {
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      font-size: 0.64rem;
+      flex-shrink: 0;
+    }
+
+    .tree-item.heading-result {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .tree-mark {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .main-pane {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tabs {
+      display: flex;
+      align-items: flex-end;
+      gap: 1px;
+      padding: 0 10px;
+      height: 34px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+
+    .tab {
+      height: 30px;
+      max-width: 190px;
+      padding: 0 10px;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: 0;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.77rem;
+      flex-shrink: 0;
+    }
+
+    .tab.active {
+      background: var(--bg);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .tab-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--orange);
+      flex-shrink: 0;
+    }
+
+    .tab-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tab-close {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .tree-context-menu {
+      margin: 6px 8px 8px 30px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #121821;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+    }
+
+    .tree-context-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 30px;
+      padding: 0 10px;
+      color: var(--dim);
+      font-size: 0.76rem;
+      border-bottom: 1px solid rgba(35, 40, 54, 0.7);
+    }
+
+    .tree-context-item:last-child {
+      border-bottom: 0;
+    }
+
+    .tree-context-item strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .tree-context-item svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    .editor-workspace {
+      display: flex;
+      flex: 1;
+      min-height: 0;
       overflow: hidden;
     }
 
@@ -372,7 +655,13 @@
     .st-dot   { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
 
     /* ── RESPONSIVE ── */
+    @media (max-width: 1080px) {
+      .workspace-pane { width: 228px; }
+      .tab { max-width: 160px; }
+    }
+
     @media (max-width: 768px) {
+      .workspace-pane { display: none; }
       .editor-pane { width: 100%; border-right: none; }
       .resize { display: none; }
       .preview-pane { display: none; }
@@ -393,7 +682,7 @@
     <div class="sep"></div>
     <div class="file-chip">
       <span class="file-dot"></span>
-      untitled.md
+      Workspace
     </div>
     <div class="spacer"></div>
     <nav class="header-nav">
@@ -495,24 +784,94 @@
     </div>
   </div>
 
-  <!-- BODY: editor + preview, no pane headers -->
+  <!-- BODY: workspace + editor + preview -->
   <div class="body">
-
-    <div class="editor-pane">
-      <div class="gutters">
-        1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20
+    <aside class="workspace-pane">
+      <div class="workspace-head">
+        <div class="ws-title">Workspace</div>
       </div>
-      <div class="code-area">
+
+      <div class="ws-toolbar">
+        <div class="ws-search-shell">
+          <input class="ws-search" value="arch" />
+          <div class="ws-search-meta">Searching files and headings in this workspace</div>
+        </div>
+      </div>
+
+      <div class="ws-scroll">
+        <div class="ws-section">
+          <div class="ws-section-head">Explorer</div>
+          <div class="ws-tree">
+            <div class="tree-item folder"><span class="tree-caret">▾</span><span class="tree-icon"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H10l2 2h7.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/></svg></span><span class="tree-name">Architecture</span><span class="tree-badge">5</span></div>
+            <div class="tree-item tree-indent-1 active"><span class="tree-caret"></span><span class="tree-icon"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M14 3.5v4h4"/></svg></span><span class="tree-name"><span class="tree-mark">arch</span>itecture-overview.md</span><span class="tree-badge">open</span></div>
+            <div class="tree-item tree-indent-2 heading-result"><span class="tree-caret"></span><span class="tree-icon">#</span><span class="tree-name">Project <span class="tree-mark">Arch</span>itecture</span></div>
+            <div class="tree-item tree-indent-2 heading-result"><span class="tree-caret"></span><span class="tree-icon">#</span><span class="tree-name">System <span class="tree-mark">Arch</span>itecture Notes</span></div>
+            <div class="tree-item tree-indent-1"><span class="tree-caret"></span><span class="tree-icon"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M14 3.5v4h4"/></svg></span><span class="tree-name">bounded-contexts.md</span></div>
+            <div class="tree-item tree-indent-1"><span class="tree-caret"></span><span class="tree-icon"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M14 3.5v4h4"/></svg></span><span class="tree-name">system-map.md</span></div>
+            <div class="tree-item folder selected-folder"><span class="tree-caret">▾</span><span class="tree-icon"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H10l2 2h7.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/></svg></span><span class="tree-name">Research</span><span class="tree-badge">4</span></div>
+            <div class="tree-context-menu">
+              <div class="tree-context-item"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>New file in <strong>Research</strong></div>
+              <div class="tree-context-item"><svg viewBox="0 0 24 24"><path d="M4 8h6l2 2h8"/><path d="M12 5v14"/><path d="M5 12h14"/></svg>New folder in <strong>Research</strong></div>
+              <div class="tree-context-item"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Rename</div>
+              <div class="tree-context-item"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</div>
+            </div>
+            <div class="tree-item tree-indent-1"><span class="tree-caret"></span><span class="tree-icon"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M14 3.5v4h4"/></svg></span><span class="tree-name">entity-additions.md</span><span class="tree-badge">edited</span></div>
+            <div class="tree-item tree-indent-1"><span class="tree-caret"></span><span class="tree-icon"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M14 3.5v4h4"/></svg></span><span class="tree-name">open-questions.md</span></div>
+            <div class="tree-item folder"><span class="tree-caret">▸</span><span class="tree-icon"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H10l2 2h7.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/></svg></span><span class="tree-name">Drafts</span><span class="tree-badge">3</span></div>
+            <div class="tree-item folder"><span class="tree-caret">▸</span><span class="tree-icon"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H10l2 2h7.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/></svg></span><span class="tree-name">Exports</span><span class="tree-badge">2</span></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="main-pane">
+      <div class="tabs">
+        <div class="tab active">
+          <span class="tab-dot"></span>
+          <span class="tab-name">architecture-overview.md</span>
+          <span class="tab-close">
+            <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </span>
+        </div>
+        <div class="tab">
+          <span class="tab-dot" style="background: transparent; border: 1px solid var(--border);"></span>
+          <span class="tab-name">entity-additions.md</span>
+          <span class="tab-close">
+            <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </span>
+        </div>
+        <div class="tab">
+          <span class="tab-dot"></span>
+          <span class="tab-name">open-questions.md</span>
+          <span class="tab-close">
+            <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <div class="editor-workspace">
+        <div class="editor-pane">
+          <div class="gutters">
+            1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20
+          </div>
+          <div class="code-area">
 <span class="cl e-h"># Project Architecture</span>
 <span class="cl">&nbsp;</span>
-<span class="cl">A guide to <span class="e-bold">**merMDitor**</span> internals.</span>
+<span class="cl">This workspace keeps <span class="e-bold">multiple markdown files</span> grouped by topic.</span>
+<span class="cl">&nbsp;</span>
+<span class="cl e-h">## Open Files</span>
+<span class="cl">&nbsp;</span>
+<span class="cl">- architecture-overview.md</span>
+<span class="cl">- entity-additions.md</span>
+<span class="cl">- open-questions.md</span>
 <span class="cl">&nbsp;</span>
 <span class="cl e-h">## Data Flow</span>
 <span class="cl">&nbsp;</span>
 <span class="cl e-g">```mermaid</span>
 <span class="cl e-m">graph TD</span>
-<span class="cl e-m">  A[Input] --> B[Parser]</span>
-<span class="cl e-m">  B --> C[Renderer]<span class="e-cur"></span></span>
+<span class="cl e-m">  A[Workspace] --> B[Explorer]</span>
+<span class="cl e-m">  B --> C[Open Tabs]</span>
+<span class="cl e-m">  C --> D[Preview]<span class="e-cur"></span></span>
 <span class="cl e-g">```</span>
 <span class="cl">&nbsp;</span>
 <span class="cl e-h">## Maxwell's Equation</span>
@@ -521,47 +880,54 @@
 <span class="cl">&nbsp;</span>
 <span class="cl e-h">## Checklist</span>
 <span class="cl">&nbsp;</span>
-<span class="cl e-done">- [x] Write the parser</span>
-<span class="cl">- [ ] Add tests</span>
-      </div>
-    </div>
-
-    <div class="resize"></div>
-
-    <div class="preview-pane">
-      <div class="help-btn" title="Help">?</div>
-      <div class="preview-inner">
-        <div class="pr-h1">Project Architecture</div>
-        <div class="pr-p">A guide to <span class="pr-strong">merMDitor</span> internals.</div>
-
-        <div class="pr-h2">Data Flow</div>
-        <div class="pr-diagram">
-          <div class="pr-diag-top">
-            <span class="pr-diag-label">mermaid · flowchart</span>
-            <div class="pr-diag-ctrls">
-              <div class="pr-ctrl">+</div>
-              <div class="pr-ctrl">−</div>
-              <div class="pr-ctrl">↺</div>
-              <div class="pr-ctrl">⤢</div>
-            </div>
-          </div>
-          <div class="pr-nodes">
-            <div class="pr-node">Input</div>
-            <span class="pr-arrow">→</span>
-            <div class="pr-node">Parser</div>
-            <span class="pr-arrow">→</span>
-            <div class="pr-node">Renderer</div>
+<span class="cl e-done">- [x] Add file explorer</span>
+<span class="cl e-done">- [x] Support multiple open tabs</span>
+<span class="cl">- [ ] Add drag and drop organization</span>
           </div>
         </div>
 
-        <div class="pr-h2">Maxwell's Equation</div>
-        <div class="pr-math">∇ · E = ρ / ε₀</div>
+        <div class="resize"></div>
 
-        <div class="pr-h2">Checklist</div>
-        <div class="pr-task"><span class="pr-chk done">✓</span> Write the parser</div>
-        <div class="pr-task"><span class="pr-chk"></span> Add tests</div>
+        <div class="preview-pane">
+          <div class="help-btn" title="Help">?</div>
+          <div class="preview-inner">
+            <div class="pr-h1">Project Architecture</div>
+            <div class="pr-p">This workspace keeps <span class="pr-strong">multiple markdown files</span> grouped by topic.</div>
+
+            <div class="pr-h2">Open Files</div>
+            <div class="pr-p">Users can create folders for architecture, research, drafts, and exports while keeping several markdown files open at once.</div>
+
+            <div class="pr-h2">Data Flow</div>
+            <div class="pr-diagram">
+              <div class="pr-diag-top">
+                <span class="pr-diag-label">mermaid · flowchart</span>
+                <div class="pr-diag-ctrls">
+                  <div class="pr-ctrl">+</div>
+                  <div class="pr-ctrl">−</div>
+                  <div class="pr-ctrl">↺</div>
+                  <div class="pr-ctrl">⤢</div>
+                </div>
+              </div>
+              <div class="pr-nodes">
+                <div class="pr-node">Workspace</div>
+                <span class="pr-arrow">→</span>
+                <div class="pr-node">Explorer</div>
+                <span class="pr-arrow">→</span>
+                <div class="pr-node">Preview</div>
+              </div>
+            </div>
+
+            <div class="pr-h2">Maxwell's Equation</div>
+            <div class="pr-math">∇ · E = ρ / ε₀</div>
+
+            <div class="pr-h2">Checklist</div>
+            <div class="pr-task"><span class="pr-chk done">✓</span> Add workspace explorer</div>
+            <div class="pr-task"><span class="pr-chk done">✓</span> Keep current toolbar and split preview</div>
+            <div class="pr-task"><span class="pr-chk"></span> Add drag and drop organization</div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
   </div>
 
@@ -569,9 +935,10 @@
   <div class="status">
     <div class="status-group">
       <span class="st saved"><span class="st-dot"></span>Saved 2:41 PM</span>
-      <span class="st"><b>342</b> words · <b>2,104</b> chars</span>
+      <span class="st"><b>4</b> open files · <b>342</b> words · <b>2,104</b> chars</span>
     </div>
     <div class="status-group">
+      <span class="st">Architecture / architecture-overview.md</span>
       <span class="st">Ln 10, Col 22</span>
       <span class="st">UTF-8</span>
     </div>
