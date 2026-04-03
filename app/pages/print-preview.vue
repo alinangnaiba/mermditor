@@ -165,6 +165,53 @@ const getPageStylesForPagedJS = () => {
       font-size: inherit;
     }
 
+    .code-block-container {
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-left: 1px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      overflow: visible;
+      break-inside: auto;
+      page-break-inside: auto;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+    }
+
+    .code-block-body {
+      max-height: none !important;
+      overflow: visible !important;
+      background: transparent;
+      display: block;
+    }
+
+    .code-block-container pre {
+      display: block;
+      margin: 0 !important;
+      padding: 0 !important;
+      background-color: #ffffff !important;
+      border: 0 !important;
+      color: #111827 !important;
+      overflow: visible !important;
+      line-height: 1.45 !important;
+      white-space: break-spaces !important;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      orphans: 3;
+      widows: 3;
+      tab-size: 2;
+    }
+
+    .code-block-container pre code {
+      display: block;
+      margin: 0;
+      border: 0 !important;
+      white-space: break-spaces !important;
+      overflow-wrap: anywhere !important;
+      word-break: break-word !important;
+      tab-size: 2;
+    }
+
     .prose table {
       border-color: #e5e7eb;
     }
@@ -234,7 +281,7 @@ const getPageStylesForPagedJS = () => {
       page-break-after: avoid;
     }
 
-    img, figure, table, .code-block-container {
+    img, figure, table {
       page-break-inside: avoid;
     }
   `

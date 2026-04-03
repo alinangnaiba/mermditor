@@ -105,6 +105,53 @@
   font-size: inherit;
 }
 
+.print-layout .code-block-container {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-left: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  overflow: visible;
+  page-break-inside: auto;
+  break-inside: auto;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.print-layout .code-block-body {
+  max-height: none !important;
+  overflow: visible !important;
+  background: transparent;
+  display: block;
+}
+
+.print-layout .code-block-container pre {
+  display: block;
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: #ffffff !important;
+  border: 0 !important;
+  color: #111827 !important;
+  overflow: visible !important;
+  line-height: 1.45 !important;
+  white-space: break-spaces !important;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  orphans: 3;
+  widows: 3;
+  tab-size: 2;
+}
+
+.print-layout .code-block-container pre code {
+  display: block;
+  margin: 0;
+  border: 0 !important;
+  white-space: break-spaces !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  tab-size: 2;
+}
+
 .print-layout .prose table {
   border-color: #e5e7eb; /* gray-200 */
 }
@@ -161,12 +208,6 @@
   display: none;
 }
 
-.print-layout .code-block-container {
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
 /* Page break hints - scoped to .print-layout */
 .print-layout h1,
 .print-layout h2,
@@ -180,8 +221,7 @@
 .print-layout img,
 .print-layout figure,
 .print-layout table,
-.print-layout .mermaid-container,
-.print-layout .code-block-container {
+.print-layout .mermaid-container {
   page-break-inside: avoid;
 }
 

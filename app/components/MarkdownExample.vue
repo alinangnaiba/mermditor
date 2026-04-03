@@ -1,10 +1,11 @@
 <template>
-  <div class="prose prose-invert max-w-none" v-html="renderedContent" />
+  <div ref="containerRef" class="prose prose-invert max-w-none" v-html="renderedContent" />
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, watch } from 'vue'
+  import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
   import { useMarkdownRenderer } from '../composables/useMarkdownRenderer'
+  import { attachCodeBlockInteractions } from '../utils/codeBlockInteractions'
 
   interface Props {
     content: string
@@ -13,11 +14,18 @@
   const props = defineProps<Props>()
   const { renderMarkdownExample } = useMarkdownRenderer()
   const renderedContent = ref('')
+  const containerRef = ref<HTMLElement | null>(null)
+  let cleanupCodeBlockInteractions: (() => void) | null = null
 
   const renderContent = async () => {
     if (props.content) {
       try {
         renderedContent.value = await renderMarkdownExample(props.content)
+        await nextTick()
+        cleanupCodeBlockInteractions?.()
+        if (containerRef.value) {
+          cleanupCodeBlockInteractions = attachCodeBlockInteractions(containerRef.value)
+        }
       } catch (error) {
         console.warn('Failed to render markdown example:', error)
         renderedContent.value = '<div class="text-red-400">Error rendering example</div>'
@@ -31,5 +39,9 @@
     if (import.meta.client) {
       renderContent()
     }
+  })
+
+  onUnmounted(() => {
+    cleanupCodeBlockInteractions?.()
   })
 </script>

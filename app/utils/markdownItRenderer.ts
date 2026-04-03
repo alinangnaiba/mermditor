@@ -173,13 +173,26 @@ export const renderMarkdown = async (content: string): Promise<string> => {
         return `<div class="code-block-container">
           <div class="code-block-header">
             <span class="${langClass}">${displayName}</span>
-            <button class="code-block-copy" title="Copy code" aria-label="Copy code">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-              </svg>
-              Copy
-            </button>
+            <div class="code-block-actions">
+              <button class="code-block-wrap" type="button" title="Toggle line wrap" aria-label="Toggle line wrap" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h14a4 4 0 1 1 0 8H9"></path>
+                  <path d="m13 10-4 4 4 4"></path>
+                  <path d="M3 18h7"></path>
+                </svg>
+                <span class="code-block-button-label">Wrap</span>
+              </button>
+              <button class="code-block-copy" type="button" title="Copy code" aria-label="Copy code">
+                <svg class="code-block-icon code-block-copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <svg class="code-block-icon code-block-success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M20 6 9 17l-5-5"></path>
+                </svg>
+                <span class="code-block-button-label">Copy</span>
+              </button>
+            </div>
           </div>
           <div class="code-block-body">
             <pre><code class="language-${lang}">${code}</code></pre>
