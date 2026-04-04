@@ -136,35 +136,21 @@
         </svg>
       </button>
       <button
-        class="tb-toggle tb-icon-toggle"
+        class="tb-toggle"
         :class="{ on: showEditor }"
         :title="showEditor ? 'Hide editor pane' : 'Show editor pane'"
         :aria-label="showEditor ? 'Hide editor pane' : 'Show editor pane'"
         :aria-pressed="showEditor"
         @click="$emit('toggle-editor')"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 5h16v14H4z" />
-          <path d="M8 5v14" />
-          <path d="M11.5 10.5l2-2" />
-          <path d="M10.5 13.5l3-3" />
-          <path d="M11.5 13.5h2" />
-        </svg>
-      </button>
+      >Editor</button>
       <button
-        class="tb-toggle tb-icon-toggle"
+        class="tb-toggle"
         :class="{ on: showPreview }"
         :title="showPreview ? 'Hide preview pane' : 'Show preview pane'"
         :aria-label="showPreview ? 'Hide preview pane' : 'Show preview pane'"
         :aria-pressed="showPreview"
         @click="$emit('toggle-preview')"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M3 6h18v12H3z" />
-          <path d="M7 10h10" />
-          <path d="M7 14h6" />
-        </svg>
-      </button>
+      >Preview</button>
     </div>
 
     <!-- Filename Modal -->
