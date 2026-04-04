@@ -368,7 +368,7 @@ const loadContent = () => {
   }
 }
 
-const normalizeCodeBlocksForPrint = (root: ParentNode) => {
+const normalizeCodeBlocksForPrint = (root: Element | Document) => {
   const codeBlocks = root.querySelectorAll('pre code')
 
   for (const codeBlock of codeBlocks) {
