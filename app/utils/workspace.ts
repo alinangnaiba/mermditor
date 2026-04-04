@@ -45,7 +45,7 @@ const createId = (): string => {
 export const normalizeFileName = (name: string): string => {
   const trimmed = name.trim()
   if (!trimmed) return 'untitled.md'
-  return /\.[a-z0-9]+$/i.test(trimmed) ? trimmed : `${trimmed}.md`
+  return trimmed.endsWith('.md') ? trimmed : `${trimmed}.md`
 }
 
 export const normalizeFolderName = (name: string): string => {

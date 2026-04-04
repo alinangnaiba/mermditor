@@ -64,6 +64,31 @@
           @drop.prevent="handleRootDrop"
         >
           <span class="workspace-pane-title">Workspace</span>
+          <div class="workspace-pane-actions">
+            <button
+              class="workspace-pane-action-btn"
+              title="New File"
+              @click.stop="startInlineNewItem('new-file', workspace.root.id)"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="12" y1="11" x2="12" y2="17" />
+                <line x1="9" y1="14" x2="15" y2="14" />
+              </svg>
+            </button>
+            <button
+              class="workspace-pane-action-btn"
+              title="New Folder"
+              @click.stop="startInlineNewItem('new-folder', workspace.root.id)"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                <line x1="12" y1="11" x2="12" y2="17" />
+                <line x1="9" y1="14" x2="15" y2="14" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="workspace-search-wrap">
@@ -133,54 +158,89 @@
           <template v-else>
             <div class="workspace-section-title">Explorer</div>
 
-            <button
-              v-for="row in workspaceTreeRows"
-              :key="row.item.id"
-              class="workspace-tree-row"
-              :class="{
-                folder: row.item.type === 'folder',
-                active: row.item.type === 'file' && row.item.id === workspace.activeFileId,
-                selected: contextMenu.visible && contextMenu.targetId === row.item.id,
-                'drop-target': row.item.type === 'folder' && dragState.targetFolderId === row.item.id,
-                dragging: dragState.draggedItemId === row.item.id,
-              }"
-              :style="{ paddingLeft: `${12 + row.depth * 18}px` }"
-              draggable="true"
-              @click="handleWorkspaceRowClick(row.item)"
-              @contextmenu.prevent.stop="openItemContextMenu($event, row.item)"
-              @dragstart="handleDragStart($event, row.item)"
-              @dragover.prevent="handleItemDragOver($event, row.item)"
-              @drop.prevent="handleItemDrop($event, row.item)"
-              @dragend="handleDragEnd"
-            >
-              <span class="workspace-tree-caret">
-                {{
-                  row.item.type === 'folder'
-                    ? expandedFolderIds.includes(row.item.id)
-                      ? '▾'
-                      : '▸'
-                    : ''
-                }}
-              </span>
-              <span class="workspace-item-icon">
-                <svg v-if="row.item.type === 'folder'" viewBox="0 0 24 24">
-                  <path
-                    d="M3 7.5A1.5 1.5 0 0 1 4.5 6H10l2 2h7.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"
-                  />
-                </svg>
-                <svg v-else viewBox="0 0 24 24">
-                  <path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z" />
-                  <path d="M14 3.5v4h4" />
-                </svg>
-              </span>
-              <span class="workspace-tree-name">{{ row.item.name }}</span>
-              <span
-                v-if="row.item.type === 'file' && openFileIds.includes(row.item.id)"
-                class="workspace-tree-badge"
+            <template v-for="row in displayTreeRows" :key="row.item.id">
+              <!-- Inline editing row (new item or rename) -->
+              <div
+                v-if="inlineEdit.itemId === row.item.id"
+                class="workspace-tree-row"
+                :class="{ folder: row.item.type === 'folder' }"
+                :style="{ paddingLeft: `${12 + row.depth * 18}px` }"
               >
-                open
-              </span>
-            </button>
+                <span class="workspace-tree-caret">
+                  {{ row.item.type === 'folder' ? '▸' : '' }}
+                </span>
+                <span class="workspace-item-icon">
+                  <svg v-if="row.item.type === 'folder'" viewBox="0 0 24 24">
+                    <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H10l2 2h7.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z" />
+                  </svg>
+                  <svg v-else viewBox="0 0 24 24">
+                    <path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z" />
+                    <path d="M14 3.5v4h4" />
+                  </svg>
+                </span>
+                <input
+                  ref="inlineInputRefs"
+                  v-model="inlineEdit.value"
+                  class="workspace-inline-input"
+                  @keydown.enter.prevent="commitInlineEdit"
+                  @keydown.escape.prevent="cancelInlineEdit"
+                  @blur="commitInlineEdit"
+                  @click.stop
+                  @mousedown.stop
+                  @dblclick.stop
+                />
+              </div>
+
+              <!-- Normal row -->
+              <button
+                v-else
+                class="workspace-tree-row"
+                :class="{
+                  folder: row.item.type === 'folder',
+                  active: row.item.type === 'file' && row.item.id === workspace.activeFileId,
+                  selected: contextMenu.visible && contextMenu.targetId === row.item.id,
+                  'drop-target': row.item.type === 'folder' && dragState.targetFolderId === row.item.id,
+                  dragging: dragState.draggedItemId === row.item.id,
+                }"
+                :style="{ paddingLeft: `${12 + row.depth * 18}px` }"
+                draggable="true"
+                @click="handleWorkspaceRowClick(row.item)"
+                @dblclick.stop="startInlineRename(row.item)"
+                @contextmenu.prevent.stop="openItemContextMenu($event, row.item)"
+                @dragstart="handleDragStart($event, row.item)"
+                @dragover.prevent="handleItemDragOver($event, row.item)"
+                @drop.prevent="handleItemDrop($event, row.item)"
+                @dragend="handleDragEnd"
+              >
+                <span class="workspace-tree-caret">
+                  {{
+                    row.item.type === 'folder'
+                      ? expandedFolderIds.includes(row.item.id)
+                        ? '▾'
+                        : '▸'
+                      : ''
+                  }}
+                </span>
+                <span class="workspace-item-icon">
+                  <svg v-if="row.item.type === 'folder'" viewBox="0 0 24 24">
+                    <path
+                      d="M3 7.5A1.5 1.5 0 0 1 4.5 6H10l2 2h7.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"
+                    />
+                  </svg>
+                  <svg v-else viewBox="0 0 24 24">
+                    <path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z" />
+                    <path d="M14 3.5v4h4" />
+                  </svg>
+                </span>
+                <span class="workspace-tree-name">{{ row.item.name }}</span>
+                <span
+                  v-if="row.item.type === 'file' && openFileIds.includes(row.item.id)"
+                  class="workspace-tree-badge"
+                >
+                  open
+                </span>
+              </button>
+            </template>
           </template>
         </div>
 
@@ -312,19 +372,6 @@
     <!-- Help Modal -->
     <HelpModal :is-open="showHelpModal" @close="showHelpModal = false" />
 
-    <WorkspaceItemModal
-      :is-open="workspaceItemModal.visible"
-      :title="workspaceItemModal.title"
-      :label="workspaceItemModal.label"
-      :confirm-text="workspaceItemModal.confirmText"
-      :initial-value="workspaceItemModal.initialValue"
-      :placeholder="workspaceItemModal.placeholder"
-      :helper-text="workspaceItemModal.helperText"
-      :error-text="workspaceItemModal.errorText"
-      @confirm="submitWorkspaceItemModal"
-      @cancel="closeWorkspaceItemModal"
-    />
-
     <WorkspaceMoveModal
       :is-open="moveModal.visible"
       :item-name="moveModal.itemName"
@@ -409,16 +456,11 @@
     | 'duplicate'
     | 'move'
     | 'delete'
-  type WorkspaceItemModalMode = 'new-file' | 'new-folder' | 'rename' | null
-
   const WORKSPACE_STORAGE_KEY = 'mermditor-workspace'
   const LEGACY_CONTENT_STORAGE_KEY = 'mermditor-content'
 
   const HelpModal = defineAsyncComponent(() => import('../components/HelpModal.vue'))
   const ConfirmModal = defineAsyncComponent(() => import('../components/ConfirmModal.vue'))
-  const WorkspaceItemModal = defineAsyncComponent(
-    () => import('../components/WorkspaceItemModal.vue')
-  )
   const WorkspaceMoveModal = defineAsyncComponent(
     () => import('../components/WorkspaceMoveModal.vue')
   )
@@ -463,6 +505,29 @@
   const workspaceTreeRows = computed(() => {
     return flattenWorkspaceTree(workspace.value.root, new Set(expandedFolderIds.value))
   })
+  const displayTreeRows = computed((): WorkspaceTreeRow[] => {
+    const rows = workspaceTreeRows.value
+    const { type, parentFolderId, depth } = inlineEdit.value
+
+    if (type !== 'new-file' && type !== 'new-folder') return rows
+    if (!parentFolderId) return rows
+
+    const pendingItem: WorkspaceTreeRow =
+      type === 'new-folder'
+        ? { item: { id: '__pending__', type: 'folder', name: '', children: [] }, depth, parentFolderId }
+        : { item: { id: '__pending__', type: 'file', name: '', content: '' }, depth, parentFolderId }
+
+    if (parentFolderId === workspace.value.root.id) {
+      return [pendingItem, ...rows]
+    }
+
+    const parentIndex = rows.findIndex((r) => r.item.id === parentFolderId)
+    if (parentIndex === -1) return [pendingItem, ...rows]
+
+    const result = [...rows]
+    result.splice(parentIndex + 1, 0, pendingItem)
+    return result
+  })
   const workspaceSearchResults = computed(() => {
     return searchWorkspace(workspace.value.root, searchQuery.value)
   })
@@ -478,29 +543,6 @@
     y: 0,
     targetId: null,
     targetType: null,
-  })
-  const workspaceItemModal = ref<{
-    visible: boolean
-    mode: WorkspaceItemModalMode
-    targetId: string | null
-    title: string
-    label: string
-    confirmText: string
-    initialValue: string
-    placeholder: string
-    helperText: string
-    errorText: string
-  }>({
-    visible: false,
-    mode: null,
-    targetId: null,
-    title: '',
-    label: '',
-    confirmText: 'Save',
-    initialValue: '',
-    placeholder: '',
-    helperText: '',
-    errorText: '',
   })
   const moveModal = ref<{
     visible: boolean
@@ -533,6 +575,20 @@
     draggedItemId: null,
     targetFolderId: null,
   })
+  const inlineEdit = ref<{
+    type: 'rename' | 'new-file' | 'new-folder' | null
+    itemId: string | null
+    parentFolderId: string | null
+    depth: number
+    value: string
+  }>({
+    type: null,
+    itemId: null,
+    parentFolderId: null,
+    depth: 0,
+    value: '',
+  })
+  const inlineInputRefs = ref<HTMLInputElement[]>([])
 
   const wordCount = computed<number>(() => {
     return content.value.trim() ? content.value.trim().split(/\s+/).length : 0
@@ -951,11 +1007,21 @@
     if (!pane) return
 
     const bounds = pane.getBoundingClientRect()
+
+    // Estimate menu height (30px per item + 2px borders) to decide open direction
+    const itemCounts: Record<string, number> = { root: 2, folder: 5, file: 4 }
+    const estimatedMenuHeight = (targetType ? (itemCounts[targetType] ?? 2) : 2) * 30 + 2
+    const clickY = event.clientY - bounds.top
+    const y =
+      bounds.height - clickY < estimatedMenuHeight + 8
+        ? Math.max(8, clickY - estimatedMenuHeight)
+        : Math.max(8, clickY)
+
     contextMenu.value.visible = true
     contextMenu.value.targetType = targetType
     contextMenu.value.targetId = targetId
     contextMenu.value.x = Math.max(8, Math.min(event.clientX - bounds.left, bounds.width - 190))
-    contextMenu.value.y = Math.max(8, event.clientY - bounds.top)
+    contextMenu.value.y = y
   }
 
   const openRootContextMenu = (event: MouseEvent): void => {
@@ -964,59 +1030,6 @@
 
   const openItemContextMenu = (event: MouseEvent, item: WorkspaceItem): void => {
     openContextMenu(event, item.type, item.id)
-  }
-
-  const closeWorkspaceItemModal = (): void => {
-    workspaceItemModal.value = {
-      visible: false,
-      mode: null,
-      targetId: null,
-      title: '',
-      label: '',
-      confirmText: 'Save',
-      initialValue: '',
-      placeholder: '',
-      helperText: '',
-      errorText: '',
-    }
-  }
-
-  const openWorkspaceItemModal = (
-    mode: Exclude<WorkspaceItemModalMode, null>,
-    targetId: string,
-    initialValue: string = ''
-  ): void => {
-    const isFileMode = mode === 'new-file' || (mode === 'rename' && findWorkspaceItem(workspace.value.root, targetId)?.item.type === 'file')
-
-    workspaceItemModal.value = {
-      visible: true,
-      mode,
-      targetId,
-      title:
-        mode === 'new-file'
-          ? 'New File'
-          : mode === 'new-folder'
-            ? 'New Folder'
-            : isFileMode
-              ? 'Rename File'
-              : 'Rename Folder',
-      label:
-        mode === 'new-folder'
-          ? 'Folder name'
-          : isFileMode
-            ? 'File name'
-            : 'Name',
-      confirmText: mode === 'rename' ? 'Rename' : 'Create',
-      initialValue,
-      placeholder: mode === 'new-folder' ? 'New Folder' : 'untitled.md',
-      helperText:
-        mode === 'new-file' || isFileMode
-          ? '.md will be added automatically if you leave it off.'
-          : '',
-      errorText: '',
-    }
-
-    closeContextMenu()
   }
 
   const createFileInFolder = (
@@ -1199,72 +1212,6 @@
     closeDeleteItemModal()
   }
 
-  const submitWorkspaceItemModal = (rawValue: string): void => {
-    const { mode, targetId } = workspaceItemModal.value
-    if (!mode || !targetId) {
-      return
-    }
-
-    const target =
-      mode === 'rename' ? findWorkspaceItem(workspace.value.root, targetId) : null
-    const parentFolder =
-      mode === 'rename'
-        ? target?.parentFolder
-        : targetId === workspace.value.root.id
-          ? workspace.value.root
-          : findWorkspaceItem(workspace.value.root, targetId)?.item
-
-    if (!parentFolder || parentFolder.type !== 'folder' && mode !== 'rename') {
-      workspaceItemModal.value.errorText = 'The selected destination is no longer available.'
-      return
-    }
-
-    if (mode === 'rename') {
-      if (!target || !target.parentFolder) {
-        workspaceItemModal.value.errorText = 'This item is no longer available.'
-        return
-      }
-
-      const normalizedName =
-        target.item.type === 'file' ? normalizeFileName(rawValue) : normalizeFolderName(rawValue)
-
-      if (hasSiblingWithName(target.parentFolder, normalizedName, target.item.id)) {
-        workspaceItemModal.value.errorText = 'An item with that name already exists in this folder.'
-        return
-      }
-
-      renameWorkspaceItem(target.item.id, normalizedName)
-      closeWorkspaceItemModal()
-      return
-    }
-
-    if (parentFolder.type !== 'folder') {
-      workspaceItemModal.value.errorText = 'The selected destination is no longer available.'
-      return
-    }
-
-    if (mode === 'new-file') {
-      const normalizedName = normalizeFileName(rawValue)
-      if (hasSiblingWithName(parentFolder, normalizedName)) {
-        workspaceItemModal.value.errorText = 'A file with that name already exists in this folder.'
-        return
-      }
-
-      createFileInFolder(parentFolder.id, normalizedName)
-      closeWorkspaceItemModal()
-      return
-    }
-
-    const normalizedName = normalizeFolderName(rawValue)
-    if (hasSiblingWithName(parentFolder, normalizedName)) {
-      workspaceItemModal.value.errorText = 'A folder with that name already exists in this folder.'
-      return
-    }
-
-    createFolderInFolder(parentFolder.id, normalizedName)
-    closeWorkspaceItemModal()
-  }
-
   const handleDragStart = (event: DragEvent, item: WorkspaceItem): void => {
     dragState.value.draggedItemId = item.id
     if (event.dataTransfer) {
@@ -1331,18 +1278,18 @@
     if (!targetId || !targetType) return
 
     if (actionId === 'new-file') {
-      openWorkspaceItemModal('new-file', targetType === 'file' ? workspace.value.root.id : targetId)
+      startInlineNewItem('new-file', targetType === 'file' ? workspace.value.root.id : targetId)
       return
     }
 
     if (actionId === 'new-folder') {
-      openWorkspaceItemModal('new-folder', targetType === 'file' ? workspace.value.root.id : targetId)
+      startInlineNewItem('new-folder', targetType === 'file' ? workspace.value.root.id : targetId)
       return
     }
 
     if (actionId === 'rename') {
       const target = findWorkspaceItem(workspace.value.root, targetId)?.item
-      openWorkspaceItemModal('rename', targetId, target?.name ?? '')
+      if (target) startInlineRename(target)
       return
     }
 
@@ -1358,6 +1305,89 @@
 
     duplicateWorkspaceFile(targetId)
     closeContextMenu()
+  }
+
+  const cancelInlineEdit = (): void => {
+    inlineEdit.value = { type: null, itemId: null, parentFolderId: null, depth: 0, value: '' }
+  }
+
+  const commitInlineEdit = (): void => {
+    const { type, itemId, parentFolderId, value } = inlineEdit.value
+    if (!type) return
+
+    // Clear first to prevent double-commit on blur after Enter
+    cancelInlineEdit()
+
+    if (!value.trim()) return
+
+    if (type === 'rename' && itemId) {
+      const target = findWorkspaceItem(workspace.value.root, itemId)
+      if (!target || !target.parentFolder) return
+
+      const normalizedName =
+        target.item.type === 'file' ? normalizeFileName(value) : normalizeFolderName(value)
+
+      if (!hasSiblingWithName(target.parentFolder, normalizedName, itemId)) {
+        renameWorkspaceItem(itemId, normalizedName)
+      }
+      return
+    }
+
+    if (!parentFolderId) return
+
+    const folder =
+      parentFolderId === workspace.value.root.id
+        ? workspace.value.root
+        : (findWorkspaceItem(workspace.value.root, parentFolderId)?.item as WorkspaceFolder | undefined)
+
+    if (!folder || folder.type !== 'folder') return
+
+    if (type === 'new-file') {
+      const normalizedName = normalizeFileName(value)
+      if (!hasSiblingWithName(folder, normalizedName)) {
+        createFileInFolder(folder.id, normalizedName)
+      }
+    } else {
+      const normalizedName = normalizeFolderName(value)
+      if (!hasSiblingWithName(folder, normalizedName)) {
+        createFolderInFolder(folder.id, normalizedName)
+      }
+    }
+  }
+
+  const startInlineRename = async (item: WorkspaceItem): Promise<void> => {
+    inlineEdit.value = {
+      type: 'rename',
+      itemId: item.id,
+      parentFolderId: null,
+      depth: 0,
+      value: item.name,
+    }
+    await nextTick()
+    const input = inlineInputRefs.value[0]
+    if (input) {
+      input.focus()
+      input.select()
+    }
+  }
+
+  const startInlineNewItem = async (
+    type: 'new-file' | 'new-folder',
+    parentFolderId: string
+  ): Promise<void> => {
+    if (parentFolderId !== workspace.value.root.id && !expandedFolderIds.value.includes(parentFolderId)) {
+      expandedFolderIds.value = [...expandedFolderIds.value, parentFolderId]
+    }
+
+    const parentRow = workspaceTreeRows.value.find((r) => r.item.id === parentFolderId)
+    const depth = parentFolderId === workspace.value.root.id ? 0 : (parentRow ? parentRow.depth + 1 : 0)
+
+    inlineEdit.value = { type, itemId: '__pending__', parentFolderId, depth, value: '' }
+    closeContextMenu()
+
+    await nextTick()
+    const input = inlineInputRefs.value[0]
+    if (input) input.focus()
   }
 
   const importMarkdownIntoWorkspace = (filename: string, importedContent: string): void => {
@@ -1853,6 +1883,9 @@
 .workspace-pane-header {
   padding: 10px 12px 8px;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .workspace-pane-header.drop-target {
@@ -1866,6 +1899,37 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.workspace-pane-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.workspace-pane-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.workspace-pane-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.workspace-pane-action-btn:hover {
+  color: var(--fg);
+  background: var(--hover);
 }
 
 .workspace-search-wrap {
@@ -1992,6 +2056,20 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
+}
+
+.workspace-inline-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--raised);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 0.78rem;
+  font-family: inherit;
+  color: var(--text);
+  outline: none;
+  height: 22px;
 }
 
 .workspace-tree-badge {
