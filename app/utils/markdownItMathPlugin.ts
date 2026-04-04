@@ -87,10 +87,10 @@ export const mathPlugin = (md: MarkdownIt) => {
   md.inline.ruler.before('escape', 'math_inline', math_inline)
 
   md.renderer.rules.math_inline = (tokens, idx) => {
-    return '$' + tokens[idx].content + '$'
+    return '$' + tokens[idx]!.content + '$'
   }
 
   md.renderer.rules.math_display = (tokens, idx) => {
-    return '$$' + tokens[idx].content + '$$'
+    return '$$' + tokens[idx]!.content + '$$'
   }
 }
