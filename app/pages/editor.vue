@@ -55,6 +55,7 @@
         v-if="!isMobile"
         ref="workspacePaneRef"
         class="workspace-pane"
+        :style="{ width: `${customWorkspaceWidth}px` }"
       >
         <div
           class="workspace-pane-header"
@@ -290,8 +291,15 @@
         </div>
       </aside>
 
+      <!-- Workspace Resize Handle -->
+      <div
+        v-if="!isMobile"
+        class="workspace-resize-handle"
+        @mousedown="startWorkspaceResize"
+      />
+
       <div class="editor-content-shell flex flex-1 flex-col overflow-hidden">
-        <div v-if="!isMobile" class="workspace-tabs">
+        <div v-if="!isMobile" ref="tabsContainerRef" class="workspace-tabs">
           <button
             v-for="fileId in openFileIds"
             :key="fileId"
@@ -492,8 +500,10 @@
   const expandedFolderIds: Ref<string[]> = ref([])
 
   const editorViewRef: Ref<EditorViewType | null> = ref(null)
+  const tabsContainerRef: Ref<HTMLElement | null> = ref(null)
   const customEditorWidth: Ref<number | null> = ref(null)
   const customPreviewWidth: Ref<number | null> = ref(null)
+  const customWorkspaceWidth: Ref<number> = ref(258)
   const workspace = ref<WorkspaceData>(createDefaultWorkspace())
   const openFileIds = computed(() => workspace.value.openFileIds)
   const activeFile = computed<WorkspaceFile | null>(() => {
@@ -1394,6 +1404,17 @@
     createFileInFolder(workspace.value.root.id, filename, importedContent, true)
   }
 
+  // Scroll active tab into view when active file changes (like VS Code behavior)
+  watch(
+    () => workspace.value.activeFileId,
+    async (fileId) => {
+      if (!fileId || !tabsContainerRef.value) return
+      await nextTick()
+      const activeTab = tabsContainerRef.value.querySelector<HTMLElement>('.workspace-tab.active')
+      activeTab?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    },
+  )
+
   // Watch for content changes and re-render (not immediate - initial render happens after editor init)
   watch(content, async (newContent) => {
     if (activeFile.value && activeFile.value.content !== newContent) {
@@ -1550,6 +1571,31 @@
       customEditorWidth.value = editorPercent
       customPreviewWidth.value = previewPercent
       savePaneWidths()
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
+
+  const startWorkspaceResize = (e: MouseEvent): void => {
+    e.preventDefault()
+
+    const startX = e.clientX
+    const startWidth = customWorkspaceWidth.value
+
+    const handleMouseMove = (e: MouseEvent): void => {
+      const newWidth = Math.min(Math.max(startWidth + (e.clientX - startX), 160), 480)
+      customWorkspaceWidth.value = newWidth
+    }
+
+    const handleMouseUp = (): void => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      try {
+        localStorage.setItem('mermditor-workspace-width', customWorkspaceWidth.value.toString())
+      } catch (error) {
+        console.error('Error saving workspace width:', error)
+      }
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -1745,6 +1791,13 @@
     loadSettings()
     loadPaneWidths()
 
+    try {
+      const savedWorkspaceWidth = localStorage.getItem('mermditor-workspace-width')
+      if (savedWorkspaceWidth) customWorkspaceWidth.value = parseFloat(savedWorkspaceWidth)
+    } catch (error) {
+      console.error('Error loading workspace width:', error)
+    }
+
     await nextTick()
 
     // Initialize editor
@@ -1871,7 +1924,6 @@
 
 .workspace-pane {
   position: relative;
-  width: 258px;
   background: var(--surface);
   border-right: 1px solid var(--border);
   flex-shrink: 0;
@@ -2226,6 +2278,17 @@
 }
 
 .editor-border { border-color: var(--border) !important; }
+
+.workspace-resize-handle {
+  width: 4px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.workspace-resize-handle:hover { background: var(--raised); }
 
 .editor-resize-handle {
   width: 4px;
