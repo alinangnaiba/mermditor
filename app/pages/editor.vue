@@ -1,6 +1,6 @@
 <template>
   <!-- App Shell -->
-  <div class="relative flex h-screen flex-col overflow-hidden">
+  <div class="editor-page relative flex h-screen flex-col overflow-hidden">
     <!-- Loading Overlay (non-blocking DOM) -->
     <LoadingScreen
       :show="isLoading"
@@ -1750,6 +1750,14 @@
 </script>
 
 <style scoped>
+.editor-page {
+  --bg: #080b10;
+  --surface: #10141b;
+  --raised: #161b23;
+  --border: #202634;
+  background: var(--bg);
+}
+
 .editor-header {
   display: flex;
   align-items: center;
