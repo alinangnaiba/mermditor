@@ -386,6 +386,7 @@
   position: absolute;
   right: 1rem;
   top: 1rem;
+  z-index: 20;
   width: 28px;
   height: 28px;
   border-radius: 4px;
@@ -398,6 +399,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
+  pointer-events: auto;
   transition: background 0.12s;
 }
 
