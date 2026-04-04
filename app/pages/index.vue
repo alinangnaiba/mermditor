@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- Nav -->
     <nav class="index-nav">
       <NuxtLink to="/" class="index-logo">
         <img src="../assets/images/logo.png" alt="merMDitor Logo" />
@@ -13,92 +12,18 @@
       </ul>
     </nav>
 
-    <!-- Hero -->
-    <div class="index-hero">
-      <h1>Write Markdown.<br />Render everything.</h1>
-      <p>
-        A browser-based markdown editor with live preview, Mermaid diagrams, LaTeX math, and syntax
-        highlighting. Free, no account required.
-      </p>
-      <div class="index-hero-actions">
-        <NuxtLink to="/editor" class="index-btn-primary">Open Editor</NuxtLink>
-        <NuxtLink to="/guide" class="index-btn-ghost">View Guide</NuxtLink>
-      </div>
-    </div>
-
-    <!-- Editor Preview Frame -->
-    <div class="index-preview-wrap">
-      <div class="index-editor-frame">
-        <div class="index-frame-bar">
-          <div class="index-dots">
-            <div class="index-dot" />
-            <div class="index-dot" />
-            <div class="index-dot" />
-          </div>
-          <span class="index-frame-name">untitled.md — merMDitor</span>
-        </div>
-        <div class="index-frame-panes">
-          <div class="index-frame-editor">
-            <div class="fe-heading"># System Design</div>
-            <div>&nbsp;</div>
-            <div>This is <span class="fe-bold">**merMDitor**</span>, a markdown editor.</div>
-            <div>&nbsp;</div>
-            <div class="fe-heading">## Architecture</div>
-            <div>&nbsp;</div>
-            <div class="fe-muted">```mermaid</div>
-            <div class="fe-green">graph LR</div>
-            <div class="fe-green">&nbsp;&nbsp;A[Editor] --&gt; B[Renderer]</div>
-            <div class="fe-green">&nbsp;&nbsp;B --&gt; C[Preview]</div>
-            <div class="fe-muted">```</div>
-            <div>&nbsp;</div>
-            <div class="fe-purple">$$E = mc^2$$</div>
-            <div>&nbsp;</div>
-            <div><span class="fe-orange">- [x]</span> Set up project</div>
-            <div><span class="fe-orange">- [ ]</span> Write docs</div>
-          </div>
-          <div class="index-frame-preview">
-            <div class="fp-h1">System Design</div>
-            <div class="fp-p">This is <strong>merMDitor</strong>, a markdown editor.</div>
-            <div class="fp-h2">Architecture</div>
-            <div class="fp-diagram">
-              <div class="fp-diag-label">mermaid</div>
-              <div class="fp-nodes">
-                <div class="fp-node">Editor</div>
-                <div class="fp-arrow">→</div>
-                <div class="fp-node">Renderer</div>
-                <div class="fp-arrow">→</div>
-                <div class="fp-node">Preview</div>
-              </div>
-            </div>
-            <div class="fp-math">E = mc²</div>
-            <div class="fp-task"><span class="fp-chk done">✓</span> Set up project</div>
-            <div class="fp-task"><span class="fp-chk">&#8203;</span> Write docs</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Features -->
-    <div class="index-features-section">
-      <div class="index-section-inner">
-        <div class="index-section-eyebrow">What's included</div>
-        <h2>Everything you need, nothing you don't</h2>
-        <p>No plugins. No setup. Works in the browser.</p>
-        <div class="index-features-grid">
-          <div v-for="feature in features" :key="feature.name" class="index-feature">
-            <div class="index-feature-name">{{ feature.name }}</div>
-            <div class="index-feature-desc">{{ feature.desc }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Footer -->
+    <MarketingHero />
+    <EditorPreviewFrame />
+    <FeatureGrid :features="features" />
     <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
+  import EditorPreviewFrame from '../components/EditorPreviewFrame.vue'
+  import FeatureGrid from '../components/FeatureGrid.vue'
+  import MarketingHero from '../components/MarketingHero.vue'
+
   const features = [
     {
       name: 'Markdown',
@@ -127,7 +52,7 @@
   ]
 </script>
 
-<style scoped>
+<style>
 .index-nav {
   display: flex;
   align-items: center;
