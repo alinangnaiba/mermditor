@@ -1,78 +1,91 @@
 <template>
-  <div
-    v-if="isOpen"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
-    @click="closeModal"
-  >
-    <div class="max-h-[90vh] w-full max-w-7xl overflow-hidden rounded-lg bg-gray-800" @click.stop>
-      <!-- Header -->
-      <div class="flex items-center justify-between border-b border-gray-700 p-4">
-        <h2 class="text-xl font-semibold text-white">Quick Reference</h2>
-        <button
-          class="rounded p-2 text-gray-400 transition-colors hover:text-white"
-          @click="closeModal"
-        >
-          <PhX :size="20" />
+  <div v-if="isOpen" class="help-overlay" @click="closeModal">
+    <div class="help-box" @click.stop>
+      <div class="help-header">
+        <h2 class="help-title">Quick Reference</h2>
+        <button class="help-close" @click="closeModal">
+          <PhX :size="16" />
         </button>
       </div>
-
-      <!-- Content -->
-      <div class="max-h-[calc(90vh-80px)] overflow-auto">
-        <!-- Navigation Tabs -->
-        <div class="border-b border-gray-700 px-4">
-          <nav class="-mb-px flex space-x-8">
-            <button
-              v-for="tab in tabs"
-              :key="tab.id"
-              :class="[
-                'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
-                activeTab === tab.id
-                  ? 'border-primary-500 text-primary-400'
-                  : 'border-transparent text-gray-400 hover:border-gray-300 hover:text-gray-300',
-              ]"
-              @click="activeTab = tab.id"
-            >
-              {{ tab.name }}
-            </button>
-          </nav>
-        </div>
-
-        <!-- Tab Content -->
-        <div class="p-4">
-          <GuideContent :active-tab="activeTab" />
-        </div>
+      <div class="help-scroll">
+        <GuideContent />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
   import { PhX } from '@phosphor-icons/vue'
   import GuideContent from './GuideContent.vue'
 
-  interface Tab {
-    id: string
-    name: string
-  }
-
-  interface Props {
-    isOpen: boolean
-  }
-
-  defineProps<Props>()
+  defineProps<{ isOpen: boolean }>()
   const emit = defineEmits(['close'])
 
-  const activeTab = ref('markdown')
-
-  const tabs: Tab[] = [
-    { id: 'markdown', name: 'Markdown' },
-    { id: 'mermaid', name: 'Mermaid' },
-    { id: 'latex', name: 'LaTeX' },
-    { id: 'shortcuts', name: 'Shortcuts' },
-  ]
-
-  const closeModal = () => {
-    emit('close')
-  }
+  const closeModal = () => emit('close')
 </script>
+
+<style scoped>
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.help-box {
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.help-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.help-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+}
+
+.help-close:hover {
+  color: var(--text);
+  background: var(--raised);
+}
+
+.help-scroll {
+  overflow-y: auto;
+  padding: 24px;
+  flex: 1;
+}
+</style>

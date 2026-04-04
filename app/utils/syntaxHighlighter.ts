@@ -1,27 +1,54 @@
 // Lazy-loaded Prism module
 let prismLoaded = false
+let prismLoadPromise: Promise<void> | null = null
 
 /**
  * Dynamically loads Prism.js library and CSS only when needed.
- * This eliminates the render-blocking CDN CSS.
+ * Languages are bundled statically to avoid CSP-violating CDN script fetches.
  */
 const loadPrism = async (): Promise<void> => {
   if (prismLoaded || !import.meta.client) return
-
-  // Load Prism core and theme CSS
-  await Promise.all([import('prismjs'), import('prismjs/themes/prism-tomorrow.css')])
-
-  // Load autoloader plugin for automatic language detection
-  await import('prismjs/plugins/autoloader/prism-autoloader')
-
-  // Configure autoloader to use CDN for language definitions
-  // This allows loading additional languages on-demand
-  if (window.Prism?.plugins?.autoloader) {
-    window.Prism.plugins.autoloader.languages_path =
-      'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/'
+  if (prismLoadPromise) {
+    await prismLoadPromise
+    return
   }
 
-  prismLoaded = true
+  prismLoadPromise = (async () => {
+    // Load Prism core and theme CSS first
+    await Promise.all([import('prismjs'), import('prismjs/themes/prism-tomorrow.css')])
+
+    // Load components in dependency order to avoid runtime registration errors.
+    await import('prismjs/components/prism-markup')
+    await import('prismjs/components/prism-clike')
+    await import('prismjs/components/prism-c')
+    await import('prismjs/components/prism-cpp')
+    await import('prismjs/components/prism-csharp')
+    await import('prismjs/components/prism-css')
+    await import('prismjs/components/prism-javascript')
+    await import('prismjs/components/prism-typescript')
+    await import('prismjs/components/prism-jsx')
+    await import('prismjs/components/prism-tsx')
+    await import('prismjs/components/prism-json')
+    await import('prismjs/components/prism-yaml')
+    await import('prismjs/components/prism-bash')
+    await import('prismjs/components/prism-python')
+    await import('prismjs/components/prism-java')
+    await import('prismjs/components/prism-go')
+    await import('prismjs/components/prism-rust')
+    await import('prismjs/components/prism-sql')
+    await import('prismjs/components/prism-markdown')
+    await import('prismjs/components/prism-diff')
+    await import('prismjs/components/prism-docker')
+    await import('prismjs/components/prism-toml')
+
+    prismLoaded = true
+  })()
+
+  try {
+    await prismLoadPromise
+  } finally {
+    prismLoadPromise = null
+  }
 }
 
 declare global {
@@ -29,11 +56,6 @@ declare global {
     Prism: {
       highlightAll: () => void
       highlightElement: (element: Element) => void
-      plugins?: {
-        autoloader?: {
-          languages_path: string
-        }
-      }
     }
   }
 }
@@ -45,18 +67,22 @@ declare global {
 export const highlightSyntax = async (): Promise<void> => {
   if (!import.meta.client) return
 
-  const codeBlocks = document.querySelectorAll('pre code:not(.prism-highlighted)')
+  try {
+    const codeBlocks = document.querySelectorAll('pre code:not(.prism-highlighted)')
 
-  // Early exit if no code blocks to highlight
-  if (codeBlocks.length === 0) return
+    // Early exit if no code blocks to highlight
+    if (codeBlocks.length === 0) return
 
-  // Load Prism on demand
-  await loadPrism()
+    // Load Prism on demand
+    await loadPrism()
 
-  if (!window.Prism) return
+    if (!window.Prism) return
 
-  codeBlocks.forEach((block) => {
-    block.classList.add('prism-highlighted')
-    window.Prism.highlightElement(block)
-  })
+    codeBlocks.forEach((block) => {
+      block.classList.add('prism-highlighted')
+      window.Prism.highlightElement(block)
+    })
+  } catch (error) {
+    console.error('Syntax highlighting error:', error)
+  }
 }

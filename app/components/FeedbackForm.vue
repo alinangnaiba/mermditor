@@ -1,171 +1,92 @@
 <template>
-  <div
-    class="mx-auto max-w-2xl rounded-lg border border-border-primary bg-surface-secondary p-6 shadow-lg"
-  >
-    <h2 class="mb-6 text-2xl font-bold text-text-primary">Share Your Feedback</h2>
-
-    <form class="space-y-4" @submit.prevent="submitSuggestion">
-      <!-- Type Selection -->
-      <div>
-        <label class="mb-2 block text-sm font-medium text-text-secondary" for="feedback-type">
-          Type of Feedback
-        </label>
-        <select
-          id="feedback-type"
-          v-model="form.type"
-          required
-          class="w-full rounded-md border border-border-secondary bg-surface-tertiary px-3 py-2 text-text-primary transition-colors focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-        >
-          <option value="">Select type...</option>
-          <option value="Bug Report">Bug Report</option>
-          <option value="Feature Request">Feature Request</option>
-          <option value="Improvement">Improvement</option>
-          <option value="Question">Question</option>
-        </select>
-      </div>
-
-      <!-- Title -->
-      <div>
-        <label class="mb-2 block text-sm font-medium text-text-secondary" for="feedback-title">
-          Title
-        </label>
-        <input
-          id="feedback-title"
-          v-model="form.title"
-          type="text"
-          required
-          maxlength="100"
-          placeholder="Brief summary of your feedback"
-          class="w-full rounded-md border border-border-secondary bg-surface-tertiary px-3 py-2 text-text-primary placeholder-text-tertiary transition-colors focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-        />
-      </div>
-
-      <!-- Description -->
-      <div>
-        <label
-          class="mb-2 block text-sm font-medium text-text-secondary"
-          for="feedback-description"
-        >
-          Description
-        </label>
-        <textarea
-          id="feedback-description"
-          v-model="form.description"
-          required
-          rows="6"
-          placeholder="Please provide details about your feedback..."
-          class="w-full resize-none rounded-md border border-border-secondary bg-surface-tertiary px-3 py-2 text-text-primary placeholder-text-tertiary transition-colors focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-        />
-      </div>
-
-      <!-- Email (Optional) -->
-      <div>
-        <label class="mb-2 block text-sm font-medium text-text-secondary" for="feedback-email">
-          Email (Optional)
-        </label>
-        <input
-          id="feedback-email"
-          v-model="form.email"
-          type="email"
-          placeholder="your@email.com (if you'd like a response)"
-          class="w-full rounded-md border border-border-secondary bg-surface-tertiary px-3 py-2 text-text-primary placeholder-text-tertiary transition-colors focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
-        />
-      </div>
-
-      <!-- Submit Button -->
-      <div class="flex gap-3">
+  <form @submit.prevent="submitSuggestion">
+    <!-- Type -->
+    <div class="ff-field">
+      <label class="ff-label">Type</label>
+      <div class="ff-type-group" role="group" aria-label="Feedback type">
         <button
-          type="submit"
-          :disabled="isSubmitting"
-          class="flex-1 rounded-md bg-surface-tertiary px-4 py-2 font-medium text-text-primary transition-colors duration-200 hover:bg-surface-quaternary focus:bg-surface-quaternary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary disabled:bg-surface-quaternary disabled:opacity-50"
-        >
-          <span v-if="!isSubmitting">Submit Feedback</span>
-          <span v-else class="flex items-center justify-center">
-            <svg
-              class="-ml-1 mr-3 h-5 w-5 animate-spin text-text-primary"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              />
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            Submitting...
-          </span>
-        </button>
-        <button
+          v-for="opt in typeOptions"
+          :key="opt.value"
           type="button"
-          class="rounded-md border border-border-secondary px-4 py-2 text-text-secondary transition-colors duration-200 hover:bg-surface-tertiary focus:bg-surface-tertiary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary"
-          @click="resetForm"
-        >
-          Reset
-        </button>
-      </div>
-    </form>
-
-    <!-- Success Message -->
-    <div v-if="submitted" class="mt-6 rounded-md border border-green-700 bg-green-900/20 p-4">
-      <div class="flex">
-        <svg
-          class="mt-0.5 h-5 w-5 text-green-400"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          aria-hidden="true"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-            clip-rule="evenodd"
-          />
-        </svg>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-green-200">Feedback Submitted!</h3>
-          <p class="mt-1 text-sm text-green-300">Thank you for your feedback!</p>
-        </div>
+          class="ff-type-btn"
+          :class="{ active: form.type === opt.value }"
+          @click="form.type = opt.value"
+        >{{ opt.label }}</button>
       </div>
     </div>
 
-    <!-- Error Message -->
-    <div v-if="error" class="mt-6 rounded-md border border-red-700 bg-red-900/20 p-4">
-      <div class="flex">
-        <svg
-          class="mt-0.5 h-5 w-5 text-red-400"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          aria-hidden="true"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-            clip-rule="evenodd"
-          />
-        </svg>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-red-200">Submission Failed</h3>
-          <p class="mt-1 text-sm text-red-300">
-            {{ error }}
-          </p>
-        </div>
-      </div>
+    <!-- Title -->
+    <div class="ff-field">
+      <label class="ff-label" for="ff-title">Title <span class="ff-req">*</span></label>
+      <input
+        id="ff-title"
+        v-model="form.title"
+        type="text"
+        required
+        maxlength="200"
+        placeholder="Brief summary"
+        class="ff-input"
+      />
     </div>
-  </div>
+
+    <!-- Details -->
+    <div class="ff-field">
+      <label class="ff-label" for="ff-details">Details <span class="ff-req">*</span></label>
+      <textarea
+        id="ff-details"
+        v-model="form.description"
+        required
+        rows="5"
+        placeholder="Describe the bug or idea in detail..."
+        class="ff-input ff-textarea"
+      />
+    </div>
+
+    <!-- Email -->
+    <div class="ff-field">
+      <label class="ff-label" for="ff-email">Email <span class="ff-opt">(optional)</span></label>
+      <input
+        id="ff-email"
+        v-model="form.email"
+        type="email"
+        placeholder="you@example.com"
+        class="ff-input"
+      />
+    </div>
+
+    <!-- Submit -->
+    <button
+      type="submit"
+      class="ff-submit"
+      :disabled="isSubmitting || !form.title || !form.description"
+    >
+      <span v-if="!isSubmitting">Send Feedback</span>
+      <span v-else>Submitting…</span>
+    </button>
+
+    <p class="ff-privacy">We don't share your data with anyone.</p>
+
+    <!-- Success -->
+    <div v-if="submitted" class="ff-notice ff-success">
+      Feedback submitted — thank you!
+    </div>
+
+    <!-- Error -->
+    <div v-if="error" class="ff-notice ff-error">
+      {{ error }}
+    </div>
+  </form>
 </template>
 
 <script setup lang="ts">
+  const typeOptions = [
+    { label: 'Bug',     value: 'Bug Report' },
+    { label: 'Feature', value: 'Feature Request' },
+    { label: 'Other',   value: 'Other' },
+  ]
+
   const form = ref({
-    type: '',
+    type: 'Bug Report',
     title: '',
     description: '',
     email: '',
@@ -178,7 +99,7 @@
 
   const resetForm = () => {
     form.value = {
-      type: '',
+      type: 'Bug Report',
       title: '',
       description: '',
       email: '',
@@ -231,3 +152,133 @@
     }
   }
 </script>
+
+<style scoped>
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ff-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ff-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--dim);
+}
+
+.ff-req { color: var(--accent); }
+.ff-opt { font-weight: 400; color: var(--muted); }
+
+.ff-type-group {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.ff-type-btn {
+  flex: 1;
+  padding: 7px 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--dim);
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+}
+
+.ff-type-btn:last-child { border-right: none; }
+
+.ff-type-btn:hover { color: var(--text); background: var(--raised); }
+
+.ff-type-btn.active {
+  color: var(--text);
+  background: var(--raised);
+  font-weight: 600;
+}
+
+.ff-input {
+  width: 100%;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.12s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.ff-input::placeholder { color: var(--muted); }
+.ff-input:focus { border-color: var(--accent); }
+
+.ff-input:-webkit-autofill,
+.ff-input:-webkit-autofill:hover,
+.ff-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 100px var(--raised) inset;
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+  border-color: var(--accent);
+}
+
+.ff-textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.ff-submit {
+  width: 100%;
+  padding: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 2px;
+}
+
+.ff-submit:hover:not(:disabled) { background: #5f9fff; }
+
+.ff-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ff-privacy {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.ff-notice {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+}
+
+.ff-success {
+  background: rgba(63, 185, 80, 0.1);
+  border: 1px solid var(--green);
+  color: var(--green);
+}
+
+.ff-error {
+  background: rgba(255, 80, 80, 0.08);
+  border: 1px solid #f85149;
+  color: #f85149;
+}
+</style>

@@ -1,80 +1,56 @@
 <template>
-  <div class="flex min-h-screen flex-col bg-surface-primary text-text-primary">
-    <!-- Header -->
-    <header class="flex-shrink-0 border-b border-border-primary px-6 py-4">
-      <div class="container mx-auto flex items-center justify-between">
-        <div class="flex items-center">
-          <NuxtLink
-            to="/"
-            class="flex items-center rounded transition-opacity hover:opacity-80 focus:opacity-80 focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-          >
-            <img src="../assets/images/logo.png" alt="merMDitor Logo" class="mr-2 h-8" />
-            <h1 class="text-xl font-semibold text-accent-primary">merMDitor</h1>
-          </NuxtLink>
-        </div>
-        <nav class="flex items-center space-x-4">
-          <NuxtLink
-            to="/"
-            class="rounded px-2 py-1 text-text-secondary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-          >
-            Home
-          </NuxtLink>
-          <NuxtLink
-            to="/editor"
-            class="rounded px-2 py-1 text-text-secondary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-          >
-            Editor
-          </NuxtLink>
-          <NuxtLink
-            to="/guide"
-            class="rounded px-2 py-1 text-text-secondary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-          >
-            Tool Guide
-          </NuxtLink>
-        </nav>
-      </div>
-    </header>
+  <div class="fb-page">
+    <!-- Nav -->
+    <nav class="fb-nav">
+      <NuxtLink to="/" class="fb-logo">
+        <img src="../assets/images/logo.png" alt="merMDitor logo" />
+        merMDitor
+      </NuxtLink>
+      <ul class="fb-nav-links">
+        <li><NuxtLink to="/">Home</NuxtLink></li>
+        <li><NuxtLink to="/guide">Guide</NuxtLink></li>
+        <li><NuxtLink to="/feedback" class="router-link-active">Feedback</NuxtLink></li>
+        <li><NuxtLink to="/editor" class="fb-nav-cta">Open Editor</NuxtLink></li>
+      </ul>
+    </nav>
 
-    <!-- Main Content -->
-    <div class="flex-grow py-8">
-      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        <!-- Page Header -->
-        <div class="mb-8 text-center">
-          <h1 class="text-3xl font-bold text-text-primary">Help Improve merMDitor</h1>
-          <p class="mt-2 text-lg text-text-secondary">
-            Your feedback helps make merMDitor better for everyone
-          </p>
-        </div>
+    <!-- Main -->
+    <main class="fb-main">
+      <div class="fb-grid">
+        <!-- Left column -->
+        <div class="fb-left">
+          <h1>Help improve merMDitor</h1>
+          <p>Found a bug, have a feature request, or want to share how you're using it? All feedback shapes what gets built next.</p>
 
-        <!-- Feedback Guidelines -->
-        <div class="mb-8 rounded-lg border border-border-primary bg-surface-secondary p-6">
-          <h2 class="mb-3 text-lg font-semibold text-accent-primary">📝 Feedback Guidelines</h2>
-          <ul class="space-y-2 text-sm text-text-secondary">
+          <ul class="fb-guidelines">
             <li>
-              <strong class="text-text-primary">Bug Reports:</strong>
-              Include steps to reproduce, expected vs actual behavior
+              <div class="g-title">Reporting a bug</div>
+              <div class="g-desc">Include what you were doing, what you expected, and what happened. Your browser and OS are useful too.</div>
             </li>
             <li>
-              <strong class="text-text-primary">Feature Requests:</strong>
-              Describe the problem you're trying to solve
+              <div class="g-title">Feature requests</div>
+              <div class="g-desc">Describe the problem you're trying to solve. We care more about your workflow than any specific solution.</div>
             </li>
             <li>
-              <strong class="text-text-primary">Improvements:</strong>
-              Suggest enhancements to existing functionality
-            </li>
-            <li>
-              <strong class="text-text-primary">Questions:</strong>
-              Ask about usage, features, or technical aspects
+              <div class="g-title">Anything else</div>
+              <div class="g-desc">General praise, criticism, or thoughts about the editor — all of it is welcome.</div>
             </li>
           </ul>
         </div>
 
-        <!-- Feedback Form -->
-        <FeedbackForm />
+        <!-- Right column: form card -->
+        <div class="fb-form-card">
+          <div class="fb-form-header">
+            <h2>Send Feedback</h2>
+            <p>No account needed · Anonymous by default</p>
+          </div>
+          <div class="fb-form-body">
+            <FeedbackForm />
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
 
-    <!-- Footer -->
     <AppFooter />
   </div>
 </template>
@@ -94,20 +70,153 @@
   useHead({
     link: [{ rel: 'canonical', href: 'https://www.mermditor.dev/feedback' }],
   })
-
-  useHead({
-    script: [
-      {
-        type: 'application/ld+json',
-        innerHTML: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'ContactPage',
-          name: 'merMDitor Feedback & Support',
-          description:
-            'Feedback and support page for merMDitor - Markdown and Mermaid diagram editor',
-          url: 'https://www.mermditor.dev/feedback',
-        }),
-      },
-    ],
-  })
 </script>
+
+<style scoped>
+.fb-page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.fb-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 54px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.fb-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.fb-logo img { height: 28px; width: auto; display: block; }
+
+.fb-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.fb-nav-links a {
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  color: var(--dim);
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+}
+
+.fb-nav-links a:hover,
+.fb-nav-links a.router-link-active { color: var(--text); background: var(--surface); }
+
+.fb-nav-cta {
+  background: var(--accent) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.fb-nav-cta:hover { background: #5f9fff !important; }
+
+.fb-main {
+  flex: 1;
+  padding: 4.5rem 2rem 5rem;
+}
+
+.fb-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 4rem;
+  max-width: 860px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.fb-left h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+
+.fb-left > p {
+  color: var(--dim);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 2.25rem;
+}
+
+.fb-guidelines {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.fb-guidelines li {
+  padding: 14px 18px;
+  background: var(--surface);
+  font-size: 0.9375rem;
+}
+
+.fb-guidelines li + li { border-top: 1px solid var(--border); }
+
+.g-title { font-weight: 600; margin-bottom: 3px; }
+.g-desc  { color: var(--dim); font-size: 0.875rem; line-height: 1.6; }
+
+.fb-form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  position: sticky;
+  top: 72px;
+}
+
+.fb-form-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.fb-form-header h2 { font-size: 1rem; font-weight: 700; margin-bottom: 3px; }
+.fb-form-header p  { font-size: 0.8125rem; color: var(--muted); }
+
+.fb-form-body { padding: 18px 20px 20px; }
+
+@media (max-width: 768px) {
+  .fb-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .fb-form-card { position: static; }
+}
+
+@media (max-width: 480px) {
+  .fb-nav, .fb-main { padding-left: 1.25rem; padding-right: 1.25rem; }
+}
+</style>

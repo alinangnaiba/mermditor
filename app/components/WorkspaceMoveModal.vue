@@ -2,67 +2,108 @@
   <div v-if="isOpen" class="modal-overlay" @click="emit('cancel')">
     <div class="modal-box" @click.stop>
       <div class="modal-header">
-        <h3 class="modal-title">Save As</h3>
+        <h3 class="modal-title">{{ title }}</h3>
         <button class="modal-close" aria-label="Close" @click="emit('cancel')">
           <PhX :size="16" />
         </button>
       </div>
       <div class="modal-body">
-        <label class="modal-label">Filename (without extension)</label>
-        <input
-          ref="filenameInput"
-          v-model="filename"
-          type="text"
-          class="modal-input"
-          placeholder="Enter filename"
-          @keydown.enter="handleSave"
+        <p class="modal-message">Choose a destination for <strong>{{ itemName }}</strong>.</p>
+        <label class="modal-label">Destination folder</label>
+        <select
+          ref="selectRef"
+          v-model="selectedId"
+          class="modal-select"
+          @keydown.enter="handleConfirm"
           @keydown.escape="emit('cancel')"
-        />
+        >
+          <option
+            v-for="option in options"
+            :key="option.id"
+            :value="option.id"
+            :disabled="option.disabled"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+        <p v-if="errorText" class="modal-error">{{ errorText }}</p>
       </div>
       <div class="modal-footer">
         <button class="modal-btn modal-btn-cancel" @click="emit('cancel')">Cancel</button>
-        <button class="modal-btn modal-btn-confirm" :disabled="!filename.trim()" @click="handleSave">Save</button>
+        <button
+          class="modal-btn modal-btn-confirm"
+          :disabled="!selectedId || !hasEnabledOption"
+          @click="handleConfirm"
+        >
+          Move
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, watch, nextTick } from 'vue'
+  import { computed, nextTick, ref, watch } from 'vue'
   import { PhX } from '@phosphor-icons/vue'
+
+  interface MoveOption {
+    id: string
+    label: string
+    disabled?: boolean
+  }
 
   interface Props {
     isOpen: boolean
-    defaultFilename?: string
+    title?: string
+    itemName: string
+    options: MoveOption[]
+    initialFolderId?: string
+    errorText?: string
   }
 
   const props = withDefaults(defineProps<Props>(), {
-    defaultFilename: '',
+    title: 'Move Item',
+    initialFolderId: '',
+    errorText: '',
   })
 
   const emit = defineEmits<{
-    save: [filename: string]
+    confirm: [folderId: string]
     cancel: []
   }>()
 
-  const filename = ref('')
-  const filenameInput = ref<HTMLInputElement | null>(null)
+  const selectedId = ref('')
+  const selectRef = ref<HTMLSelectElement | null>(null)
 
-  const handleSave = () => {
-    if (filename.value.trim()) {
-      emit('save', filename.value.trim())
+  const hasEnabledOption = computed(() => props.options.some((option) => !option.disabled))
+
+  const getInitialSelection = (): string => {
+    const initialOption = props.options.find(
+      (option) => option.id === props.initialFolderId && !option.disabled
+    )
+    if (initialOption) {
+      return initialOption.id
+    }
+
+    return props.options.find((option) => !option.disabled)?.id ?? ''
+  }
+
+  const handleConfirm = (): void => {
+    if (selectedId.value) {
+      emit('confirm', selectedId.value)
     }
   }
 
   watch(
     () => props.isOpen,
     async (isOpen) => {
-      if (isOpen) {
-        filename.value = props.defaultFilename
-        await nextTick()
-        filenameInput.value?.focus()
-        filenameInput.value?.select()
+      if (!isOpen) {
+        return
       }
+
+      selectedId.value = getInitialSelection()
+      await nextTick()
+      selectRef.value?.focus()
     }
   )
 </script>
@@ -71,7 +112,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,7 +122,7 @@
 
 .modal-box {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -126,6 +167,13 @@
   padding: 18px;
 }
 
+.modal-message {
+  margin-bottom: 14px;
+  font-size: 0.875rem;
+  color: var(--dim);
+  line-height: 1.6;
+}
+
 .modal-label {
   display: block;
   font-size: 0.8125rem;
@@ -134,7 +182,7 @@
   margin-bottom: 8px;
 }
 
-.modal-input {
+.modal-select {
   width: 100%;
   background: var(--raised);
   border: 1px solid var(--border);
@@ -147,8 +195,16 @@
   transition: border-color 0.15s;
 }
 
-.modal-input:focus { border-color: var(--accent); }
-.modal-input::placeholder { color: var(--muted); }
+.modal-select:focus {
+  border-color: var(--accent);
+}
+
+.modal-error {
+  margin-top: 8px;
+  font-size: 0.76rem;
+  color: #ff8d8d;
+  line-height: 1.5;
+}
 
 .modal-footer {
   display: flex;
@@ -187,6 +243,12 @@
   border-color: var(--accent);
 }
 
-.modal-btn-confirm:hover { background: #5f9fff; }
-.modal-btn-confirm:disabled { opacity: 0.45; cursor: not-allowed; }
+.modal-btn-confirm:hover {
+  background: #5f9fff;
+}
+
+.modal-btn-confirm:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 </style>

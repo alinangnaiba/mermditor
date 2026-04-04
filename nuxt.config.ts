@@ -21,11 +21,7 @@ export default defineNuxtConfig({
       ],
       // CDN resources removed - KaTeX and Prism.js are now loaded dynamically via NPM packages
       // This improves FCP by eliminating render-blocking CSS
-      link: [
-        // Keep preconnect for Prism autoloader language definitions (loaded on-demand)
-        { rel: 'preconnect', href: 'https://cdn.jsdelivr.net', crossorigin: 'anonymous' },
-        { rel: 'dns-prefetch', href: 'https://cdn.jsdelivr.net' },
-      ],
+      link: [],
       script: [],
     },
   },

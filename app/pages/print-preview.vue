@@ -112,6 +112,9 @@ const marginValues: Record<MarginSize, string> = {
   'wide': '30mm'
 }
 
+const PRINT_CODE_LINES_CLASS = 'print-code-lines'
+const PRINT_CODE_LINE_CLASS = 'print-code-line'
+
 // Generate @page CSS for PagedJS (passed as stylesheet to preview())
 const getPageStylesForPagedJS = () => {
   return `
@@ -163,6 +166,69 @@ const getPageStylesForPagedJS = () => {
       border: none;
       color: inherit;
       font-size: inherit;
+    }
+
+    .code-block-container {
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-left: 1px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      overflow: visible;
+      break-inside: auto;
+      page-break-inside: auto;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+    }
+
+    .code-block-body {
+      max-height: none !important;
+      overflow: visible !important;
+      background: transparent;
+      display: block;
+    }
+
+    .code-block-container pre {
+      display: block;
+      margin: 0 !important;
+      padding: 0 !important;
+      background-color: #ffffff !important;
+      border: 0 !important;
+      color: #111827 !important;
+      overflow: visible !important;
+      line-height: 1.45 !important;
+      white-space: break-spaces !important;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      orphans: 3;
+      widows: 3;
+      tab-size: 2;
+    }
+
+    .code-block-container pre code {
+      display: block;
+      margin: 0;
+      border: 0 !important;
+      white-space: break-spaces !important;
+      overflow-wrap: anywhere !important;
+      word-break: break-word !important;
+      tab-size: 2;
+    }
+
+    .prose pre code.${PRINT_CODE_LINES_CLASS},
+    .code-block-container pre code.${PRINT_CODE_LINES_CLASS} {
+      white-space: normal !important;
+      overflow-wrap: normal !important;
+      word-break: normal !important;
+    }
+
+    .prose pre code.${PRINT_CODE_LINES_CLASS} .${PRINT_CODE_LINE_CLASS},
+    .code-block-container pre code.${PRINT_CODE_LINES_CLASS} .${PRINT_CODE_LINE_CLASS} {
+      display: block;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: normal;
+      min-height: 1.45em;
     }
 
     .prose table {
@@ -234,7 +300,7 @@ const getPageStylesForPagedJS = () => {
       page-break-after: avoid;
     }
 
-    img, figure, table, .code-block-container {
+    img, figure, table {
       page-break-inside: avoid;
     }
   `
@@ -302,6 +368,39 @@ const loadContent = () => {
   }
 }
 
+const normalizeCodeBlocksForPrint = (root: Element | Document) => {
+  const codeBlocks = root.querySelectorAll('pre code')
+
+  for (const codeBlock of codeBlocks) {
+    if (codeBlock.classList.contains('language-mermaid')) {
+      continue
+    }
+
+    if (codeBlock.classList.contains(PRINT_CODE_LINES_CLASS)) {
+      continue
+    }
+
+    const rawText = codeBlock.textContent
+    if (!rawText) {
+      continue
+    }
+
+    const lines = rawText.replace(/\r\n?/g, '\n').split('\n')
+    const fragment = document.createDocumentFragment()
+
+    for (const line of lines) {
+      const lineElement = document.createElement('span')
+      lineElement.className = PRINT_CODE_LINE_CLASS
+      lineElement.textContent = line.length > 0 ? line : '\u00a0'
+      fragment.appendChild(lineElement)
+    }
+
+    codeBlock.textContent = ''
+    codeBlock.classList.add(PRINT_CODE_LINES_CLASS)
+    codeBlock.appendChild(fragment)
+  }
+}
+
 const initializePreview = async () => {
   if (!import.meta.client) return
 
@@ -330,6 +429,8 @@ const initializePreview = async () => {
       tertiaryBkg: '#e5e7eb',
     }
   })
+
+  normalizeCodeBlocksForPrint(document.querySelector('#print-content') ?? document)
 
   // 4. Run Paged.js with our complete stylesheet
   const paged = new Previewer()

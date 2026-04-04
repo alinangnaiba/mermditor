@@ -1,210 +1,97 @@
 <template>
   <div>
-    <!-- Header -->
-    <header class="border-b border-gray-700 bg-gray-800">
-      <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 items-center justify-between">
-          <!-- Logo/Icon -->
-          <div class="flex items-center">
-            <NuxtLink
-              to="/"
-              class="flex items-center rounded transition-opacity hover:opacity-80 focus:opacity-80 focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-            >
-              <img src="../assets/images/logo.png" alt="merMDitor Logo" class="mr-3 h-8" />
-            </NuxtLink>
-          </div>
+    <!-- Nav -->
+    <nav class="index-nav">
+      <NuxtLink to="/" class="index-logo">
+        <img src="../assets/images/logo.png" alt="merMDitor Logo" />
+        merMDitor
+      </NuxtLink>
+      <ul class="index-nav-links">
+        <li><NuxtLink to="/guide">Guide</NuxtLink></li>
+        <li><NuxtLink to="/feedback">Feedback</NuxtLink></li>
+        <li><NuxtLink to="/editor" class="index-nav-cta">Open Editor</NuxtLink></li>
+      </ul>
+    </nav>
 
-          <!-- Navigation -->
-          <nav>
-            <NuxtLink
-              to="/guide"
-              class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:text-white"
-            >
-              Tool Guide
-            </NuxtLink>
-          </nav>
-        </div>
+    <!-- Hero -->
+    <div class="index-hero">
+      <h1>Write Markdown.<br />Render everything.</h1>
+      <p>
+        A browser-based markdown editor with live preview, Mermaid diagrams, LaTeX math, and syntax
+        highlighting. Free, no account required.
+      </p>
+      <div class="index-hero-actions">
+        <NuxtLink to="/editor" class="index-btn-primary">Open Editor</NuxtLink>
+        <NuxtLink to="/guide" class="index-btn-ghost">View Guide</NuxtLink>
       </div>
-    </header>
+    </div>
 
-    <!-- Jumbotron -->
-    <section
-      class="flex flex-col items-center justify-center py-12 md:py-20"
-      aria-labelledby="hero-heading"
-    >
-      <div class="container mx-auto px-4 text-center">
-        <div class="mx-auto max-w-3xl">
-          <h1
-            id="hero-heading"
-            class="mb-6 flex flex-col items-center justify-center text-5xl font-bold text-accent-primary sm:text-4xl md:flex-row md:text-5xl lg:text-6xl"
-          >
-            <img
-              src="../assets/images/logo.png"
-              alt="merMDitor Logo"
-              class="mb-4 h-10 sm:h-12 md:mb-0 md:mr-4 md:h-14 lg:h-16"
-            />
-            merMDitor
-          </h1>
-          <p class="mb-6 text-xl text-text-secondary sm:text-2xl md:text-3xl">
-            A simple Markdown editor with
-            <a
-              href="https://mermaid.js.org/"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="rounded text-text-tertiary underline transition-colors hover:text-text-secondary focus:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-            >
-              Mermaid
-            </a>
-            diagrams and
-            <a
-              href="https://www.latex-project.org/"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="rounded text-text-tertiary underline transition-colors hover:text-text-secondary focus:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-            >
-              LaTeX
-            </a>
-            math support
-          </p>
-          <p class="mb-12 text-lg leading-relaxed text-text-tertiary">
-            Write Markdown, see it rendered instantly, add diagrams with Mermaid syntax, and render
-            mathematical expressions with LaTeX. No signup required, works in your browser, saves
-            automatically to local storage.
-          </p>
-          <div class="flex flex-col justify-center gap-4 sm:flex-row">
-            <NuxtLink
-              to="/editor"
-              class="rounded-lg bg-accent-active px-6 py-3 font-medium text-text-secondary transition-colors hover:bg-accent-primary focus:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-primary"
-            >
-              Open Editor
-            </NuxtLink>
+    <!-- Editor Preview Frame -->
+    <div class="index-preview-wrap">
+      <div class="index-editor-frame">
+        <div class="index-frame-bar">
+          <div class="index-dots">
+            <div class="index-dot" />
+            <div class="index-dot" />
+            <div class="index-dot" />
           </div>
+          <span class="index-frame-name">untitled.md — merMDitor</span>
         </div>
-      </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="bg-surface-secondary py-16" aria-labelledby="features-heading">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 class="mb-12 text-center text-3xl font-bold">What it does</h2>
-
-        <!-- Feature Carousel -->
-        <div class="relative" @mouseenter="stopAutoAdvance" @mouseleave="startAutoAdvance">
-          <!-- Carousel Container -->
-          <div class="overflow-hidden">
-            <div
-              class="flex transition-transform duration-500 ease-in-out"
-              :style="{ transform: `translateX(-${currentSlide * 100}%)` }"
-            >
-              <!-- Slides -->
-              <div v-for="(slide, index) in slides" :key="index" class="w-full flex-shrink-0 px-2">
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-                  <div
-                    v-for="feature in slide"
-                    :key="feature.title"
-                    class="h-full rounded-lg border border-gray-700 bg-gray-800 p-6"
-                  >
-                    <div
-                      class="mb-4 flex h-12 w-12 items-center justify-center rounded-lg"
-                      :class="feature.iconBg"
-                    >
-                      <component :is="feature.icon" :size="24" class="text-white" />
-                    </div>
-                    <h3 class="mb-3 text-xl font-semibold">{{ feature.title }}</h3>
-                    <p class="text-gray-400">{{ feature.description }}</p>
-                  </div>
-                </div>
+        <div class="index-frame-panes">
+          <div class="index-frame-editor">
+            <div class="fe-heading"># System Design</div>
+            <div>&nbsp;</div>
+            <div>This is <span class="fe-bold">**merMDitor**</span>, a markdown editor.</div>
+            <div>&nbsp;</div>
+            <div class="fe-heading">## Architecture</div>
+            <div>&nbsp;</div>
+            <div class="fe-muted">```mermaid</div>
+            <div class="fe-green">graph LR</div>
+            <div class="fe-green">&nbsp;&nbsp;A[Editor] --&gt; B[Renderer]</div>
+            <div class="fe-green">&nbsp;&nbsp;B --&gt; C[Preview]</div>
+            <div class="fe-muted">```</div>
+            <div>&nbsp;</div>
+            <div class="fe-purple">$$E = mc^2$$</div>
+            <div>&nbsp;</div>
+            <div><span class="fe-orange">- [x]</span> Set up project</div>
+            <div><span class="fe-orange">- [ ]</span> Write docs</div>
+          </div>
+          <div class="index-frame-preview">
+            <div class="fp-h1">System Design</div>
+            <div class="fp-p">This is <strong>merMDitor</strong>, a markdown editor.</div>
+            <div class="fp-h2">Architecture</div>
+            <div class="fp-diagram">
+              <div class="fp-diag-label">mermaid</div>
+              <div class="fp-nodes">
+                <div class="fp-node">Editor</div>
+                <div class="fp-arrow">→</div>
+                <div class="fp-node">Renderer</div>
+                <div class="fp-arrow">→</div>
+                <div class="fp-node">Preview</div>
               </div>
             </div>
-          </div>
-
-          <!-- Carousel Navigation -->
-          <div class="mt-8 flex justify-center space-x-4">
-            <!-- Previous Button -->
-            <button
-              class="rounded-full bg-gray-700 p-2 transition-colors hover:bg-gray-600"
-              :disabled="currentSlide === 0"
-              :class="{ 'cursor-not-allowed opacity-50': currentSlide === 0 }"
-              @click="previousSlide"
-            >
-              <PhCaretLeft :size="20" class="text-white" />
-            </button>
-
-            <!-- Dots Indicator -->
-            <div class="flex items-center space-x-2">
-              <button
-                v-for="(slide, index) in slides"
-                :key="index"
-                class="h-3 w-3 rounded-full transition-colors"
-                :class="currentSlide === index ? 'bg-blue-500' : 'bg-gray-600 hover:bg-gray-500'"
-                @click="goToSlide(index)"
-              />
-            </div>
-
-            <!-- Next Button -->
-            <button
-              class="rounded-full bg-gray-700 p-2 transition-colors hover:bg-gray-600"
-              :disabled="currentSlide === slides.length - 1"
-              :class="{ 'cursor-not-allowed opacity-50': currentSlide === slides.length - 1 }"
-              @click="nextSlide"
-            >
-              <PhCaretRight :size="20" class="text-white" />
-            </button>
+            <div class="fp-math">E = mc²</div>
+            <div class="fp-task"><span class="fp-chk done">✓</span> Set up project</div>
+            <div class="fp-task"><span class="fp-chk">&#8203;</span> Write docs</div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- Use cases Section -->
-    <section class="bg-surface-primary py-16" aria-labelledby="use-cases-heading">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 class="mb-12 text-center text-3xl font-bold">Good for</h2>
-
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-          <!-- Documentation -->
-          <div class="rounded-lg border border-gray-700 bg-gray-900 p-8">
-            <div
-              class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-lg bg-blue-500"
-            >
-              <PhBookOpen :size="32" class="text-white" />
-            </div>
-            <h3 class="mb-4 text-center text-2xl font-semibold">Documentation</h3>
-            <p class="text-center text-gray-400">
-              API docs, project READMEs, technical guides. Add flowcharts, architecture diagrams,
-              and mathematical formulas inline with your text.
-            </p>
-          </div>
-
-          <!-- Note-taking -->
-          <div class="rounded-lg border border-gray-700 bg-gray-900 p-8">
-            <div
-              class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-lg bg-green-500"
-            >
-              <PhNotebook :size="32" class="text-white" />
-            </div>
-            <h3 class="mb-4 text-center text-2xl font-semibold">Note-taking</h3>
-            <p class="text-center text-gray-400">
-              Meeting notes, research, study materials. Organize thoughts with headers, lists,
-              visual diagrams, and mathematical equations.
-            </p>
-          </div>
-
-          <!-- Academic & Research -->
-          <div class="rounded-lg border border-gray-700 bg-gray-900 p-8">
-            <div
-              class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-lg bg-purple-500"
-            >
-              <PhGraduationCap :size="32" class="text-white" />
-            </div>
-            <h3 class="mb-4 text-center text-2xl font-semibold">Academic & Research</h3>
-            <p class="text-center text-gray-400">
-              Research papers, technical analysis, scientific documentation. Combine text, diagrams,
-              and complex mathematical expressions in one place.
-            </p>
+    <!-- Features -->
+    <div class="index-features-section">
+      <div class="index-section-inner">
+        <div class="index-section-eyebrow">What's included</div>
+        <h2>Everything you need, nothing you don't</h2>
+        <p>No plugins. No setup. Works in the browser.</p>
+        <div class="index-features-grid">
+          <div v-for="feature in features" :key="feature.name" class="index-feature">
+            <div class="index-feature-name">{{ feature.name }}</div>
+            <div class="index-feature-desc">{{ feature.desc }}</div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
 
     <!-- Footer -->
     <AppFooter />
@@ -212,138 +99,324 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, onUnmounted } from 'vue'
-  import {
-    PhFileText,
-    PhNotePencil,
-    PhTreeStructure,
-    PhFunction,
-    PhBookOpen,
-    PhNotebook,
-    PhGraduationCap,
-    PhEye,
-    PhDownloadSimple,
-    PhCurrencyDollar,
-    PhCaretLeft,
-    PhCaretRight,
-    PhExport,
-  } from '@phosphor-icons/vue'
-  import type { Component } from 'vue'
-
-  interface Feature {
-    title: string
-    description: string
-    icon: Component
-    iconBg: string
-  }
-
-  const currentSlide = ref<number>(0)
-
-  const features: Feature[] = [
+  const features = [
     {
-      title: 'Markdown Support',
-      description:
-        'Full Markdown support with live preview, syntax highlighting, and formatting shortcuts.',
-      icon: PhNotePencil,
-      iconBg: 'bg-blue-500',
+      name: 'Markdown',
+      desc: 'Full CommonMark with tables, task lists, footnotes, highlights, subscript, superscript, and emoji.',
     },
     {
-      title: 'Mermaid Diagrams',
-      description: 'Create beautiful flowcharts, sequence diagrams, and more with Mermaid syntax.',
-      icon: PhTreeStructure,
-      iconBg: 'bg-green-500',
+      name: 'Mermaid Diagrams',
+      desc: 'Flowcharts, sequence, Gantt, class, and state diagrams — rendered live as you type.',
     },
     {
-      title: 'LaTeX Math',
-      description: 'Write complex mathematical expressions and formulas using LaTeX syntax.',
-      icon: PhFunction,
-      iconBg: 'bg-purple-500',
+      name: 'LaTeX Math',
+      desc: 'Inline $x^2$ and block $$...$$ math via KaTeX.',
     },
     {
-      title: 'Live Preview',
-      description:
-        'Split-pane view with instant preview. See exactly how your markdown will look while you write.',
-      icon: PhEye,
-      iconBg: 'bg-indigo-500',
+      name: 'Live Split Preview',
+      desc: 'Side-by-side editing with synchronized scrolling. Toggle either pane independently.',
     },
     {
-      title: 'Auto-save',
-      description:
-        'Your work is automatically saved to browser local storage. No accounts, no data sent anywhere.',
-      icon: PhDownloadSimple,
-      iconBg: 'bg-orange-500',
+      name: 'Import & Export',
+      desc: 'Open .md files from disk, export as Markdown, or print to PDF with configurable page settings.',
     },
     {
-      title: 'Free to use',
-      description: 'No registration, no payments, no limits. Just open it and start writing.',
-      icon: PhCurrencyDollar,
-      iconBg: 'bg-red-500',
-    },
-    {
-      title: 'Built-in help',
-      description:
-        'Quick reference for Markdown, Mermaid, and LaTeX syntax available when you need it.',
-      icon: PhFileText,
-      iconBg: 'bg-cyan-500',
-    },
-    {
-      title: 'Import & Export',
-      description:
-        'Import existing .md files from your device or export your work as Markdown files.',
-      icon: PhExport,
-      iconBg: 'bg-teal-500',
+      name: 'Auto-save',
+      desc: 'Content is persisted to localStorage automatically. Reopen the browser and your work is there.',
     },
   ]
-
-  // Organize features into slides (4 per slide)
-  const slides = computed<Feature[][]>(() => {
-    const slidesArray: Feature[][] = []
-    for (let i = 0; i < features.length; i += 4) {
-      slidesArray.push(features.slice(i, i + 4))
-    }
-    return slidesArray
-  })
-
-  const nextSlide = (): void => {
-    if (currentSlide.value < slides.value.length - 1) {
-      currentSlide.value++
-    }
-  }
-
-  const previousSlide = (): void => {
-    if (currentSlide.value > 0) {
-      currentSlide.value--
-    }
-  }
-
-  const goToSlide = (index: number): void => {
-    currentSlide.value = index
-  }
-
-  let autoAdvanceInterval: ReturnType<typeof setInterval> | null = null
-
-  const startAutoAdvance = (): void => {
-    autoAdvanceInterval = setInterval(() => {
-      if (currentSlide.value < slides.value.length - 1) {
-        nextSlide()
-      } else {
-        currentSlide.value = 0
-      }
-    }, 6000) // Change slide every 6 seconds
-  }
-
-  const stopAutoAdvance = (): void => {
-    if (autoAdvanceInterval) {
-      clearInterval(autoAdvanceInterval)
-      autoAdvanceInterval = null
-    }
-  }
-
-  onMounted(() => {
-    startAutoAdvance()
-  })
-
-  onUnmounted(() => {
-    stopAutoAdvance()
-  })
 </script>
+
+<style scoped>
+.index-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 54px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 20;
+}
+
+.index-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.index-logo img { height: 28px; width: auto; display: block; }
+
+.index-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+}
+
+.index-nav-links a {
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  color: var(--dim);
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+}
+
+.index-nav-links a:hover { color: var(--text); background: var(--surface); }
+
+.index-nav-cta {
+  background: var(--accent) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.index-nav-cta:hover { background: #5f9fff !important; }
+
+/* Hero */
+.index-hero {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 88px 2rem 64px;
+  text-align: center;
+}
+
+.index-hero h1 {
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 1.25rem;
+  color: var(--text);
+}
+
+.index-hero p {
+  color: var(--dim);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  margin-bottom: 2.25rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.index-hero-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.index-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.index-btn-primary:hover { background: #5f9fff; }
+
+.index-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  background: transparent;
+  color: var(--dim);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.index-btn-ghost:hover { background: var(--surface); color: var(--text); }
+
+/* Preview frame */
+.index-preview-wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 2rem 96px;
+}
+
+.index-editor-frame {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.index-frame-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--raised);
+}
+
+.index-dots { display: flex; gap: 6px; }
+.index-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--border); }
+
+.index-frame-name {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+.index-frame-panes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 300px;
+}
+
+.index-frame-editor {
+  border-right: 1px solid var(--border);
+  padding: 18px 20px;
+  font-family: 'SF Mono', 'Fira Mono', 'Cascadia Code', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.8;
+  color: var(--dim);
+  overflow: hidden;
+}
+
+.fe-heading  { color: #79b8ff; }
+.fe-bold     { color: var(--text); font-weight: 600; }
+.fe-muted    { color: var(--muted); }
+.fe-green    { color: #56d364; }
+.fe-orange   { color: var(--orange); }
+.fe-purple   { color: var(--purple); }
+
+.index-frame-preview {
+  padding: 18px 22px;
+  overflow: hidden;
+}
+
+.fp-h1  { font-size: 1.0625rem; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+.fp-p   { font-size: 0.8125rem; color: var(--dim); margin-bottom: 12px; line-height: 1.65; }
+.fp-h2  { font-size: 0.875rem; font-weight: 700; margin: 14px 0 7px; color: var(--text); }
+
+.fp-diagram {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 11px 14px;
+  margin-bottom: 12px;
+}
+
+.fp-diag-label { font-size: 0.65rem; color: var(--muted); margin-bottom: 7px; }
+
+.fp-nodes { display: flex; align-items: center; gap: 6px; }
+
+.fp-node {
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 9px;
+  font-size: 0.7rem;
+  color: var(--dim);
+}
+
+.fp-arrow { color: var(--muted); font-size: 0.8rem; }
+
+.fp-math { font-style: italic; color: var(--purple); font-size: 0.875rem; margin-bottom: 10px; }
+
+.fp-task { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: var(--dim); margin-bottom: 4px; }
+.fp-chk {
+  width: 13px; height: 13px; border-radius: 2px;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.55rem; flex-shrink: 0;
+}
+.fp-chk.done { background: var(--green); border-color: var(--green); color: #000; }
+
+/* Features */
+.index-features-section {
+  border-top: 1px solid var(--border);
+  padding: 72px 2rem 80px;
+}
+
+.index-section-inner {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.index-section-eyebrow {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.625rem;
+}
+
+.index-section-inner h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.625rem;
+  color: var(--text);
+}
+
+.index-section-inner > p {
+  color: var(--dim);
+  font-size: 1rem;
+  margin-bottom: 3rem;
+}
+
+.index-features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--border);
+}
+
+.index-feature {
+  background: var(--surface);
+  padding: 1.625rem 1.75rem;
+}
+
+.index-feature-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.index-feature-desc {
+  font-size: 0.875rem;
+  color: var(--dim);
+  line-height: 1.65;
+}
+
+@media (max-width: 768px) {
+  .index-nav-cta { display: none; }
+  .index-hero { padding: 56px 1.5rem 48px; }
+  .index-frame-panes { grid-template-columns: 1fr; height: auto; }
+  .index-frame-editor { border-right: none; border-bottom: 1px solid var(--border); height: 200px; }
+  .index-frame-preview { height: 220px; }
+  .index-features-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .index-nav { padding: 0 1.25rem; }
+  .index-preview-wrap, .index-features-section { padding-left: 1.25rem; padding-right: 1.25rem; }
+}
+</style>

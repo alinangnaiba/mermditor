@@ -2,24 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg:      #0c0f14;
+  --surface: #13171f;
+  --raised:  #191e28;
+  --border:  #232836;
+  --text:    #e2e6f0;
+  --dim:     #8892a4;
+  --muted:   #505869;
+  --accent:  #4a8eff;
+  --green:   #3fb950;
+  --orange:  #f0883e;
+  --purple:  #b392f0;
+  --radius:  5px;
+}
+
 @layer base {
   html {
-    @apply bg-gray-900 text-gray-100;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.65;
   }
 
   body {
-    @apply bg-gray-900 text-gray-100;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 }
 
 /* CodeMirror dark theme customizations */
 .cm-editor {
-  @apply border-0 bg-deep-black text-gray-100;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border: 0 !important;
   height: 100% !important;
 }
 
 .cm-focused {
-  @apply outline-none ring-2 ring-blue-500 ring-opacity-50;
+  outline: none !important;
 }
 
 .cm-scroller {
@@ -27,67 +49,259 @@
 }
 
 .cm-content {
-  @apply p-4;
+  padding: 16px !important;
   min-height: 100% !important;
 }
 
 .cm-gutters {
-  @apply border-r border-gray-600 bg-gray-700;
+  background: var(--bg) !important;
+  border-right: 1px solid var(--border) !important;
+  color: var(--muted) !important;
 }
 
 .cm-lineNumbers .cm-gutterElement {
-  @apply text-gray-400;
+  color: var(--muted) !important;
 }
 
-/* Scrollbar styling for dark theme */
+/* Scrollbar styling */
 ::-webkit-scrollbar {
-  @apply w-2;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-800;
+  background: var(--bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply rounded bg-gray-600;
+  background: var(--border);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500;
+  background: var(--muted);
 }
 
 /* Code block with language labels */
 .code-block-container {
-  @apply my-6 overflow-hidden rounded-lg border border-gray-700;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  /* Left accent edge gives the eye a quick "this is a code block" signal */
+  border-left: 3px solid var(--accent);
 }
 
 .code-block-header {
-  @apply border-b border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-gray-300;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  height: 36px;
+  background: var(--bg);
 }
 
+/* Language pill — clear at a glance, not loud */
 .code-block-language {
-  @apply text-gray-200;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--dim);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+/* Unknown languages: softer, no shouting */
+.code-block-language.lang-unknown {
+  color: var(--muted);
+  font-weight: 500;
+  border-style: dashed;
+}
+
+.code-block-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.code-block-wrap,
+.code-block-copy {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: center;
+  padding: 0 9px;
+  height: 24px;
+  min-width: 74px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.code-block-wrap:hover,
+.code-block-copy:hover {
+  color: var(--dim);
+  border-color: var(--muted);
+  background: var(--bg);
+}
+
+.code-block-wrap:focus-visible,
+/* Visible focus ring for keyboard users */
+.code-block-copy:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.code-block-wrap.active {
+  color: var(--accent);
+  border-color: rgba(74, 142, 255, 0.5);
+  background: rgba(74, 142, 255, 0.08);
+}
+
+.code-block-copy.copied {
+  color: var(--green);
+  border-color: var(--green);
+  background: rgba(63, 185, 80, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(63, 185, 80, 0.08);
+}
+
+.code-block-copy.copy-failed {
+  color: #f0883e;
+  border-color: #f0883e;
+  background: rgba(240, 136, 62, 0.08);
+}
+
+.code-block-wrap svg,
+.code-block-copy svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.code-block-icon {
+  display: block;
+}
+
+.code-block-success-icon {
+  display: none;
+}
+
+.code-block-copy.copied .code-block-copy-icon {
+  display: none;
+}
+
+.code-block-copy.copied .code-block-success-icon {
+  display: block;
+}
+
+.code-block-button-label {
+  line-height: 1;
+}
+
+/* Scrollable body — max-height keeps long blocks navigable,
+   header stays visible above it */
+.code-block-body {
+  max-height: 480px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+/* Intentional horizontal-scroll affordance */
+.code-block-body::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+}
+
+.code-block-body::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+.code-block-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.code-block-body::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
 }
 
 .code-block-container pre {
-  @apply m-0 rounded-none border-0;
+  margin: 0;
+  border-radius: 0;
+  border: 0;
+  /* Match editor pane: same font stack, size, and rhythm */
+  background: var(--bg) !important;
+  padding: 1rem 1.25rem !important;
+  font-family: 'SF Mono', 'Fira Mono', 'Cascadia Code', 'Consolas', monospace !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.75 !important;
+  /* Don't clip — body handles overflow */
+  overflow: visible !important;
+}
+
+.code-block-container.is-wrapped pre,
+.code-block-container.is-wrapped code {
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Mermaid diagram styling */
 .mermaid-container {
-  @apply relative my-6 rounded-lg border border-gray-700 bg-gray-800 p-4;
+  position: relative;
+  margin: 1rem 0 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 14px 18px;
 }
 
 .mermaid-controls {
-  @apply absolute right-2 top-2 z-10 flex space-x-1;
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  z-index: 10;
+  display: flex;
+  gap: 3px;
 }
 
 .mermaid-controls button {
-  @apply flex h-8 w-8 items-center justify-center rounded bg-gray-700 text-gray-200 transition-colors hover:bg-gray-600;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.65rem;
+  transition: color 0.12s, background 0.12s;
+}
+
+.mermaid-controls button:hover {
+  background: var(--border);
+  color: var(--dim);
 }
 
 .mermaid-controls button svg {
-  @apply h-4 w-4;
+  width: 13px;
+  height: 13px;
 }
 
 .mermaid-viewport {
@@ -112,17 +326,86 @@
 
 /* Mermaid Modal */
 .mermaid-modal-overlay {
-  @apply fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
 }
 
 .mermaid-modal-content {
-  @apply relative max-h-screen max-w-6xl overflow-auto rounded-lg bg-gray-800 p-6;
+  position: relative;
+  max-height: 90vh;
+  max-width: 90vw;
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
   width: 90vw;
   height: 90vh;
 }
 
+.mermaid-container--modal {
+  min-height: calc(90vh - 5rem);
+  margin: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 4rem 0 0;
+}
+
+.mermaid-container--modal .mermaid-controls {
+  right: 3.75rem;
+  top: 0.75rem;
+  gap: 0.375rem;
+  padding: 0.375rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(19, 23, 31, 0.88);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+.mermaid-container--modal .mermaid-controls button {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dim);
+}
+
+.mermaid-container--modal .mermaid-controls button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
 .mermaid-modal-close {
-  @apply absolute right-4 top-4 h-8 w-8 rounded bg-gray-700 text-lg font-bold text-gray-200 transition-colors hover:bg-gray-600;
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  z-index: 20;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  color: var(--dim);
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: auto;
+  transition: background 0.12s;
+}
+
+.mermaid-modal-close:hover {
+  background: var(--border);
 }
 
 /* KaTeX styling */
@@ -136,29 +419,47 @@
 
 /* Table styling for dark theme */
 .prose table {
-  @apply border-gray-700;
+  border-color: var(--border);
 }
 
 .prose th {
-  @apply border-gray-700 bg-gray-800 text-gray-100;
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text);
 }
 
 .prose td {
-  @apply border-gray-700 text-gray-200;
+  border-color: var(--border);
+  color: var(--dim);
 }
 
 /* Code block improvements */
 .prose pre {
-  @apply border border-gray-700 bg-deep-black shadow-lg;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.prose .code-block-body pre {
+  border: 0;
 }
 
 .prose code {
-  @apply rounded bg-gray-800 px-2 py-1 text-gray-100;
+  background: var(--raised);
+  border-radius: 3px;
+  padding: 2px 5px;
+  color: var(--orange);
+  font-size: 0.82em;
 }
 
-/* Remove borders from code inside pre blocks */
+/* Remove borders from code inside pre blocks.
+   Use --text so unhighlighted blocks are as readable as highlighted ones. */
 .prose pre code {
-  @apply rounded-none border-0 bg-transparent p-0;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--text);
+  font-size: 1em;
 }
 
 /* Blockquote styling */
@@ -168,36 +469,82 @@
 
 /* Fix hydration mismatch - ensure editor toolbar buttons override Mermaid button styles */
 .editor-toolbar-btn {
-  @apply rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white !important;
+  width: 28px !important;
+  height: 26px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 4px !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--dim) !important;
+  cursor: pointer !important;
+  transition: background 0.12s, color 0.12s !important;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
 }
 
-/* Footnote styling for marked-footnote plugin */
+.editor-toolbar-btn:hover {
+  background: var(--raised) !important;
+  color: var(--text) !important;
+}
+
+.editor-toolbar-btn.active {
+  background: var(--raised) !important;
+  color: var(--accent) !important;
+}
+
+/* Footnote styling */
 .footnotes {
-  @apply mt-8 border-t border-gray-600 pt-4;
+  margin-top: 2rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
 }
 
 .footnotes ol {
-  @apply list-decimal pl-6 text-sm text-gray-400;
+  list-style: decimal;
+  padding-left: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--dim);
 }
 
 .footnotes li {
-  @apply mb-2;
+  margin-bottom: 0.5rem;
 }
 
 .footnotes p {
-  @apply m-0;
+  margin: 0;
 }
 
 .footnotes a {
-  @apply text-blue-400 transition-colors hover:text-blue-300;
+  color: var(--accent);
+  transition: opacity 0.12s;
+}
+
+.footnotes a:hover {
+  opacity: 0.8;
 }
 
 /* Footnote reference styling */
 a[href^='#fn:'] {
-  @apply text-blue-400 no-underline transition-colors hover:text-blue-300;
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.12s;
+}
+
+a[href^='#fn:']:hover {
+  opacity: 0.8;
 }
 
 /* Footnote back reference styling */
 a[href^='#fnref:'] {
-  @apply ml-2 text-xs text-blue-400 no-underline transition-colors hover:text-blue-300;
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.12s;
+}
+
+a[href^='#fnref:']:hover {
+  opacity: 0.8;
 }

@@ -1,74 +1,48 @@
 <template>
-  <footer class="mt-auto border-t border-border-primary bg-surface-secondary py-8">
-    <div class="container mx-auto px-4">
-      <div class="grid gap-8 md:grid-cols-2">
-        <!-- Brand Section -->
-        <div>
-          <div class="mb-4 flex items-center">
-            <img src="../assets/images/logo.png" alt="merMDitor Logo" class="mr-3 h-8" />
-            <h3 class="text-xl font-semibold text-accent-primary">merMDitor</h3>
-          </div>
-          <p class="text-sm text-text-tertiary">
-            A simple, free Markdown editor with Mermaid diagram support. No signup required, works
-            entirely in your browser.
-          </p>
-        </div>
-
-        <!-- Quick Links -->
-        <div>
-          <h4 class="mb-4 text-lg font-medium text-text-primary">Quick Links</h4>
-          <ul class="space-y-2">
-            <li>
-              <NuxtLink
-                to="/editor"
-                class="rounded px-1 py-0.5 text-text-tertiary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary"
-              >
-                Markdown Editor
-              </NuxtLink>
-            </li>
-            <li>
-              <NuxtLink
-                to="/guide"
-                class="rounded px-1 py-0.5 text-text-tertiary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary"
-              >
-                Tool Guide
-              </NuxtLink>
-            </li>
-            <li>
-              <NuxtLink
-                to="/feedback"
-                class="rounded px-1 py-0.5 text-text-tertiary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary"
-              >
-                Help & Feedback
-              </NuxtLink>
-            </li>
-            <li>
-              <a
-                href="https://mermaid.js.org/syntax/flowchart.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="rounded px-1 py-0.5 text-text-tertiary transition-colors hover:text-text-primary focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface-secondary"
-              >
-                Mermaid Documentation
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Bottom Section -->
-      <div class="mt-8 border-t border-border-primary pt-6 text-center">
-        <p class="text-sm text-text-quaternary">
-          © {{ new Date().getFullYear() }} merMDitor - Free Markdown Editor with Mermaid support
-        </p>
-      </div>
+  <footer class="app-footer">
+    <div class="footer-logo">
+      <img src="../assets/images/logo.png" alt="merMDitor logo" />
+      merMDitor
+    </div>
+    <div class="footer-links">
+      <NuxtLink to="/editor">Editor</NuxtLink>
+      <NuxtLink to="/guide">Guide</NuxtLink>
+      <NuxtLink to="/feedback">Feedback</NuxtLink>
     </div>
   </footer>
 </template>
 
 <style scoped>
-  footer {
-    position: relative;
-    width: 100%;
-  }
+.app-footer {
+  border-top: 1px solid var(--border);
+  padding: 1.75rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-top: auto;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+}
+
+.footer-logo img { height: 22px; width: auto; opacity: 0.5; }
+
+.footer-links {
+  display: flex;
+  gap: 1.75rem;
+}
+
+.footer-links a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-links a:hover { color: var(--dim); }
 </style>

@@ -2,26 +2,30 @@
   <div v-if="isOpen" class="modal-overlay" @click="emit('cancel')">
     <div class="modal-box" @click.stop>
       <div class="modal-header">
-        <h3 class="modal-title">Save As</h3>
+        <h3 class="modal-title">{{ title }}</h3>
         <button class="modal-close" aria-label="Close" @click="emit('cancel')">
           <PhX :size="16" />
         </button>
       </div>
       <div class="modal-body">
-        <label class="modal-label">Filename (without extension)</label>
+        <label class="modal-label">{{ label }}</label>
         <input
-          ref="filenameInput"
-          v-model="filename"
+          ref="inputRef"
+          v-model="value"
           type="text"
           class="modal-input"
-          placeholder="Enter filename"
-          @keydown.enter="handleSave"
+          :placeholder="placeholder"
+          @keydown.enter="handleConfirm"
           @keydown.escape="emit('cancel')"
         />
+        <p v-if="helperText" class="modal-helper">{{ helperText }}</p>
+        <p v-if="errorText" class="modal-error">{{ errorText }}</p>
       </div>
       <div class="modal-footer">
         <button class="modal-btn modal-btn-cancel" @click="emit('cancel')">Cancel</button>
-        <button class="modal-btn modal-btn-confirm" :disabled="!filename.trim()" @click="handleSave">Save</button>
+        <button class="modal-btn modal-btn-confirm" :disabled="!value.trim()" @click="handleConfirm">
+          {{ confirmText }}
+        </button>
       </div>
     </div>
   </div>
@@ -33,36 +37,48 @@
 
   interface Props {
     isOpen: boolean
-    defaultFilename?: string
+    title: string
+    label: string
+    confirmText?: string
+    initialValue?: string
+    placeholder?: string
+    helperText?: string
+    errorText?: string
   }
 
   const props = withDefaults(defineProps<Props>(), {
-    defaultFilename: '',
+    confirmText: 'Save',
+    initialValue: '',
+    placeholder: '',
+    helperText: '',
+    errorText: '',
   })
 
   const emit = defineEmits<{
-    save: [filename: string]
+    confirm: [value: string]
     cancel: []
   }>()
 
-  const filename = ref('')
-  const filenameInput = ref<HTMLInputElement | null>(null)
+  const value = ref('')
+  const inputRef = ref<HTMLInputElement | null>(null)
 
-  const handleSave = () => {
-    if (filename.value.trim()) {
-      emit('save', filename.value.trim())
+  const handleConfirm = (): void => {
+    if (value.value.trim()) {
+      emit('confirm', value.value.trim())
     }
   }
 
   watch(
     () => props.isOpen,
     async (isOpen) => {
-      if (isOpen) {
-        filename.value = props.defaultFilename
-        await nextTick()
-        filenameInput.value?.focus()
-        filenameInput.value?.select()
+      if (!isOpen) {
+        return
       }
+
+      value.value = props.initialValue
+      await nextTick()
+      inputRef.value?.focus()
+      inputRef.value?.select()
     }
   )
 </script>
@@ -71,7 +87,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,7 +97,7 @@
 
 .modal-box {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -147,8 +163,27 @@
   transition: border-color 0.15s;
 }
 
-.modal-input:focus { border-color: var(--accent); }
-.modal-input::placeholder { color: var(--muted); }
+.modal-input:focus {
+  border-color: var(--accent);
+}
+
+.modal-input::placeholder {
+  color: var(--muted);
+}
+
+.modal-helper {
+  margin-top: 8px;
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.modal-error {
+  margin-top: 8px;
+  font-size: 0.76rem;
+  color: #ff8d8d;
+  line-height: 1.5;
+}
 
 .modal-footer {
   display: flex;
@@ -187,6 +222,12 @@
   border-color: var(--accent);
 }
 
-.modal-btn-confirm:hover { background: #5f9fff; }
-.modal-btn-confirm:disabled { opacity: 0.45; cursor: not-allowed; }
+.modal-btn-confirm:hover {
+  background: #5f9fff;
+}
+
+.modal-btn-confirm:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 </style>
