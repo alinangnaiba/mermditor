@@ -72,7 +72,7 @@ export const processLatex = async (html: string): Promise<string> => {
       return `<div class="katex-display">${katex.renderToString(math.trim(), { ...renderOptions, displayMode: true })}</div>`
     } catch (error) {
       console.error('LaTeX display math error:', error)
-      return `<div class="text-red-400">LaTeX Error: ${match}</div>`
+      return `<div class="render-error">LaTeX Error: ${match}</div>`
     }
   })
 
@@ -83,7 +83,7 @@ export const processLatex = async (html: string): Promise<string> => {
       return katex.renderToString(math.trim(), { ...renderOptions, displayMode: false })
     } catch (error) {
       console.error('LaTeX inline math error:', error)
-      return `<span class="text-red-400">LaTeX Error: ${match}</span>`
+      return `<span class="render-error">LaTeX Error: ${match}</span>`
     }
   })
 

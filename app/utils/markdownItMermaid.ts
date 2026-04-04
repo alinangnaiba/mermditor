@@ -11,6 +11,10 @@ interface MermaidThemeVariables {
   mainBkg: string
   secondBkg: string
   tertiaryBkg: string
+  edgeLabelBackground?: string
+  clusterBkg?: string
+  clusterBorder?: string
+  nodeBorder?: string
 }
 
 interface MermaidCache {
@@ -31,7 +35,52 @@ const mermaidCache = new Map<string, MermaidCache>()
 interface MermaidConfig {
   theme?: 'default' | 'base' | 'dark' | 'forest' | 'neutral' | 'null'
   themeVariables?: Partial<MermaidThemeVariables>
+  cacheKey?: MermaidRenderTheme
   [key: string]: any
+}
+
+export type MermaidRenderTheme = 'dark' | 'light'
+
+export const getMermaidThemeConfig = (theme: MermaidRenderTheme): MermaidConfig => {
+  if (theme === 'light') {
+    return {
+      theme: 'base',
+      cacheKey: 'light',
+      themeVariables: {
+        primaryColor: '#f3f7fb',
+        primaryTextColor: '#243b53',
+        primaryBorderColor: '#6f8fad',
+        lineColor: '#8aa1b8',
+        secondaryColor: '#e8eff5',
+        tertiaryColor: '#dde6ef',
+        background: '#ecf2f7',
+        mainBkg: '#f3f7fb',
+        secondBkg: '#e8eff5',
+        tertiaryBkg: '#dde6ef',
+        edgeLabelBackground: '#f6f9fc',
+        clusterBkg: '#f1f6fa',
+        clusterBorder: '#c1cedb',
+        nodeBorder: '#6f8fad',
+      },
+    }
+  }
+
+  return {
+    theme: 'dark',
+    cacheKey: 'dark',
+    themeVariables: {
+      primaryColor: '#3b82f6',
+      primaryTextColor: '#f3f4f6',
+      primaryBorderColor: '#374151',
+      lineColor: '#6b7280',
+      secondaryColor: '#1f2937',
+      tertiaryColor: '#111827',
+      background: '#111827',
+      mainBkg: '#1f2937',
+      secondBkg: '#374151',
+      tertiaryBkg: '#4b5563',
+    },
+  }
 }
 
 /**
@@ -51,20 +100,11 @@ export const initMermaid = async (config?: MermaidConfig): Promise<void> => {
   if ((!mermaidInitialized || config) && import.meta.client) {
     const mermaid = await loadMermaid()
 
-    const defaultThemeVariables: MermaidThemeVariables = {
-      primaryColor: '#3b82f6',
-      primaryTextColor: '#f3f4f6',
-      primaryBorderColor: '#374151',
-      lineColor: '#6b7280',
-      secondaryColor: '#1f2937',
-      tertiaryColor: '#111827',
-      background: '#111827',
-      mainBkg: '#1f2937',
-      secondBkg: '#374151',
-      tertiaryBkg: '#4b5563',
-    }
+    const defaultThemeConfig = getMermaidThemeConfig('dark')
+    const defaultThemeVariables = defaultThemeConfig.themeVariables as MermaidThemeVariables
 
-    const { theme, themeVariables: configThemeVariables, ...otherConfig } = config || {}
+    const { theme, themeVariables: configThemeVariables, cacheKey: _cacheKey, ...otherConfig } =
+      config || {}
 
     const themeVariables = configThemeVariables
       ? { ...defaultThemeVariables, ...configThemeVariables }
@@ -120,6 +160,8 @@ export const processMermaidInMarkdown = (html: string): string => {
 export const renderMermaidDiagrams = async (config?: MermaidConfig): Promise<void> => {
   if (!import.meta.client) return
 
+  const themeKey = config?.cacheKey || 'dark'
+
   const mermaidElements = document.querySelectorAll('.mermaid:not([data-processed])')
 
   // Early exit if no diagrams to render - don't load Mermaid at all
@@ -137,7 +179,8 @@ export const renderMermaidDiagrams = async (config?: MermaidConfig): Promise<voi
     }
 
     try {
-      let cached = mermaidCache.get(content)
+      const cacheKey = `${themeKey}:${content}`
+      let cached = mermaidCache.get(cacheKey)
 
       if (cached) {
         element.innerHTML = sanitizeSvg(cached.svg)
@@ -149,29 +192,35 @@ export const renderMermaidDiagrams = async (config?: MermaidConfig): Promise<voi
         const { svg } = await mermaid.render(id + '-svg', content)
         const sanitizedSvg = sanitizeSvg(svg)
         element.innerHTML = sanitizedSvg
-        mermaidCache.set(content, { svg: sanitizedSvg, id })
+        mermaidCache.set(cacheKey, { svg: sanitizedSvg, id })
       }
 
       element.setAttribute('data-processed', 'true')
       element.setAttribute('data-content', content)
+      element.setAttribute('data-theme-key', themeKey)
 
       setupMermaidControls(element)
     } catch (error) {
       console.error('Mermaid rendering error:', error)
       const errorMessage = error instanceof Error ? error.message : String(error)
-      const errorHTML = `<div class="text-red-400 p-4 border border-red-600 rounded">Mermaid Error: ${errorMessage}</div>`
+      const errorHTML = `<div class="render-error p-4 border rounded">Mermaid Error: ${errorMessage}</div>`
 
       element.innerHTML = errorHTML
       element.setAttribute('data-processed', 'true')
       element.setAttribute('data-content', content)
+      element.setAttribute('data-theme-key', themeKey)
 
-      mermaidCache.set(content, { svg: errorHTML, id: element.id })
+      mermaidCache.set(`${themeKey}:${content}`, { svg: errorHTML, id: element.id })
     }
   }
 }
 
 const getMermaidCacheKey = (mermaidElement: Element): string => {
-  return mermaidElement.getAttribute('data-content')?.trim() || mermaidElement.textContent?.trim() || ''
+  const themeKey = mermaidElement.getAttribute('data-theme-key') || 'dark'
+  const content =
+    mermaidElement.getAttribute('data-content')?.trim() || mermaidElement.textContent?.trim() || ''
+
+  return `${themeKey}:${content}`
 }
 
 const setupMermaidControls = (mermaidElement: Element): void => {
@@ -330,7 +379,7 @@ export const renderMermaidExample = async (mermaidCode: string): Promise<string>
     return `<div class="mermaid-example">${sanitizedSvg}</div>`
   } catch (error) {
     console.warn('Mermaid example rendering error:', error)
-    return '<div class="text-gray-400">Diagram would render here</div>'
+    return '<div class="render-placeholder">Diagram would render here</div>'
   }
 }
 

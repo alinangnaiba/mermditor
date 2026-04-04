@@ -28,7 +28,7 @@ export const useMarkdownRenderer = () => {
       return sanitizeHtml(html)
     } catch (error) {
       console.error('Markdown rendering error:', error)
-      return '<p class="text-red-400">Error rendering markdown</p>'
+      return '<p class="render-error">Error rendering markdown</p>'
     }
   }
 
@@ -41,7 +41,7 @@ export const useMarkdownRenderer = () => {
       return sanitizeHtml(html)
     } catch (error) {
       console.error('Example markdown rendering error:', error)
-      return '<p class="text-red-400">Error rendering example</p>'
+      return '<p class="render-error">Error rendering example</p>'
     }
   }
 

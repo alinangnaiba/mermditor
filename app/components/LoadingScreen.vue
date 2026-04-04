@@ -1,7 +1,7 @@
 <template>
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 transition-opacity duration-300"
-    :class="{ 'opacity-0 pointer-events-none': !internalShow }"
+    class="loading-screen fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300"
+    :class="[theme, { 'opacity-0 pointer-events-none': !internalShow }]"
   >
     <div class="text-center">
       <!-- Logo -->
@@ -11,8 +11,8 @@
           alt="merMDitor Logo"
           class="mx-auto mb-4 h-16 animate-pulse"
         />
-        <h1 class="mb-2 text-2xl font-bold text-white">merMDitor</h1>
-        <p class="text-gray-400">Markdown Editor with Mermaid Support</p>
+        <h1 class="loading-title mb-2 text-2xl font-bold">merMDitor</h1>
+        <p class="loading-subtitle">Markdown Editor with Mermaid Support</p>
       </div>
 
       <!-- Loading Animation -->
@@ -33,7 +33,7 @@
       </div>
 
       <!-- Loading Text -->
-      <div class="text-gray-300">
+      <div class="loading-message">
         <p class="mb-2">{{ loadingText }}</p>
       </div>
     </div>
@@ -46,11 +46,13 @@
   interface Props {
     show?: boolean
     step?: string
+    theme?: 'dark' | 'light'
   }
 
   const props = withDefaults(defineProps<Props>(), {
     show: true,
     step: 'Loading...',
+    theme: 'dark',
   })
 
   const emit = defineEmits<{
@@ -81,6 +83,19 @@
 </script>
 
 <style scoped>
+  .loading-screen {
+    background: var(--bg);
+  }
+
+  .loading-title {
+    color: var(--text);
+  }
+
+  .loading-subtitle,
+  .loading-message {
+    color: var(--dim);
+  }
+
   @keyframes bounce {
     0%,
     80%,

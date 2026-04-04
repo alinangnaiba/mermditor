@@ -84,7 +84,7 @@ export const createMarkdownItInstance = async (): Promise<MarkdownIt> => {
     console.warn('Some markdown-it plugins failed to load:', error)
   }
 
-  // Custom renderer for task lists to match dark theme
+  // Custom renderer for task lists to match the active editor theme
   md.renderer.rules.list_item_open = function (tokens, idx, options, env, renderer) {
     const token = tokens[idx]
     if (!token) {
@@ -93,7 +93,7 @@ export const createMarkdownItInstance = async (): Promise<MarkdownIt> => {
     const isTaskList = token.attrGet('class')?.includes('task-list-item')
 
     if (isTaskList) {
-      return '<li class="flex items-start space-x-2 text-gray-200 list-none">'
+      return '<li class="md-task-list-item">'
     }
 
     return renderer.renderToken(tokens, idx, options)
@@ -111,7 +111,7 @@ export const createMarkdownItInstance = async (): Promise<MarkdownIt> => {
       const isChecked = content.includes('checked')
       const disabled = content.includes('disabled') ? 'disabled' : ''
 
-      return `<input type="checkbox" ${isChecked ? 'checked' : ''} ${disabled} class="rounded bg-gray-700 border-gray-600 mt-1">`
+      return `<input type="checkbox" ${isChecked ? 'checked' : ''} ${disabled} class="md-task-checkbox">`
     }
 
     return content
@@ -204,6 +204,6 @@ export const renderMarkdown = async (content: string): Promise<string> => {
     return html
   } catch (error) {
     console.error('Markdown rendering error:', error)
-    return '<p class="text-red-400">Error rendering markdown</p>'
+    return '<p class="render-error">Error rendering markdown</p>'
   }
 }

@@ -115,21 +115,42 @@
         Autosave
       </label>
       <button
-        class="tb-toggle"
-        :class="{ on: showEditor }"
-        title="Toggle editor"
-        @click="$emit('toggle-editor')"
+        class="tb-toggle tb-icon-toggle"
+        :title="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+        :aria-label="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+        @click="$emit('toggle-theme')"
       >
-        Editor
+        <svg v-if="theme === 'dark'" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2" />
+          <path d="M12 20v2" />
+          <path d="M4.93 4.93l1.41 1.41" />
+          <path d="M17.66 17.66l1.41 1.41" />
+          <path d="M2 12h2" />
+          <path d="M20 12h2" />
+          <path d="M4.93 19.07l1.41-1.41" />
+          <path d="M17.66 6.34l1.41-1.41" />
+        </svg>
+        <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3c0 0 0 0 0 0A7 7 0 0 0 21 12.79z" />
+        </svg>
       </button>
       <button
         class="tb-toggle"
+        :class="{ on: showEditor }"
+        :title="showEditor ? 'Hide editor pane' : 'Show editor pane'"
+        :aria-label="showEditor ? 'Hide editor pane' : 'Show editor pane'"
+        :aria-pressed="showEditor"
+        @click="$emit('toggle-editor')"
+      >Editor</button>
+      <button
+        class="tb-toggle"
         :class="{ on: showPreview }"
-        title="Toggle preview"
+        :title="showPreview ? 'Hide preview pane' : 'Show preview pane'"
+        :aria-label="showPreview ? 'Hide preview pane' : 'Show preview pane'"
+        :aria-pressed="showPreview"
         @click="$emit('toggle-preview')"
-      >
-        Preview
-      </button>
+      >Preview</button>
     </div>
 
     <!-- Filename Modal -->
@@ -152,6 +173,7 @@
   interface Props {
     actions: EditorActions
     autosave: boolean
+    theme: 'dark' | 'light'
     showPreview: boolean
     showEditor: boolean
   }
@@ -161,6 +183,7 @@
   defineEmits<{
     'toggle-preview': []
     'toggle-editor': []
+    'toggle-theme': []
     'update:autosave': [value: boolean]
     'clear-storage': []
   }>()
@@ -209,7 +232,7 @@
   border-radius: 4px !important;
   border: none !important;
   background: transparent !important;
-  color: var(--dim) !important;
+  color: var(--icon) !important;
   cursor: pointer !important;
   transition: background 0.12s, color 0.12s !important;
   flex-shrink: 0 !important;
@@ -218,7 +241,7 @@
 
 .editor-toolbar-btn:hover {
   background: var(--raised) !important;
-  color: var(--text) !important;
+  color: var(--icon-strong) !important;
 }
 
 .editor-toolbar-btn svg {
@@ -272,9 +295,29 @@
   transition: all 0.12s;
 }
 
+.tb-icon-toggle {
+  width: 28px;
+  min-width: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tb-icon-toggle svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .tb-toggle.on {
-  background: var(--raised);
-  color: var(--dim);
+  background: var(--toggle-active-bg);
+  border-color: var(--toggle-active-border);
+  color: var(--toggle-active-text);
 }
 
 .tb-toggle:hover {
@@ -282,7 +325,7 @@
 }
 
 .tb-clear-btn:hover {
-  background: rgba(248, 81, 73, 0.12) !important;
-  color: #f85149 !important;
+  background: var(--danger-soft) !important;
+  color: var(--danger) !important;
 }
 </style>

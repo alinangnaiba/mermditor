@@ -1,10 +1,11 @@
 <template>
   <!-- App Shell -->
-  <div class="editor-page relative flex h-screen flex-col overflow-hidden">
+  <div :data-theme="editorTheme" class="editor-page relative flex h-screen flex-col overflow-hidden">
     <!-- Loading Overlay (non-blocking DOM) -->
     <LoadingScreen
       :show="isLoading"
       :step="loadingStep"
+      :theme="editorTheme"
       class="absolute inset-0 z-50"
       @loading-complete="onLoadingComplete"
     />
@@ -41,10 +42,12 @@
     <EditorToolbar
       :actions="actions"
       :autosave="autosave"
+      :theme="editorTheme"
       :show-preview="showPreview"
       :show-editor="showEditor"
       @toggle-preview="togglePreview"
       @toggle-editor="toggleEditor"
+      @toggle-theme="toggleTheme"
       @update:autosave="onAutosaveToggle($event)"
       @clear-storage="onClearStorageClick"
     />
@@ -352,7 +355,7 @@
             </button>
 
             <div ref="previewContainer" class="editor-preview-inner flex-1 overflow-auto p-4">
-              <div class="prose prose-invert max-w-none" v-html="renderedContent" />
+              <div :class="previewProseClass" v-html="renderedContent" />
             </div>
           </div>
         </div>
@@ -433,6 +436,7 @@
 <script setup lang="ts">
   import { ref, watch, computed, nextTick, onMounted, onUnmounted } from 'vue'
   import type { Ref } from 'vue'
+  import type { Compartment, Extension } from '@codemirror/state'
   import type { EditorView as EditorViewType } from '@codemirror/view'
 
   import EditorToolbar from '../components/EditorToolbar.vue'
@@ -441,6 +445,7 @@
   import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
   import { useMarkdownRenderer } from '../composables/useMarkdownRenderer'
   import { attachCodeBlockInteractions } from '../utils/codeBlockInteractions'
+  import { getMermaidThemeConfig } from '../utils/markdownItMermaid'
   import {
     createDefaultWorkspace,
     createWorkspaceFile,
@@ -457,6 +462,7 @@
   import type { WorkspaceData, WorkspaceFile, WorkspaceFolder, WorkspaceItem } from '../utils/workspace'
 
   type ContextMenuTargetType = 'root' | 'folder' | 'file' | null
+  type EditorTheme = 'dark' | 'light'
   type ContextMenuActionId =
     | 'new-file'
     | 'new-folder'
@@ -466,6 +472,113 @@
     | 'delete'
   const WORKSPACE_STORAGE_KEY = 'mermditor-workspace'
   const LEGACY_CONTENT_STORAGE_KEY = 'mermditor-content'
+  const EDITOR_THEME_STORAGE_KEY = 'mermditor-editor-theme'
+
+  type EditorThemeRuntime = {
+    EditorView: typeof import('@codemirror/view').EditorView
+    oneDark: Extension
+  }
+
+  let editorThemeCompartment: Compartment | null = null
+  let editorThemeRuntime: EditorThemeRuntime | null = null
+
+  const loadInitialEditorTheme = (): EditorTheme => {
+    if (!import.meta.client) {
+      return 'dark'
+    }
+
+    try {
+      const savedTheme = localStorage.getItem(EDITOR_THEME_STORAGE_KEY)
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        return savedTheme
+      }
+
+      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+    } catch {
+      return 'dark'
+    }
+  }
+
+  const applyDocumentTheme = (theme: EditorTheme): void => {
+    if (!import.meta.client) return
+
+    document.documentElement.setAttribute('data-editor-theme', theme)
+  }
+
+  const clearDocumentTheme = (): void => {
+    if (!import.meta.client) return
+
+    document.documentElement.removeAttribute('data-editor-theme')
+  }
+
+  const persistEditorTheme = (theme: EditorTheme): void => {
+    if (!import.meta.client) return
+
+    try {
+      localStorage.setItem(EDITOR_THEME_STORAGE_KEY, theme)
+    } catch {
+      /* ignore storage errors */
+    }
+  }
+
+  const buildEditorThemeExtension = (theme: EditorTheme): Extension => {
+    if (!editorThemeRuntime) {
+      return []
+    }
+
+    const { EditorView, oneDark } = editorThemeRuntime
+    const baseTheme = EditorView.theme({
+      '&': {
+        height: '100%',
+        fontSize: '14px',
+      },
+      '.cm-editor': {
+        height: '100%',
+      },
+      '.cm-scroller': {
+        height: '100%',
+      },
+      '.cm-content': {
+        minHeight: '100%',
+        padding: '16px',
+      },
+    })
+
+    if (theme === 'dark') {
+      return [oneDark, baseTheme]
+    }
+
+    const lightTheme = EditorView.theme({
+      '&': {
+        color: 'var(--text)',
+        backgroundColor: 'var(--editor-canvas)',
+      },
+      '.cm-gutters': {
+        color: 'var(--muted)',
+        backgroundColor: 'var(--editor-canvas)',
+        borderRight: '1px solid var(--border)',
+      },
+      '.cm-activeLine, .cm-activeLineGutter': {
+        backgroundColor: 'var(--hover)',
+      },
+      '.cm-selectionBackground': {
+        backgroundColor: 'var(--selection-bg)',
+      },
+      '&.cm-focused .cm-selectionBackground': {
+        backgroundColor: 'var(--selection-bg)',
+      },
+      '&.cm-focused .cm-cursor': {
+        borderLeftColor: 'var(--accent)',
+      },
+      '.cm-foldPlaceholder': {
+        color: 'var(--muted)',
+        backgroundColor: 'var(--raised)',
+        border: '1px solid var(--border)',
+      },
+    })
+
+    return [baseTheme, lightTheme]
+  }
 
   const HelpModal = defineAsyncComponent(() => import('../components/HelpModal.vue'))
   const ConfirmModal = defineAsyncComponent(() => import('../components/ConfirmModal.vue'))
@@ -488,6 +601,7 @@
   const content: Ref<string> = ref('')
   const showEditor: Ref<boolean> = ref(true)
   const showPreview: Ref<boolean> = ref(true)
+  const editorTheme: Ref<EditorTheme> = ref(loadInitialEditorTheme())
   const autosave: Ref<boolean> = ref(false)
   const lastSaved: Ref<string> = ref('')
   const isMobile: Ref<boolean> = ref(false)
@@ -505,6 +619,9 @@
   const customPreviewWidth: Ref<number | null> = ref(null)
   const customWorkspaceWidth: Ref<number> = ref(258)
   const workspace = ref<WorkspaceData>(createDefaultWorkspace())
+  const previewProseClass = computed(() =>
+    editorTheme.value === 'light' ? 'prose max-w-none' : 'prose prose-invert max-w-none'
+  )
   const openFileIds = computed(() => workspace.value.openFileIds)
   const activeFile = computed<WorkspaceFile | null>(() => {
     return findWorkspaceFile(workspace.value.root, workspace.value.activeFileId)
@@ -614,7 +731,8 @@
 
   const renderedContent: Ref<string> = ref('')
 
-  const { renderMarkdown, renderMermaidDiagrams, highlightSyntax } = useMarkdownRenderer()
+  const { renderMarkdown, renderMermaidDiagrams, highlightSyntax, clearMermaidCache } =
+    useMarkdownRenderer()
   const contextMenuActions = computed<Array<{ id: ContextMenuActionId; label: string }>>(() => {
     if (contextMenu.value.targetType === 'root') {
       return [
@@ -698,6 +816,10 @@
   })
   useKeyboardShortcuts(actions)
 
+  if (import.meta.client) {
+    applyDocumentTheme(editorTheme.value)
+  }
+
   let mermaidTimeout: ReturnType<typeof setTimeout> | null = null
   const debouncedMermaidRender = async () => {
     if (mermaidTimeout) {
@@ -705,8 +827,15 @@
     }
 
     mermaidTimeout = setTimeout(async () => {
-      await renderMermaidDiagrams()
+      await renderMermaidDiagrams(getMermaidThemeConfig(editorTheme.value))
     }, 300)
+  }
+
+  const refreshPreview = async (nextContent: string = content.value): Promise<void> => {
+    renderedContent.value = await renderMarkdown(nextContent)
+    await nextTick()
+    await debouncedMermaidRender()
+    await highlightSyntax()
   }
 
   const collectExpandedFolders = (folder: WorkspaceFolder): string[] => {
@@ -1421,10 +1550,21 @@
       activeFile.value.content = newContent
     }
 
-    renderedContent.value = await renderMarkdown(newContent)
-    await nextTick()
-    await debouncedMermaidRender()
-    await highlightSyntax()
+    await refreshPreview(newContent)
+  })
+
+  watch(editorTheme, async (theme) => {
+    applyDocumentTheme(theme)
+    persistEditorTheme(theme)
+
+    if (editorViewRef.value && editorThemeCompartment) {
+      editorViewRef.value.dispatch({
+        effects: editorThemeCompartment.reconfigure(buildEditorThemeExtension(theme)),
+      })
+    }
+
+    clearMermaidCache()
+    await refreshPreview()
   })
 
   // Methods
@@ -1438,7 +1578,7 @@
     const [
       { EditorView, keymap },
       { basicSetup },
-      { EditorState },
+      { Compartment, EditorState },
       { indentWithTab },
       { markdown },
       { oneDark }
@@ -1451,11 +1591,14 @@
       import('@codemirror/theme-one-dark')
     ])
 
+    editorThemeRuntime = { EditorView, oneDark }
+    editorThemeCompartment = new Compartment()
+
     const extensions = [
       basicSetup,
       markdown(),
-      oneDark,
       EditorView.lineWrapping,
+      editorThemeCompartment.of(buildEditorThemeExtension(editorTheme.value)),
       keymap.of([indentWithTab]),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
@@ -1466,22 +1609,6 @@
         const line = update.state.doc.lineAt(sel.head)
         cursorLine.value = line.number
         cursorCol.value = sel.head - line.from + 1
-      }),
-      EditorView.theme({
-        '&': {
-          height: '100%',
-          fontSize: '14px',
-        },
-        '.cm-editor': {
-          height: '100%',
-        },
-        '.cm-scroller': {
-          height: '100%',
-        },
-        '.cm-content': {
-          minHeight: '100%',
-          padding: '16px',
-        },
       }),
     ]
 
@@ -1510,6 +1637,10 @@
       showPreview.value = true
     }
     nextTick(() => applyPaneWidths())
+  }
+
+  const toggleTheme = (): void => {
+    editorTheme.value = editorTheme.value === 'dark' ? 'light' : 'dark'
   }
 
   const applyPaneWidths = (): void => {
@@ -1790,6 +1921,7 @@
     loadWorkspace()
     loadSettings()
     loadPaneWidths()
+    applyDocumentTheme(editorTheme.value)
 
     try {
       const savedWorkspaceWidth = localStorage.getItem('mermditor-workspace-width')
@@ -1813,10 +1945,7 @@
 
     // Trigger initial markdown render after editor is ready
     loadingStep.value = 'Rendering preview...'
-    renderedContent.value = await renderMarkdown(content.value)
-    await nextTick()
-    await debouncedMermaidRender()
-    await highlightSyntax()
+    await refreshPreview(content.value)
 
     // Hide loading screen
     requestAnimationFrame(() => {
@@ -1828,17 +1957,21 @@
   onUnmounted(() => {
     window.removeEventListener('resize', checkMobile)
     document.removeEventListener('click', handleDocumentClick)
+    clearDocumentTheme()
+    if (mermaidTimeout) {
+      clearTimeout(mermaidTimeout)
+    }
+    if (saveTimeout) {
+      clearTimeout(saveTimeout)
+    }
     cleanupCodeBlockInteractions?.()
   })
 </script>
 
 <style scoped>
 .editor-page {
-  --bg: #080b10;
-  --surface: #10141b;
-  --raised: #161b23;
-  --border: #202634;
   background: var(--bg);
+  color: var(--text);
 }
 
 .editor-header {
@@ -1941,8 +2074,8 @@
 }
 
 .workspace-pane-header.drop-target {
-  background: rgba(74, 142, 255, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(74, 142, 255, 0.28);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-strong);
 }
 
 .workspace-pane-title {
@@ -1980,7 +2113,7 @@
 }
 
 .workspace-pane-action-btn:hover {
-  color: var(--fg);
+  color: var(--text);
   background: var(--hover);
 }
 
@@ -1994,7 +2127,7 @@
   height: 28px;
   border: 1px solid var(--border);
   border-radius: 4px;
-  background: var(--bg);
+  background: var(--preview-canvas);
   color: var(--dim);
   padding: 0 9px;
   font-size: 0.76rem;
@@ -2002,7 +2135,8 @@
 }
 
 .workspace-search-input:focus {
-  border-color: rgba(74, 142, 255, 0.45);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .workspace-search-meta {
@@ -2057,17 +2191,17 @@
 }
 
 .workspace-tree-row.active {
-  color: #dbe7ff;
-  background: rgba(74, 142, 255, 0.16);
+  color: var(--selection-text);
+  background: var(--selection-bg);
 }
 
 .workspace-tree-row.selected {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--hover);
 }
 
 .workspace-tree-row.drop-target {
-  background: rgba(74, 142, 255, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(74, 142, 255, 0.26);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-strong);
 }
 
 .workspace-tree-row.dragging {
@@ -2127,8 +2261,8 @@
 .workspace-tree-badge {
   padding: 2px 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--muted);
+  background: var(--badge-bg);
+  color: var(--badge-text);
   font-size: 0.64rem;
   flex-shrink: 0;
 }
@@ -2152,7 +2286,7 @@
 }
 
 .workspace-result-item:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--hover);
 }
 
 .workspace-result-item.heading-result {
@@ -2191,8 +2325,8 @@
   width: 188px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: #121821;
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  background: var(--context-menu-bg);
+  box-shadow: 0 14px 30px rgba(var(--shadow-rgb), 0.18);
   overflow: hidden;
   z-index: 20;
 }
@@ -2207,7 +2341,7 @@
   color: var(--dim);
   font-size: 0.76rem;
   cursor: pointer;
-  border-bottom: 1px solid rgba(35, 40, 54, 0.7);
+  border-bottom: 1px solid var(--border);
 }
 
 .workspace-context-item:last-child {
@@ -2215,7 +2349,7 @@
 }
 
 .workspace-context-item:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--hover);
 }
 
 .workspace-tabs {
@@ -2247,9 +2381,10 @@
 }
 
 .workspace-tab.active {
-  background: var(--bg);
+  background: var(--editor-canvas);
   border-color: var(--border);
   color: var(--text);
+  box-shadow: inset 0 2px 0 var(--accent);
 }
 
 .workspace-tab-dot {
@@ -2302,7 +2437,11 @@
 
 .editor-resize-handle:hover { background: var(--raised); }
 
-.editor-preview-inner { background: var(--bg); }
+.editor-pane { background: var(--editor-canvas); }
+
+.preview-pane { background: var(--preview-canvas); }
+
+.editor-preview-inner { background: var(--preview-canvas); }
 
 .editor-help-btn {
   position: absolute;
