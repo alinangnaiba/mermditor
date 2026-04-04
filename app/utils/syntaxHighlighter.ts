@@ -3,7 +3,7 @@ let prismLoaded = false
 let prismLoadPromise: Promise<void> | null = null
 
 /**
- * Dynamically loads Prism.js library and CSS only when needed.
+ * Dynamically loads Prism.js only when needed.
  * Languages are bundled statically to avoid CSP-violating CDN script fetches.
  */
 const loadPrism = async (): Promise<void> => {
@@ -14,8 +14,8 @@ const loadPrism = async (): Promise<void> => {
   }
 
   prismLoadPromise = (async () => {
-    // Load Prism core and theme CSS first
-    await Promise.all([import('prismjs'), import('prismjs/themes/prism-tomorrow.css')])
+    // Load Prism core before languages.
+    await import('prismjs')
 
     // Load components in dependency order to avoid runtime registration errors.
     await import('prismjs/components/prism-markup')

@@ -3,7 +3,7 @@
     <button
       ref="triggerRef"
       type="button"
-      class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+      class="editor-toolbar-btn"
       :class="{ active: showHeadingPicker }"
       title="Insert Heading"
       aria-haspopup="menu"

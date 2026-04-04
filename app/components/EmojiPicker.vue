@@ -3,7 +3,7 @@
     <button
       ref="triggerRef"
       type="button"
-      class="editor-toolbar-btn rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+      class="editor-toolbar-btn"
       :class="{ active: showEmojiPicker }"
       title="Insert Emoji"
       aria-haspopup="dialog"
@@ -575,7 +575,7 @@
 
   .emoji-picker-search:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(74, 142, 255, 0.2);
+    box-shadow: 0 0 0 2px var(--focus-ring);
   }
 
   .emoji-picker-category {
@@ -585,7 +585,7 @@
 
   .emoji-picker-category:hover {
     color: var(--text);
-    background: rgba(74, 142, 255, 0.14);
+    background: var(--accent-soft);
   }
 
   .emoji-picker-category.active {

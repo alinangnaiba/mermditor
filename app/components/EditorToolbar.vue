@@ -116,6 +116,13 @@
       </label>
       <button
         class="tb-toggle"
+        :title="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+        @click="$emit('toggle-theme')"
+      >
+        {{ theme === 'dark' ? 'Dark' : 'Light' }}
+      </button>
+      <button
+        class="tb-toggle"
         :class="{ on: showEditor }"
         title="Toggle editor"
         @click="$emit('toggle-editor')"
@@ -152,6 +159,7 @@
   interface Props {
     actions: EditorActions
     autosave: boolean
+    theme: 'dark' | 'light'
     showPreview: boolean
     showEditor: boolean
   }
@@ -161,6 +169,7 @@
   defineEmits<{
     'toggle-preview': []
     'toggle-editor': []
+    'toggle-theme': []
     'update:autosave': [value: boolean]
     'clear-storage': []
   }>()
@@ -209,7 +218,7 @@
   border-radius: 4px !important;
   border: none !important;
   background: transparent !important;
-  color: var(--dim) !important;
+  color: var(--icon) !important;
   cursor: pointer !important;
   transition: background 0.12s, color 0.12s !important;
   flex-shrink: 0 !important;
@@ -218,7 +227,7 @@
 
 .editor-toolbar-btn:hover {
   background: var(--raised) !important;
-  color: var(--text) !important;
+  color: var(--icon-strong) !important;
 }
 
 .editor-toolbar-btn svg {
@@ -273,8 +282,9 @@
 }
 
 .tb-toggle.on {
-  background: var(--raised);
-  color: var(--dim);
+  background: var(--toggle-active-bg);
+  border-color: var(--toggle-active-border);
+  color: var(--toggle-active-text);
 }
 
 .tb-toggle:hover {
@@ -282,7 +292,7 @@
 }
 
 .tb-clear-btn:hover {
-  background: rgba(248, 81, 73, 0.12) !important;
-  color: #f85149 !important;
+  background: var(--danger-soft) !important;
+  color: var(--danger) !important;
 }
 </style>
