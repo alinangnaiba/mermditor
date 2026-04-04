@@ -27,10 +27,10 @@
         <svg viewBox="0 0 24 24"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>
       </button>
       <button class="editor-toolbar-btn" title="Strikethrough" @click="actions.insertFormat('~~', '~~')">
-        <svg viewBox="0 0 24 24"><path d="M17.3 12H6.7"/><path d="M10 7.5c0-1.1.9-2 2-2h2.5a2 2 0 1 1 0 4H10"/><path d="M10 16.5c0 1.1.9 2 2 2h2.5a2 2 0 1 0 0-4H10"/></svg>
+        <svg viewBox="0 0 256 256"><line x1="40" y1="128" x2="216" y2="128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M76.33,96a25.71,25.71,0,0,1-1.22-8c0-22.09,22-40,52.89-40,23,0,40.24,9.87,48,24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M72,168c0,22.09,25.07,40,56,40s56-17.91,56-40c0-23.77-21.62-33-45.6-40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
       </button>
       <button class="editor-toolbar-btn" title="Highlight (Ctrl+Shift+H)" @click="actions.insertHighlight()">
-        <svg viewBox="0 0 24 24"><path d="M9 11l-6 6v3h3l6-6"/><path d="M22 5.5a2.12 2.12 0 0 0-3-3l-8.5 8.5 3 3z"/></svg>
+        <svg viewBox="0 0 256 256"><polyline points="88 128 24 192 96 216 136 176" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M184,160l-26.34,26.34a8,8,0,0,1-11.32,0L77.66,117.66a8,8,0,0,1,0-11.32L104,80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M248,112l-50.34,50.34a8,8,0,0,1-11.32,0L101.66,77.66a8,8,0,0,1,0-11.32L152,16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
       </button>
       <button class="editor-toolbar-btn" title="Inline Code (Ctrl+`)" @click="actions.insertFormat('`', '`')">
         <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
@@ -61,7 +61,7 @@
         <svg viewBox="0 0 24 24"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
       </button>
       <button class="editor-toolbar-btn" title="Code block (Ctrl+Shift+~)" @click="actions.insertCodeBlock()">
-        <svg viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5z"/><polyline points="14 2 14 8 20 8"/><line x1="10" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="16" y1="13" x2="14" y2="13"/></svg>
+        <svg viewBox="0 0 256 256"><polyline points="64 88 16 128 64 168" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><polyline points="192 88 240 128 192 168" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="160" y1="40" x2="96" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
       </button>
     </div>
 
@@ -83,7 +83,7 @@
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       </button>
       <button class="editor-toolbar-btn" title="Footnote" @click="actions.insertFootnote()">
-        <svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h14"/><path d="M8 21h12a2 2 0 0 0 2-2v-1"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
+        <svg viewBox="0 0 256 256"><line x1="128" y1="40" x2="128" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="48" y1="80" x2="208" y2="176" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="48" y1="176" x2="208" y2="80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
       </button>
     </div>
 
@@ -92,10 +92,10 @@
     <!-- Extra group -->
     <div class="tb-group">
       <button class="editor-toolbar-btn" title="Subscript (Ctrl+Shift+Y)" @click="actions.insertSubscript()">
-        <svg viewBox="0 0 24 24"><path d="M4 5l8 8"/><path d="M12 5 4 13"/><path d="M20 19h-4c0-1.5.44-2 1.5-2.5S20 15.33 20 14c0-.47-.17-.93-.48-1.29a2 2 0 0 0-2.62-.44"/></svg>
+        <svg viewBox="0 0 256 256"><path d="M240,208H192l43.17-57.56A24,24,0,1,0,193.37,128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="40" y1="56" x2="144" y2="176" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="144" y1="56" x2="40" y2="176" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
       </button>
       <button class="editor-toolbar-btn" title="Superscript (Ctrl+Shift+U)" @click="actions.insertSuperscript()">
-        <svg viewBox="0 0 24 24"><path d="M4 19l8-8"/><path d="M12 19 4 11"/><path d="M20 12h-4c0-1.5.44-2 1.5-2.5S20 8.33 20 7c0-.47-.17-.93-.48-1.29a2 2 0 0 0-2.62-.44"/></svg>
+        <svg viewBox="0 0 256 256"><path d="M240,144H192l43.17-57.56A24,24,0,1,0,193.37,64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="40" y1="80" x2="144" y2="200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="144" y1="80" x2="40" y2="200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
       </button>
     </div>
 
