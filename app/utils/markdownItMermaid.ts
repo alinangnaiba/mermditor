@@ -170,6 +170,10 @@ export const renderMermaidDiagrams = async (config?: MermaidConfig): Promise<voi
   }
 }
 
+const getMermaidCacheKey = (mermaidElement: Element): string => {
+  return mermaidElement.getAttribute('data-content')?.trim() || mermaidElement.textContent?.trim() || ''
+}
+
 const setupMermaidControls = (mermaidElement: Element): void => {
   const container = mermaidElement.closest('.mermaid-container')
   if (!container) return
@@ -181,7 +185,7 @@ const setupMermaidControls = (mermaidElement: Element): void => {
   const resetBtn = container.querySelector('.mermaid-reset')
   const modalBtn = container.querySelector('.mermaid-modal')
 
-  const content = mermaidElement.textContent?.trim() || ''
+  const content = getMermaidCacheKey(mermaidElement)
   const cached = mermaidCache.get(content)
 
   let currentZoom = cached?.controls?.zoom || 1
@@ -229,7 +233,7 @@ const setupMermaidControls = (mermaidElement: Element): void => {
   })
 
   modalBtn?.addEventListener('click', () => {
-    createMermaidModal(mermaidElement.outerHTML)
+    createMermaidModal(container.cloneNode(true))
   })
 
   // Drag/pan functionality
@@ -275,7 +279,9 @@ const setupMermaidControls = (mermaidElement: Element): void => {
   })
 }
 
-const createMermaidModal = (diagramHTML: string): void => {
+const createMermaidModal = (containerNode: Node): void => {
+  if (!(containerNode instanceof HTMLElement)) return
+
   const overlay = document.createElement('div')
   overlay.className = 'mermaid-modal-overlay'
   const content = document.createElement('div')
@@ -284,11 +290,12 @@ const createMermaidModal = (diagramHTML: string): void => {
   closeBtn.className = 'mermaid-modal-close'
   closeBtn.innerHTML = '×'
   closeBtn.onclick = () => overlay.remove()
-  const diagramContainer = document.createElement('div')
-  diagramContainer.innerHTML = diagramHTML
+  const modalContainer = containerNode
+  modalContainer.classList.add('mermaid-container--modal')
+  modalContainer.querySelector('.mermaid-modal')?.remove()
 
   content.appendChild(closeBtn)
-  content.appendChild(diagramContainer)
+  content.appendChild(modalContainer)
   overlay.appendChild(content)
 
   overlay.onclick = (e) => {
@@ -304,6 +311,11 @@ const createMermaidModal = (diagramHTML: string): void => {
   document.addEventListener('keydown', handleEscape)
 
   document.body.appendChild(overlay)
+
+  const modalMermaidElement = modalContainer.querySelector('.mermaid')
+  if (modalMermaidElement) {
+    setupMermaidControls(modalMermaidElement)
+  }
 }
 
 export const renderMermaidExample = async (mermaidCode: string): Promise<string> => {
