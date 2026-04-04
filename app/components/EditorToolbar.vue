@@ -115,27 +115,55 @@
         Autosave
       </label>
       <button
-        class="tb-toggle"
+        class="tb-toggle tb-icon-toggle"
         :title="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+        :aria-label="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
         @click="$emit('toggle-theme')"
       >
-        {{ theme === 'dark' ? 'Dark' : 'Light' }}
+        <svg v-if="theme === 'dark'" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2" />
+          <path d="M12 20v2" />
+          <path d="M4.93 4.93l1.41 1.41" />
+          <path d="M17.66 17.66l1.41 1.41" />
+          <path d="M2 12h2" />
+          <path d="M20 12h2" />
+          <path d="M4.93 19.07l1.41-1.41" />
+          <path d="M17.66 6.34l1.41-1.41" />
+        </svg>
+        <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3c0 0 0 0 0 0A7 7 0 0 0 21 12.79z" />
+        </svg>
       </button>
       <button
-        class="tb-toggle"
+        class="tb-toggle tb-icon-toggle"
         :class="{ on: showEditor }"
-        title="Toggle editor"
+        :title="showEditor ? 'Hide editor pane' : 'Show editor pane'"
+        :aria-label="showEditor ? 'Hide editor pane' : 'Show editor pane'"
+        :aria-pressed="showEditor"
         @click="$emit('toggle-editor')"
       >
-        Editor
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 5h16v14H4z" />
+          <path d="M8 5v14" />
+          <path d="M11.5 10.5l2-2" />
+          <path d="M10.5 13.5l3-3" />
+          <path d="M11.5 13.5h2" />
+        </svg>
       </button>
       <button
-        class="tb-toggle"
+        class="tb-toggle tb-icon-toggle"
         :class="{ on: showPreview }"
-        title="Toggle preview"
+        :title="showPreview ? 'Hide preview pane' : 'Show preview pane'"
+        :aria-label="showPreview ? 'Hide preview pane' : 'Show preview pane'"
+        :aria-pressed="showPreview"
         @click="$emit('toggle-preview')"
       >
-        Preview
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 6h18v12H3z" />
+          <path d="M7 10h10" />
+          <path d="M7 14h6" />
+        </svg>
       </button>
     </div>
 
@@ -279,6 +307,25 @@
   font-weight: 600;
   font-family: inherit;
   transition: all 0.12s;
+}
+
+.tb-icon-toggle {
+  width: 28px;
+  min-width: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tb-icon-toggle svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .tb-toggle.on {
