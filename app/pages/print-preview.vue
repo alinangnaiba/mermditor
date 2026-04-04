@@ -112,6 +112,9 @@ const marginValues: Record<MarginSize, string> = {
   'wide': '30mm'
 }
 
+const PRINT_CODE_LINES_CLASS = 'print-code-lines'
+const PRINT_CODE_LINE_CLASS = 'print-code-line'
+
 // Generate @page CSS for PagedJS (passed as stylesheet to preview())
 const getPageStylesForPagedJS = () => {
   return `
@@ -210,6 +213,22 @@ const getPageStylesForPagedJS = () => {
       overflow-wrap: anywhere !important;
       word-break: break-word !important;
       tab-size: 2;
+    }
+
+    .prose pre code.${PRINT_CODE_LINES_CLASS},
+    .code-block-container pre code.${PRINT_CODE_LINES_CLASS} {
+      white-space: normal !important;
+      overflow-wrap: normal !important;
+      word-break: normal !important;
+    }
+
+    .prose pre code.${PRINT_CODE_LINES_CLASS} .${PRINT_CODE_LINE_CLASS},
+    .code-block-container pre code.${PRINT_CODE_LINES_CLASS} .${PRINT_CODE_LINE_CLASS} {
+      display: block;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: normal;
+      min-height: 1.45em;
     }
 
     .prose table {
@@ -349,6 +368,39 @@ const loadContent = () => {
   }
 }
 
+const normalizeCodeBlocksForPrint = (root: ParentNode) => {
+  const codeBlocks = root.querySelectorAll('pre code')
+
+  for (const codeBlock of codeBlocks) {
+    if (codeBlock.classList.contains('language-mermaid')) {
+      continue
+    }
+
+    if (codeBlock.classList.contains(PRINT_CODE_LINES_CLASS)) {
+      continue
+    }
+
+    const rawText = codeBlock.textContent
+    if (!rawText) {
+      continue
+    }
+
+    const lines = rawText.replace(/\r\n?/g, '\n').split('\n')
+    const fragment = document.createDocumentFragment()
+
+    for (const line of lines) {
+      const lineElement = document.createElement('span')
+      lineElement.className = PRINT_CODE_LINE_CLASS
+      lineElement.textContent = line.length > 0 ? line : '\u00a0'
+      fragment.appendChild(lineElement)
+    }
+
+    codeBlock.textContent = ''
+    codeBlock.classList.add(PRINT_CODE_LINES_CLASS)
+    codeBlock.appendChild(fragment)
+  }
+}
+
 const initializePreview = async () => {
   if (!import.meta.client) return
 
@@ -377,6 +429,8 @@ const initializePreview = async () => {
       tertiaryBkg: '#e5e7eb',
     }
   })
+
+  normalizeCodeBlocksForPrint(document.querySelector('#print-content') ?? document)
 
   // 4. Run Paged.js with our complete stylesheet
   const paged = new Previewer()

@@ -152,6 +152,22 @@
   tab-size: 2;
 }
 
+.print-layout .prose pre code.print-code-lines,
+.print-layout .code-block-container pre code.print-code-lines {
+  white-space: normal !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+
+.print-layout .prose pre code.print-code-lines .print-code-line,
+.print-layout .code-block-container pre code.print-code-lines .print-code-line {
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  min-height: 1.45em;
+}
+
 .print-layout .prose table {
   border-color: #e5e7eb; /* gray-200 */
 }
