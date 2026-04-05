@@ -57,6 +57,29 @@ test.describe('merMDitor smoke coverage', () => {
     await expect(page.locator('.cm-content')).toContainText(':rocket:')
   })
 
+  test('inline rename cancels when clicking another file in the explorer', async ({ page }) => {
+    await page.goto('/editor')
+
+    await page.getByTitle('New File').click()
+    await page.locator('.workspace-inline-input').fill('alpha')
+    await page.locator('.workspace-inline-input').press('Enter')
+
+    await page.getByTitle('New File').click()
+    await page.locator('.workspace-inline-input').fill('beta')
+    await page.locator('.workspace-inline-input').press('Enter')
+
+    const alphaRow = page.locator('.workspace-tree-row', { hasText: 'alpha.md' }).first()
+    const betaRow = page.locator('.workspace-tree-row', { hasText: 'beta.md' }).first()
+
+    await alphaRow.dblclick()
+    await expect(page.locator('.workspace-inline-input')).toHaveValue('alpha.md')
+
+    await betaRow.click()
+
+    await expect(page.locator('.workspace-inline-input')).toHaveCount(0)
+    await expect(betaRow).toHaveClass(/active/)
+  })
+
   test('print preview renders stored content', async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem(

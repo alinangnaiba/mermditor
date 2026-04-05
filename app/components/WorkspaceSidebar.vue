@@ -122,6 +122,7 @@
         <template v-for="row in displayTreeRows" :key="row.item.id">
           <div
             v-if="inlineEdit.itemId === row.item.id"
+            ref="inlineEditRowRef"
             class="workspace-tree-row"
             :class="{ folder: row.item.type === 'folder' }"
             :style="{ paddingLeft: `${12 + row.depth * 18}px` }"
@@ -145,7 +146,7 @@
               @input="onInlineInput"
               @keydown.enter.prevent="commitInlineEdit"
               @keydown.escape.prevent="cancelInlineEdit"
-              @blur="commitInlineEdit"
+              @blur="cancelInlineEdit"
               @click.stop
               @mousedown.stop
               @dblclick.stop
@@ -252,7 +253,7 @@
 </template>
 
 <script setup lang="ts">
-  import { nextTick, ref, watch } from 'vue'
+  import { nextTick, onUnmounted, ref, watch } from 'vue'
   import type {
     ContextMenuActionId,
     ContextMenuState,
@@ -308,10 +309,44 @@
 
   const workspacePaneRef = ref<HTMLElement | null>(null)
   const inlineInputRef = ref<HTMLInputElement | null>(null)
+  const inlineEditRowRef = ref<HTMLElement | null>(null)
+
+  const isInlineEditTarget = (target: EventTarget | null): boolean => {
+    const node = target instanceof Node ? target : null
+    return !!node && !!inlineEditRowRef.value?.contains(node)
+  }
+
+  const cancelInlineEditIfOutside = (target: EventTarget | null): void => {
+    if (!props.inlineEdit.itemId || isInlineEditTarget(target)) {
+      return
+    }
+
+    props.cancelInlineEdit()
+  }
+
+  const handleOutsideDocumentClick = (event: MouseEvent): void => {
+    cancelInlineEditIfOutside(event.target)
+  }
+
+  const handleOutsideFocusIn = (event: FocusEvent): void => {
+    cancelInlineEditIfOutside(event.target)
+  }
+
+  const attachInlineEditGuards = (): void => {
+    document.addEventListener('click', handleOutsideDocumentClick, true)
+    document.addEventListener('focusin', handleOutsideFocusIn, true)
+  }
+
+  const detachInlineEditGuards = (): void => {
+    document.removeEventListener('click', handleOutsideDocumentClick, true)
+    document.removeEventListener('focusin', handleOutsideFocusIn, true)
+  }
 
   watch(
     () => props.inlineEdit.itemId,
     async (itemId) => {
+      detachInlineEditGuards()
+
       if (!itemId) return
 
       await nextTick()
@@ -319,8 +354,14 @@
       if (props.inlineEdit.type === 'rename') {
         inlineInputRef.value?.select()
       }
+
+      attachInlineEditGuards()
     }
   )
+
+  onUnmounted(() => {
+    detachInlineEditGuards()
+  })
 
   const resolveContextMenuPosition = (event: MouseEvent, targetType: 'root' | 'folder' | 'file') => {
     const pane = workspacePaneRef.value
@@ -378,6 +419,10 @@
   }
 
   const handleWorkspaceRowClick = (item: WorkspaceItem): void => {
+    if (props.inlineEdit.itemId && props.inlineEdit.itemId !== item.id) {
+      props.cancelInlineEdit()
+    }
+
     props.handleWorkspaceRowClick(item)
   }
 
