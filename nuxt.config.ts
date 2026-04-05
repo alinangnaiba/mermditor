@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss', '@nuxt/eslint'],
-  css: ['~/app/assets/main.css'],
+  css: ['~/app/assets/main.css', '~/app/assets/editor-page.css'],
   alias: {
     '@': '.',
     '~': '.',
