@@ -4,5 +4,6 @@
       "source": "/(.*)",
       "destination": "/"
     }
-  ]
+  ],
+  "ignoreCommand": "[[ \"$VERCEL_GIT_COMMIT_REF\" == \"main\" || \"$VERCEL_GIT_COMMIT_REF\" == \"pre-prod\" ]] && exit 1 || exit 0"
 }
