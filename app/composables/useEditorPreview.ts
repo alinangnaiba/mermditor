@@ -3,9 +3,10 @@ import type { Ref } from 'vue'
 import type { EditorView as EditorViewType } from '@codemirror/view'
 import { attachCodeBlockInteractions } from '../utils/codeBlockInteractions'
 import {
-  canHydrateMermaidDiagramsFromCache,
   cleanupMermaidControls,
   getMermaidThemeConfig,
+  injectCachedMermaidSvgsIntoHtml,
+  reattachMermaidControlsForProcessed,
 } from '../utils/markdownItMermaid'
 import { logError } from '../../utils/logging'
 import { useMarkdownRenderer } from './useMarkdownRenderer'
@@ -33,6 +34,7 @@ export const useEditorPreview = ({
   const MERMAID_RENDER_DEBOUNCE_MS = 300
 
   let mermaidTimeout: ReturnType<typeof setTimeout> | null = null
+  let mermaidResolve: (() => void) | null = null
   let cleanupCodeBlockInteractions: (() => void) | null = null
   let cleanupScrollSync: (() => void) | null = null
   let renderRequestId = 0
@@ -40,10 +42,17 @@ export const useEditorPreview = ({
   const debouncedMermaidRender = (requestId: number): Promise<void> => {
     if (mermaidTimeout) {
       clearTimeout(mermaidTimeout)
+      mermaidTimeout = null
+      mermaidResolve?.()
+      mermaidResolve = null
     }
 
     return new Promise((resolve) => {
+      mermaidResolve = resolve
       mermaidTimeout = setTimeout(async () => {
+        mermaidTimeout = null
+        mermaidResolve = null
+
         if (requestId !== renderRequestId) {
           resolve()
           return
@@ -70,18 +79,28 @@ export const useEditorPreview = ({
       const nextRenderedContent = await renderMarkdown(nextContent)
       if (requestId !== renderRequestId) return
 
-      renderedContent.value = nextRenderedContent
-      await nextTick()
-      if (requestId !== renderRequestId) return
-
       const mermaidRoot = previewContainer.value ?? document
-      if (mermaidRoot.querySelector('.mermaid')) {
-        if (canHydrateMermaidDiagramsFromCache(mermaidConfig, mermaidRoot)) {
-          await renderMermaidDiagrams(mermaidConfig, mermaidRoot)
-        } else {
-          await debouncedMermaidRender(requestId)
-          if (requestId !== renderRequestId) return
-        }
+
+      // Try to pre-inject cached SVGs into the HTML string before the v-html DOM update.
+      // This keeps diagrams visible without flickering and avoids per-keystroke DOM parsing.
+      // Returns null if any diagram is not yet in cache — fall back to debounced render.
+      const htmlWithCachedSvgs = injectCachedMermaidSvgsIntoHtml(nextRenderedContent, mermaidConfig)
+
+      if (htmlWithCachedSvgs !== null) {
+        // All diagrams (if any) are already cached — set pre-filled HTML and reattach controls
+        renderedContent.value = htmlWithCachedSvgs
+        await nextTick()
+        if (requestId !== renderRequestId) return
+
+        reattachMermaidControlsForProcessed(mermaidRoot)
+      } else {
+        // Some diagrams not yet in cache — show placeholders and debounce the render
+        renderedContent.value = nextRenderedContent
+        await nextTick()
+        if (requestId !== renderRequestId) return
+
+        await debouncedMermaidRender(requestId)
+        if (requestId !== renderRequestId) return
       }
 
       await highlightSyntax(mermaidRoot)

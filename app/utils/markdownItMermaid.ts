@@ -146,53 +146,44 @@ const decodeMermaidCode = (code: string): string =>
     .replace(/&#39;/g, "'")
 
 const cloneCachedMermaidSvg = (svg: string): string => {
-  if (typeof DOMParser === 'undefined' || typeof XMLSerializer === 'undefined') {
-    return svg
-  }
-
-  const parser = new DOMParser()
-  const documentElement = parser.parseFromString(svg, 'image/svg+xml').documentElement
   const idMap = new Map<string, string>()
+  const suffix = `-${crypto.randomUUID()}`
+  const idPattern = /\bid="([^"]*)"/g
+  let m: RegExpExecArray | null
 
-  documentElement.querySelectorAll('[id]').forEach((element) => {
-    const currentId = element.getAttribute('id')
-    if (!currentId) return
-
-    const nextId = `${currentId}-${crypto.randomUUID()}`
-    idMap.set(currentId, nextId)
-    element.setAttribute('id', nextId)
-  })
-
-  if (idMap.size === 0) {
-    return svg
+  while ((m = idPattern.exec(svg)) !== null) {
+    const originalId = m[1]
+    if (originalId && !idMap.has(originalId)) {
+      idMap.set(originalId, `${originalId}${suffix}`)
+    }
   }
 
-  documentElement.querySelectorAll('*').forEach((element) => {
-    for (const attributeName of element.getAttributeNames()) {
-      const attributeValue = element.getAttribute(attributeName)
-      if (!attributeValue) continue
+  if (idMap.size === 0) return svg
 
-      let nextValue = attributeValue
-      for (const [currentId, nextId] of idMap) {
-        nextValue = nextValue.replaceAll(`url(#${currentId})`, `url(#${nextId})`)
-        nextValue = nextValue.replaceAll(`href="#${currentId}"`, `href="#${nextId}"`)
-        nextValue = nextValue.replaceAll(`xlink:href="#${currentId}"`, `xlink:href="#${nextId}"`)
-
-        if (attributeName === 'aria-labelledby' || attributeName === 'aria-describedby') {
-          nextValue = nextValue
-            .split(/\s+/)
-            .map((token) => idMap.get(token) || token)
-            .join(' ')
-        }
-      }
-
-      if (nextValue !== attributeValue) {
-        element.setAttribute(attributeName, nextValue)
-      }
-    }
-  })
-
-  return new XMLSerializer().serializeToString(documentElement)
+  return svg
+    .replace(/\bid="([^"]*)"/g, (_, id: string) => {
+      const newId = idMap.get(id)
+      return newId ? `id="${newId}"` : `id="${id}"`
+    })
+    .replace(/\burl\(#([^)]*)\)/g, (_, id: string) => {
+      const newId = idMap.get(id)
+      return newId ? `url(#${newId})` : `url(#${id})`
+    })
+    .replace(/\bhref="#([^"]*)"/g, (_, id: string) => {
+      const newId = idMap.get(id)
+      return newId ? `href="#${newId}"` : `href="#${id}"`
+    })
+    .replace(/\bxlink:href="#([^"]*)"/g, (_, id: string) => {
+      const newId = idMap.get(id)
+      return newId ? `xlink:href="#${newId}"` : `xlink:href="#${id}"`
+    })
+    .replace(/\b(aria-labelledby|aria-describedby)="([^"]*)"/g, (_, attrName: string, attrValue: string) => {
+      const newValue = attrValue
+        .split(/\s+/)
+        .map((token: string) => idMap.get(token) ?? token)
+        .join(' ')
+      return `${attrName}="${newValue}"`
+    })
 }
 
 export const processMermaidInMarkdown = (html: string): string => {
@@ -219,7 +210,7 @@ export const processMermaidInMarkdown = (html: string): string => {
         </div>
         <div class="mermaid-viewport">
           <div class="mermaid-diagram" style="transform-origin: top left;">
-            <div class="mermaid" id="${id}">${decodedCode}</div>
+            <div class="mermaid" id="${id}" data-content="${escapeHtml(decodedCode)}"></div>
           </div>
         </div>
       </div>`
@@ -616,4 +607,55 @@ export const renderMermaidExample = async (mermaidCode: string): Promise<string>
 
 export const clearMermaidCache = (): void => {
   mermaidCache.clear()
+}
+
+/**
+ * Injects cached mermaid SVGs into the HTML string before the v-html DOM update.
+ * This avoids the DOMParser/XMLSerializer overhead on every keystroke by pre-filling
+ * diagram placeholders with cached SVGs at the string level.
+ *
+ * Returns the modified HTML with all placeholders filled, or null if any diagram
+ * is not yet in cache (caller should fall back to debounced render).
+ */
+export const injectCachedMermaidSvgsIntoHtml = (
+  html: string,
+  config?: MermaidConfig
+): string | null => {
+  if (!html.includes('class="mermaid"')) return html
+
+  const themeKey = (config?.cacheKey ?? 'dark') as MermaidRenderTheme
+  let allCached = true
+
+  const result = html.replace(
+    /<div class="mermaid"([^>]*)><\/div>/g,
+    (match, attrs: string) => {
+      const idMatch = attrs.match(/\bid="([^"]*)"/)
+      const contentMatch = attrs.match(/\bdata-content="([^"]*)"/)
+      if (!idMatch || !contentMatch) return match
+
+      const id = idMatch[1] ?? ''
+      const content = decodeMermaidCode(contentMatch[1] ?? '')
+      const cached = mermaidCache.get(`${themeKey}:${content}`)
+
+      if (!cached) {
+        allCached = false
+        return match
+      }
+
+      const clonedSvg = cloneCachedMermaidSvg(cached.svg)
+      return `<div class="mermaid" id="${id}" data-processed="true" data-content="${contentMatch[1]}" data-theme-key="${themeKey}">${clonedSvg}</div>`
+    }
+  )
+
+  return allCached ? result : null
+}
+
+/**
+ * Re-attaches interactive controls to already-processed mermaid elements after a DOM
+ * update caused by v-html. Call this when SVGs were pre-injected via injectCachedMermaidSvgsIntoHtml.
+ */
+export const reattachMermaidControlsForProcessed = (root: ParentNode = document): void => {
+  root.querySelectorAll('.mermaid[data-processed]').forEach((element) => {
+    setupMermaidControls(element)
+  })
 }
