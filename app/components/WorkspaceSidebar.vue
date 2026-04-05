@@ -347,14 +347,20 @@
     dismissInlineEdit({ target: event.target })
   }
 
+  let inlineEditGuardsAttached = false
+
   const attachInlineEditGuards = (): void => {
+    if (inlineEditGuardsAttached) return
     document.addEventListener('click', handleOutsideDocumentClick, true)
     document.addEventListener('focusin', handleOutsideFocusIn, true)
+    inlineEditGuardsAttached = true
   }
 
   const detachInlineEditGuards = (): void => {
+    if (!inlineEditGuardsAttached) return
     document.removeEventListener('click', handleOutsideDocumentClick, true)
     document.removeEventListener('focusin', handleOutsideFocusIn, true)
+    inlineEditGuardsAttached = false
   }
 
   watch(

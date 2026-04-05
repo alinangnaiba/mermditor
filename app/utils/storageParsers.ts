@@ -19,19 +19,23 @@ const isWorkspaceFile = (value: unknown): value is WorkspaceFile => {
   )
 }
 
-const isWorkspaceFolder = (value: unknown): value is WorkspaceFolder => {
+const MAX_WORKSPACE_NESTING_DEPTH = 100
+
+const isWorkspaceFolder = (value: unknown, depth = 0): value is WorkspaceFolder => {
+  if (depth > MAX_WORKSPACE_NESTING_DEPTH) return false
   return (
     isRecord(value) &&
     value.type === 'folder' &&
     typeof value.id === 'string' &&
     typeof value.name === 'string' &&
     Array.isArray(value.children) &&
-    value.children.every((child) => isWorkspaceItem(child))
+    value.children.every((child) => isWorkspaceItem(child, depth + 1))
   )
 }
 
-const isWorkspaceItem = (value: unknown): value is WorkspaceItem => {
-  return isWorkspaceFile(value) || isWorkspaceFolder(value)
+const isWorkspaceItem = (value: unknown, depth = 0): value is WorkspaceItem => {
+  if (depth > MAX_WORKSPACE_NESTING_DEPTH) return false
+  return isWorkspaceFile(value) || isWorkspaceFolder(value, depth)
 }
 
 export const isWorkspaceData = (value: unknown): value is WorkspaceData => {

@@ -33,6 +33,14 @@ const MERMAID_ZOOM_MIN = 0.5
 const MERMAID_ZOOM_MAX = 3
 const MERMAID_CACHE_MAX_SIZE = 50
 
+const escapeHtml = (text: string): string =>
+  text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
 // Lazy-loaded Mermaid module
 let mermaidModule: typeof import('mermaid').default | null = null
 let mermaidInitialized: boolean = false
@@ -132,7 +140,7 @@ export const processMermaidInMarkdown = (html: string): string => {
   return html.replace(
     /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
     (match: string, code: string) => {
-      const id = 'mermaid-' + Math.random().toString(36).substring(2, 11)
+      const id = `mermaid-${crypto.randomUUID()}`
       const decodedCode = code
         .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
@@ -213,7 +221,7 @@ export const renderMermaidDiagrams = async (
         element.innerHTML = sanitizeSvg(cached.svg)
         element.id = cached.id
       } else {
-        const id = element.id || 'mermaid-' + Math.random().toString(36).substring(2, 11)
+        const id = element.id || `mermaid-${crypto.randomUUID()}`
         element.id = id
 
         const { svg } = await mermaid.render(id + '-svg', content)
@@ -221,7 +229,8 @@ export const renderMermaidDiagrams = async (
         element.innerHTML = sanitizedSvg
         mermaidCache.set(cacheKey, { svg: sanitizedSvg, id })
         if (mermaidCache.size > MERMAID_CACHE_MAX_SIZE) {
-          mermaidCache.delete(mermaidCache.keys().next().value!)
+          const firstKey = mermaidCache.keys().next().value
+          if (firstKey !== undefined) mermaidCache.delete(firstKey)
         }
       }
 
@@ -236,7 +245,7 @@ export const renderMermaidDiagrams = async (
         themeKey,
       })
       const errorMessage = error instanceof Error ? error.message : String(error)
-      const errorHTML = `<div class="render-error p-4 border rounded">Mermaid Error: ${errorMessage}</div>`
+      const errorHTML = `<div class="render-error p-4 border rounded">Mermaid Error: ${escapeHtml(errorMessage)}</div>`
 
       element.innerHTML = errorHTML
       element.setAttribute('data-processed', 'true')
@@ -457,7 +466,7 @@ export const renderMermaidExample = async (mermaidCode: string): Promise<string>
   try {
     await initMermaid()
     const mermaid = await loadMermaid()
-    const id = 'mermaid-example-' + Math.random().toString(36).substring(2, 11)
+    const id = `mermaid-example-${crypto.randomUUID()}`
     const { svg } = await mermaid.render(id, mermaidCode)
     const sanitizedSvg = sanitizeSvg(svg)
     return `<div class="mermaid-example">${sanitizedSvg}</div>`

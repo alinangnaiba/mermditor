@@ -3,6 +3,7 @@ import type { Ref } from 'vue'
 import type { EditorView as EditorViewType } from '@codemirror/view'
 import { attachCodeBlockInteractions } from '../utils/codeBlockInteractions'
 import { cleanupMermaidControls, getMermaidThemeConfig } from '../utils/markdownItMermaid'
+import { logError } from '../../utils/logging'
 import { useMarkdownRenderer } from './useMarkdownRenderer'
 import type { EditorTheme } from './editorTypes'
 
@@ -24,6 +25,8 @@ export const useEditorPreview = ({
 
   const { renderMarkdown, renderMermaidDiagrams, highlightSyntax, clearMermaidCache } =
     useMarkdownRenderer()
+
+  const MERMAID_RENDER_DEBOUNCE_MS = 300
 
   let mermaidTimeout: ReturnType<typeof setTimeout> | null = null
   let cleanupCodeBlockInteractions: (() => void) | null = null
@@ -47,28 +50,33 @@ export const useEditorPreview = ({
           previewContainer.value ?? document
         )
         resolve()
-      }, 300)
+      }, MERMAID_RENDER_DEBOUNCE_MS)
     })
   }
 
   const refreshPreview = async (nextContent: string): Promise<void> => {
     const requestId = ++renderRequestId
 
-    if (previewContainer.value) {
-      cleanupMermaidControls(previewContainer.value)
+    try {
+      if (previewContainer.value) {
+        cleanupMermaidControls(previewContainer.value)
+      }
+
+      const nextRenderedContent = await renderMarkdown(nextContent)
+      if (requestId !== renderRequestId) return
+
+      renderedContent.value = nextRenderedContent
+      await nextTick()
+      if (requestId !== renderRequestId) return
+
+      await debouncedMermaidRender(requestId)
+      if (requestId !== renderRequestId) return
+
+      await highlightSyntax(previewContainer.value ?? document)
+    } catch (error) {
+      logError('editor.refreshPreview', error)
+      renderedContent.value = '<p class="render-error">Failed to render preview.</p>'
     }
-
-    const nextRenderedContent = await renderMarkdown(nextContent)
-    if (requestId !== renderRequestId) return
-
-    renderedContent.value = nextRenderedContent
-    await nextTick()
-    if (requestId !== renderRequestId) return
-
-    await debouncedMermaidRender(requestId)
-    if (requestId !== renderRequestId) return
-
-    await highlightSyntax(previewContainer.value ?? document)
   }
 
   const setupScrollSync = (): void => {

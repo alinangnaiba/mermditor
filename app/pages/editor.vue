@@ -149,7 +149,8 @@
   const cursorLine = ref(1)
   const cursorCol = ref(1)
   const cursorInfo = computed(() => `Ln ${cursorLine.value}, Col ${cursorCol.value}`)
-  const wordCount = computed(() => (content.value.trim() ? content.value.trim().split(/\s+/).length : 0))
+  const trimmedContent = computed(() => content.value.trim())
+  const wordCount = computed(() => (trimmedContent.value ? trimmedContent.value.split(/\s+/).length : 0))
   const charCount = computed(() => content.value.length)
 
   const {

@@ -46,9 +46,7 @@ const INVALID_FILE_CHARACTERS = /[<>:"/\\|?*\x00-\x1f]/g
 const TRAILING_FILE_CHARACTERS = /[.\s]+$/g
 const RESERVED_WINDOWS_FILE_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i
 
-const createId = (): string => {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
-}
+const createId = (): string => crypto.randomUUID()
 
 const trimWindowsFileName = (value: string): string => {
   return value.trim().replace(TRAILING_FILE_CHARACTERS, '')
