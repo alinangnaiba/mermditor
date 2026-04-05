@@ -17,7 +17,7 @@ export default defineEventHandler((event) => {
   if (event.method === 'GET') {
     const token = randomBytes(32).toString('hex')
     setCookie(event, 'csrf-token', token, {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',

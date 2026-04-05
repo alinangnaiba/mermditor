@@ -97,6 +97,11 @@
   const error = ref('')
   const issueUrl = ref('')
 
+  // Fetch CSRF token on mount so the csrf-token cookie is set before submission
+  onMounted(async () => {
+    await $fetch('/api/csrf')
+  })
+
   const resetForm = () => {
     form.value = {
       type: 'Bug Report',
@@ -136,17 +141,8 @@
       setTimeout(() => {
         resetForm()
       }, 3000)
-    } catch (err: unknown) {
-      const errorMessage =
-        err &&
-        typeof err === 'object' &&
-        'data' in err &&
-        err.data &&
-        typeof err.data === 'object' &&
-        'message' in err.data
-          ? String(err.data.message)
-          : 'An unexpected error occurred'
-      error.value = errorMessage
+    } catch {
+      error.value = 'Something went wrong. Please try again.'
     } finally {
       isSubmitting.value = false
     }
