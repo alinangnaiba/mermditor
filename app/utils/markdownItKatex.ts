@@ -1,4 +1,5 @@
 import type { KatexOptions } from 'katex'
+import { logError } from '../../utils/logging'
 
 // Lazy-loaded KaTeX module
 let katexModule: typeof import('katex').default | null = null
@@ -71,7 +72,7 @@ export const processLatex = async (html: string): Promise<string> => {
     try {
       return `<div class="katex-display">${katex.renderToString(math.trim(), { ...renderOptions, displayMode: true })}</div>`
     } catch (error) {
-      console.error('LaTeX display math error:', error)
+      logError('latex.displayMath', error, { math: math.slice(0, 100) })
       return `<div class="render-error">LaTeX Error: ${match}</div>`
     }
   })
@@ -82,7 +83,7 @@ export const processLatex = async (html: string): Promise<string> => {
     try {
       return katex.renderToString(math.trim(), { ...renderOptions, displayMode: false })
     } catch (error) {
-      console.error('LaTeX inline math error:', error)
+      logError('latex.inlineMath', error, { math: math.slice(0, 100) })
       return `<span class="render-error">LaTeX Error: ${match}</span>`
     }
   })

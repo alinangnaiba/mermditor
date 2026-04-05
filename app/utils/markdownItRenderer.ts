@@ -88,17 +88,12 @@ export const createMarkdownItInstance = async (): Promise<MarkdownIt> => {
         if (typeof plugin === 'function') {
           md.use(plugin, options)
         } else {
-          console.warn(`Plugin ${name} is not a function:`, typeof plugin, plugin)
-          if (name === 'emoji') {
-            console.warn(
-              'Emoji module structure:',
-              typeof pluginModule === 'object' && pluginModule !== null ? Object.keys(pluginModule) : []
-            )
-            console.warn('Continuing without emoji plugin')
-          }
+          logError(`markdown.plugin.${name}`, new Error('Plugin is not a function'), {
+            type: typeof plugin,
+          })
         }
       } catch (error) {
-        console.warn(`Failed to load plugin ${name}:`, error)
+        logError(`markdown.plugin.${name}`, error)
       }
     }
 
@@ -125,7 +120,7 @@ export const createMarkdownItInstance = async (): Promise<MarkdownIt> => {
   }
 
   // Custom renderer for task lists to match the active editor theme
-  md.renderer.rules.list_item_open = function (tokens, idx, options, env: StateCore, renderer) {
+  md.renderer.rules.list_item_open = function (tokens, idx, options, _env: StateCore, renderer) {
     const token = tokens[idx]
     if (!token) {
       return renderer.renderToken(tokens, idx, options)

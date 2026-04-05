@@ -44,8 +44,12 @@ export const isWorkspaceData = (value: unknown): value is WorkspaceData => {
 }
 
 export const parseWorkspaceData = (rawValue: string): WorkspaceData | null => {
-  const parsedValue: unknown = JSON.parse(rawValue)
-  return isWorkspaceData(parsedValue) ? parsedValue : null
+  try {
+    const parsedValue: unknown = JSON.parse(rawValue)
+    return isWorkspaceData(parsedValue) ? parsedValue : null
+  } catch {
+    return null
+  }
 }
 
 const isEmojiItem = (value: unknown): value is EmojiItem => {
@@ -55,8 +59,12 @@ const isEmojiItem = (value: unknown): value is EmojiItem => {
 }
 
 export const parseRecentEmojis = (rawValue: string): EmojiItem[] | null => {
-  const parsedValue: unknown = JSON.parse(rawValue)
-  return Array.isArray(parsedValue) && parsedValue.every((entry) => isEmojiItem(entry))
-    ? parsedValue
-    : null
+  try {
+    const parsedValue: unknown = JSON.parse(rawValue)
+    return Array.isArray(parsedValue) && parsedValue.every((entry) => isEmojiItem(entry))
+      ? parsedValue
+      : null
+  } catch {
+    return null
+  }
 }

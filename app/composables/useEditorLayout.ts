@@ -4,6 +4,11 @@ const EDITOR_WIDTH_STORAGE_KEY = 'mermditor-editor-width'
 const PREVIEW_WIDTH_STORAGE_KEY = 'mermditor-preview-width'
 const WORKSPACE_WIDTH_STORAGE_KEY = 'mermditor-workspace-width'
 
+const parseStoredNumber = (value: string, fallback: number): number => {
+  const n = parseFloat(value)
+  return isNaN(n) ? fallback : n
+}
+
 export const useEditorLayout = () => {
   const isMobile = ref(false)
   const showEditor = ref(true)
@@ -64,8 +69,8 @@ export const useEditorLayout = () => {
       const savedPreviewWidth = localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY)
 
       if (savedEditorWidth && savedPreviewWidth) {
-        customEditorWidth.value = parseFloat(savedEditorWidth)
-        customPreviewWidth.value = parseFloat(savedPreviewWidth)
+        customEditorWidth.value = parseStoredNumber(savedEditorWidth, 50)
+        customPreviewWidth.value = parseStoredNumber(savedPreviewWidth, 50)
       }
     } catch (error) {
       console.error('Error loading pane widths:', error)
@@ -76,7 +81,7 @@ export const useEditorLayout = () => {
     try {
       const savedWorkspaceWidth = localStorage.getItem(WORKSPACE_WIDTH_STORAGE_KEY)
       if (savedWorkspaceWidth) {
-        customWorkspaceWidth.value = parseFloat(savedWorkspaceWidth)
+        customWorkspaceWidth.value = parseStoredNumber(savedWorkspaceWidth, 258)
       }
     } catch (error) {
       console.error('Error loading workspace width:', error)
