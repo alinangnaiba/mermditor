@@ -2,7 +2,7 @@ import { computed, nextTick, ref } from 'vue'
 import type { Ref } from 'vue'
 import type { EditorView as EditorViewType } from '@codemirror/view'
 import { attachCodeBlockInteractions } from '../utils/codeBlockInteractions'
-import { getMermaidThemeConfig } from '../utils/markdownItMermaid'
+import { cleanupMermaidControls, getMermaidThemeConfig } from '../utils/markdownItMermaid'
 import { useMarkdownRenderer } from './useMarkdownRenderer'
 import type { EditorTheme } from './editorTypes'
 
@@ -28,25 +28,47 @@ export const useEditorPreview = ({
   let mermaidTimeout: ReturnType<typeof setTimeout> | null = null
   let cleanupCodeBlockInteractions: (() => void) | null = null
   let cleanupScrollSync: (() => void) | null = null
+  let renderRequestId = 0
 
-  const debouncedMermaidRender = (): Promise<void> => {
+  const debouncedMermaidRender = (requestId: number): Promise<void> => {
     if (mermaidTimeout) {
       clearTimeout(mermaidTimeout)
     }
 
     return new Promise((resolve) => {
       mermaidTimeout = setTimeout(async () => {
-        await renderMermaidDiagrams(getMermaidThemeConfig(editorTheme.value))
+        if (requestId !== renderRequestId) {
+          resolve()
+          return
+        }
+
+        await renderMermaidDiagrams(
+          getMermaidThemeConfig(editorTheme.value),
+          previewContainer.value ?? document
+        )
         resolve()
       }, 300)
     })
   }
 
   const refreshPreview = async (nextContent: string): Promise<void> => {
-    renderedContent.value = await renderMarkdown(nextContent)
+    const requestId = ++renderRequestId
+
+    if (previewContainer.value) {
+      cleanupMermaidControls(previewContainer.value)
+    }
+
+    const nextRenderedContent = await renderMarkdown(nextContent)
+    if (requestId !== renderRequestId) return
+
+    renderedContent.value = nextRenderedContent
     await nextTick()
-    await debouncedMermaidRender()
-    await highlightSyntax()
+    if (requestId !== renderRequestId) return
+
+    await debouncedMermaidRender(requestId)
+    if (requestId !== renderRequestId) return
+
+    await highlightSyntax(previewContainer.value ?? document)
   }
 
   const setupScrollSync = (): void => {
@@ -54,49 +76,77 @@ export const useEditorPreview = ({
 
     cleanupScrollSync?.()
 
-    let isEditorScrolling = false
-    let isPreviewScrolling = false
+    let syncFrame: number | null = null
+    let sourcePendingSync: 'editor' | 'preview' | null = null
+    let ignoreSource: 'editor' | 'preview' | null = null
 
-    const editorScrollHandler = (): void => {
-      if (isPreviewScrolling || !previewContainer.value || !editorViewRef.value) return
-
-      isEditorScrolling = true
-
-      const editorElement = editorViewRef.value.scrollDOM
-      const scrollPercentage =
-        editorElement.scrollTop / (editorElement.scrollHeight - editorElement.clientHeight || 1)
-
-      const previewElement = previewContainer.value
-      const maxScrollTop = previewElement.scrollHeight - previewElement.clientHeight
-      previewElement.scrollTop = scrollPercentage * maxScrollTop
-
+    const releaseIgnoreSource = (): void => {
       requestAnimationFrame(() => {
-        isEditorScrolling = false
+        ignoreSource = null
       })
     }
 
-    const previewScrollHandler = (): void => {
-      if (isEditorScrolling || !previewContainer.value || !editorViewRef.value) return
+    const syncScrollPosition = (source: 'editor' | 'preview'): void => {
+      if (!previewContainer.value || !editorViewRef.value) return
 
-      isPreviewScrolling = true
-
+      const editorElement = editorViewRef.value.scrollDOM
       const previewElement = previewContainer.value
+
+      if (source === 'editor') {
+        const scrollPercentage =
+          editorElement.scrollTop / (editorElement.scrollHeight - editorElement.clientHeight || 1)
+
+        const maxScrollTop = previewElement.scrollHeight - previewElement.clientHeight
+        ignoreSource = 'preview'
+        previewElement.scrollTop = scrollPercentage * maxScrollTop
+        releaseIgnoreSource()
+        return
+      }
+
       const scrollPercentage =
         previewElement.scrollTop / (previewElement.scrollHeight - previewElement.clientHeight || 1)
 
-      const editorElement = editorViewRef.value.scrollDOM
       const maxScrollTop = editorElement.scrollHeight - editorElement.clientHeight
+      ignoreSource = 'editor'
       editorElement.scrollTop = scrollPercentage * maxScrollTop
+      releaseIgnoreSource()
+    }
 
-      requestAnimationFrame(() => {
-        isPreviewScrolling = false
+    const scheduleScrollSync = (source: 'editor' | 'preview'): void => {
+      sourcePendingSync = source
+
+      if (syncFrame !== null) {
+        return
+      }
+
+      syncFrame = requestAnimationFrame(() => {
+        syncFrame = null
+
+        if (!sourcePendingSync) return
+
+        const sourceToSync = sourcePendingSync
+        sourcePendingSync = null
+        syncScrollPosition(sourceToSync)
       })
     }
 
-    editorViewRef.value.scrollDOM.addEventListener('scroll', editorScrollHandler)
-    previewContainer.value.addEventListener('scroll', previewScrollHandler)
+    const editorScrollHandler = (): void => {
+      if (ignoreSource === 'editor') return
+      scheduleScrollSync('editor')
+    }
+
+    const previewScrollHandler = (): void => {
+      if (ignoreSource === 'preview') return
+      scheduleScrollSync('preview')
+    }
+
+    editorViewRef.value.scrollDOM.addEventListener('scroll', editorScrollHandler, { passive: true })
+    previewContainer.value.addEventListener('scroll', previewScrollHandler, { passive: true })
 
     cleanupScrollSync = () => {
+      if (syncFrame !== null) {
+        cancelAnimationFrame(syncFrame)
+      }
       editorViewRef.value?.scrollDOM.removeEventListener('scroll', editorScrollHandler)
       previewContainer.value?.removeEventListener('scroll', previewScrollHandler)
     }
@@ -118,6 +168,9 @@ export const useEditorPreview = ({
   const cleanup = (): void => {
     if (mermaidTimeout) {
       clearTimeout(mermaidTimeout)
+    }
+    if (previewContainer.value) {
+      cleanupMermaidControls(previewContainer.value)
     }
     cleanupScrollSync?.()
     cleanupCodeBlockInteractions?.()

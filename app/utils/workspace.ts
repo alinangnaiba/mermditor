@@ -38,14 +38,46 @@ export interface WorkspaceSearchResults {
   headings: WorkspaceHeadingResult[]
 }
 
+export const DEFAULT_WORKSPACE_FILE_NAME = 'untitled.md'
+export const WORKSPACE_FILE_EXTENSION = '.md'
+export const MAX_FILENAME_LENGTH = 255
+
+const INVALID_FILE_CHARACTERS = /[<>:"/\\|?*\x00-\x1f]/g
+const TRAILING_FILE_CHARACTERS = /[.\s]+$/g
+const RESERVED_WINDOWS_FILE_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i
+
 const createId = (): string => {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
 
+const trimWindowsFileName = (value: string): string => {
+  return value.trim().replace(TRAILING_FILE_CHARACTERS, '')
+}
+
 export const normalizeFileName = (name: string): string => {
-  const trimmed = name.trim()
-  if (!trimmed) return 'untitled.md'
-  return trimmed.endsWith('.md') ? trimmed : `${trimmed}.md`
+  const sanitizedName = trimWindowsFileName(name).replace(INVALID_FILE_CHARACTERS, '_')
+  const hasMarkdownExtension = sanitizedName.toLowerCase().endsWith(WORKSPACE_FILE_EXTENSION)
+
+  let baseName = hasMarkdownExtension
+    ? sanitizedName.slice(0, -WORKSPACE_FILE_EXTENSION.length)
+    : sanitizedName
+
+  baseName = trimWindowsFileName(baseName)
+
+  if (!baseName) {
+    return DEFAULT_WORKSPACE_FILE_NAME
+  }
+
+  if (RESERVED_WINDOWS_FILE_NAMES.test(baseName)) {
+    baseName = `_${baseName}`
+  }
+
+  const maxBaseLength = MAX_FILENAME_LENGTH - WORKSPACE_FILE_EXTENSION.length
+  if (baseName.length > maxBaseLength) {
+    baseName = baseName.slice(0, maxBaseLength)
+  }
+
+  return `${baseName}${WORKSPACE_FILE_EXTENSION}`
 }
 
 export const normalizeFolderName = (name: string): string => {

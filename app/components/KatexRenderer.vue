@@ -2,12 +2,13 @@
   <div class="katex-renderer">
     <div v-if="error" class="text-red-400">LaTeX Error: {{ error }}</div>
     <div v-else-if="loading" class="text-gray-400">Rendering LaTeX...</div>
-    <div v-else v-html="renderedLatex" />
+    <SafeHtml v-else :content="renderedLatex" />
   </div>
 </template>
 
 <script setup lang="ts">
   import { ref, watch, onMounted } from 'vue'
+  import SafeHtml from './SafeHtml.vue'
   import { renderLatexExample } from '../utils/markdownItKatex'
 
   interface Props {

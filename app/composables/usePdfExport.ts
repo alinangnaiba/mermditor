@@ -1,5 +1,6 @@
 import { useRouter } from 'vue-router'
 import { useMarkdownRenderer } from './useMarkdownRenderer'
+import { logError } from '../../utils/logging'
 
 export const usePdfExport = () => {
   const router = useRouter()
@@ -19,7 +20,9 @@ export const usePdfExport = () => {
       const url = router.resolve('/print-preview').href
       window.open(url, '_blank')
     } catch (error) {
-      console.error('Failed to export PDF:', error)
+      logError('pdf.export', error, {
+        contentPreview: markdownContent.slice(0, 160),
+      })
       alert('Failed to prepare document for PDF export.')
     }
   }

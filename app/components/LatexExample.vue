@@ -1,9 +1,13 @@
 <template>
-  <div class="math-display text-center text-lg text-white" v-html="renderedContent" />
+  <SafeHtml
+    class="math-display text-center text-lg text-white"
+    :content="renderedContent"
+  />
 </template>
 
 <script setup lang="ts">
   import { ref, onMounted, watch } from 'vue'
+  import SafeHtml from './SafeHtml.vue'
   import { renderLatexExample } from '../utils/markdownItKatex'
 
   interface Props {

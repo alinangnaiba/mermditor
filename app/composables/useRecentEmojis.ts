@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { parseRecentEmojis } from '../utils/storageParsers'
 
 export interface EmojiItem {
   shortcode: string
@@ -14,9 +15,17 @@ export const useRecentEmojis = () => {
     try {
       const stored = localStorage.getItem(RECENT_EMOJIS_KEY)
       if (stored) {
-        recentEmojis.value = JSON.parse(stored)
+        const parsedRecentEmojis = parseRecentEmojis(stored)
+
+        if (parsedRecentEmojis) {
+          recentEmojis.value = parsedRecentEmojis
+          return
+        }
+
+        localStorage.removeItem(RECENT_EMOJIS_KEY)
       }
     } catch {
+      localStorage.removeItem(RECENT_EMOJIS_KEY)
       /* ignore storage errors */
     }
   }

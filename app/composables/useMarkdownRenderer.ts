@@ -9,6 +9,7 @@ import {
 import { processLatex, renderLatexExample } from '../utils/markdownItKatex'
 import { highlightSyntax } from '../utils/syntaxHighlighter'
 import { sanitizeHtml } from '../utils/sanitizer'
+import { logError } from '../../utils/logging'
 
 export const useMarkdownRenderer = () => {
   const renderMarkdownContent = async (content: string): Promise<string> => {
@@ -27,7 +28,9 @@ export const useMarkdownRenderer = () => {
       // Step 4: Sanitize final HTML
       return sanitizeHtml(html)
     } catch (error) {
-      console.error('Markdown rendering error:', error)
+      logError('markdown.render', error, {
+        contentPreview: content.slice(0, 160),
+      })
       return '<p class="render-error">Error rendering markdown</p>'
     }
   }
@@ -40,7 +43,9 @@ export const useMarkdownRenderer = () => {
       const html = await renderMarkdown(content)
       return sanitizeHtml(html)
     } catch (error) {
-      console.error('Example markdown rendering error:', error)
+      logError('markdown.renderExample', error, {
+        contentPreview: content.slice(0, 160),
+      })
       return '<p class="render-error">Error rendering example</p>'
     }
   }

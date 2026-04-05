@@ -1,8 +1,53 @@
 import MarkdownIt from 'markdown-it'
+import type StateCore from 'markdown-it/lib/rules_core/state_core.mjs'
 import { emojiMapping } from './emojiMapping'
 import { mathPlugin } from './markdownItMathPlugin'
+import { logError } from '../../utils/logging'
 
 let mdInstance: MarkdownIt | null = null
+
+type MarkdownItPlugin = (md: MarkdownIt, options?: unknown) => void
+
+type MarkdownItPluginModule =
+  | MarkdownItPlugin
+  | {
+      default?: unknown
+      plugin?: unknown
+      markdownItPlugin?: unknown
+      full?: unknown
+    }
+
+const resolveMarkdownItPlugin = (pluginModule: unknown): MarkdownItPlugin | null => {
+  let pluginCandidate: unknown = pluginModule
+
+  if (
+    typeof pluginCandidate === 'object' &&
+    pluginCandidate !== null &&
+    'default' in pluginCandidate &&
+    pluginCandidate.default !== undefined
+  ) {
+    pluginCandidate = pluginCandidate.default
+  }
+
+  if (typeof pluginCandidate === 'object' && pluginCandidate !== null) {
+    if ('plugin' in pluginCandidate && typeof pluginCandidate.plugin === 'function') {
+      return pluginCandidate.plugin as MarkdownItPlugin
+    }
+
+    if (
+      'markdownItPlugin' in pluginCandidate &&
+      typeof pluginCandidate.markdownItPlugin === 'function'
+    ) {
+      return pluginCandidate.markdownItPlugin as MarkdownItPlugin
+    }
+
+    if ('default' in pluginCandidate && typeof pluginCandidate.default === 'function') {
+      return pluginCandidate.default as MarkdownItPlugin
+    }
+  }
+
+  return typeof pluginCandidate === 'function' ? (pluginCandidate as MarkdownItPlugin) : null
+}
 
 export const createMarkdownItInstance = async (): Promise<MarkdownIt> => {
   if (mdInstance) {
@@ -22,7 +67,7 @@ export const createMarkdownItInstance = async (): Promise<MarkdownIt> => {
   try {
     // Dynamically import plugins to handle ESM/CommonJS issues
     const plugins = await Promise.all([
-      import('markdown-it-emoji').then((mod) => mod.full || mod.default || mod), // Try different emoji imports
+      import('markdown-it-emoji').then((mod) => mod.full || mod.default || mod),
       import('markdown-it-footnote'),
       import('markdown-it-mark'),
       import('markdown-it-sub'),
@@ -32,28 +77,23 @@ export const createMarkdownItInstance = async (): Promise<MarkdownIt> => {
     ])
 
     // Helper function to safely use plugins
-    const safeUsePlugin = (pluginModule: any, options: any = {}, name: string = 'unknown') => {
+    const safeUsePlugin = (
+      pluginModule: MarkdownItPluginModule,
+      options: Record<string, unknown> = {},
+      name: string = 'unknown'
+    ) => {
       try {
-        let plugin = pluginModule.default || pluginModule
-
-        // Special handling for different plugin export patterns
-        if (typeof plugin === 'object' && plugin !== null) {
-          // Try common export patterns
-          if (plugin.plugin && typeof plugin.plugin === 'function') {
-            plugin = plugin.plugin
-          } else if (plugin.markdownItPlugin && typeof plugin.markdownItPlugin === 'function') {
-            plugin = plugin.markdownItPlugin
-          } else if (plugin.default && typeof plugin.default === 'function') {
-            plugin = plugin.default
-          }
-        }
+        const plugin = resolveMarkdownItPlugin(pluginModule)
 
         if (typeof plugin === 'function') {
           md.use(plugin, options)
         } else {
           console.warn(`Plugin ${name} is not a function:`, typeof plugin, plugin)
           if (name === 'emoji') {
-            console.warn('Emoji module structure:', Object.keys(pluginModule))
+            console.warn(
+              'Emoji module structure:',
+              typeof pluginModule === 'object' && pluginModule !== null ? Object.keys(pluginModule) : []
+            )
             console.warn('Continuing without emoji plugin')
           }
         }
@@ -85,7 +125,7 @@ export const createMarkdownItInstance = async (): Promise<MarkdownIt> => {
   }
 
   // Custom renderer for task lists to match the active editor theme
-  md.renderer.rules.list_item_open = function (tokens, idx, options, env, renderer) {
+  md.renderer.rules.list_item_open = function (tokens, idx, options, env: StateCore, renderer) {
     const token = tokens[idx]
     if (!token) {
       return renderer.renderToken(tokens, idx, options)
@@ -203,7 +243,9 @@ export const renderMarkdown = async (content: string): Promise<string> => {
 
     return html
   } catch (error) {
-    console.error('Markdown rendering error:', error)
+    logError('markdown.renderRaw', error, {
+      contentPreview: content.slice(0, 160),
+    })
     return '<p class="render-error">Error rendering markdown</p>'
   }
 }

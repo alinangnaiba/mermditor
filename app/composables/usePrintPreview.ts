@@ -1,7 +1,7 @@
 import { nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Previewer } from 'pagedjs'
-import { renderMermaidDiagrams } from '../utils/markdownItMermaid'
+import { cleanupMermaidControls, renderMermaidDiagrams } from '../utils/markdownItMermaid'
 import { sanitizeHtml } from '../utils/sanitizer'
 import {
   getPageStylesForPagedJS,
@@ -103,6 +103,11 @@ export const usePrintPreview = () => {
     injectPrintMediaStyles()
     await nextTick()
 
+    const printContentRoot = document.querySelector('#print-content')
+    if (printContentRoot) {
+      cleanupMermaidControls(printContentRoot)
+    }
+
     await renderMermaidDiagrams({
       theme: 'default',
       startOnLoad: false,
@@ -120,12 +125,12 @@ export const usePrintPreview = () => {
         secondBkg: '#f3f4f6',
         tertiaryBkg: '#e5e7eb',
       },
-    })
+    }, printContentRoot ?? document)
 
-    normalizeCodeBlocksForPrint(document.querySelector('#print-content') ?? document)
+    normalizeCodeBlocksForPrint(printContentRoot ?? document)
 
     const paged = new Previewer()
-    const source = document.querySelector('#print-content')
+    const source = printContentRoot
 
     if (source && previewContainer.value) {
       previewContainer.value.innerHTML = ''

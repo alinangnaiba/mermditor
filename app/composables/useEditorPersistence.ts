@@ -1,10 +1,13 @@
 import { ref } from 'vue'
 import type { WorkspaceData } from '../utils/workspace'
+import { parseWorkspaceData } from '../utils/storageParsers'
+import { logError } from '../../utils/logging'
 
-const WORKSPACE_STORAGE_KEY = 'mermditor-workspace'
-const LEGACY_CONTENT_STORAGE_KEY = 'mermditor-content'
-const AUTOSAVE_STORAGE_KEY = 'mermditor-autosave'
-const RECENT_EMOJIS_STORAGE_KEY = 'mermditor-recent-emojis'
+export const WORKSPACE_STORAGE_KEY = 'mermditor-workspace'
+export const LEGACY_CONTENT_STORAGE_KEY = 'mermditor-content'
+export const AUTOSAVE_STORAGE_KEY = 'mermditor-autosave'
+export const RECENT_EMOJIS_STORAGE_KEY = 'mermditor-recent-emojis'
+export const AUTOSAVE_INTERVAL_MS = 10_000
 
 export const useEditorPersistence = () => {
   const autosave = ref(false)
@@ -17,17 +20,24 @@ export const useEditorPersistence = () => {
   let saveTimeout: ReturnType<typeof setTimeout> | null = null
 
   const loadWorkspaceSnapshot = (): { workspace: WorkspaceData | null; legacyContent: string } => {
+    const legacyContent = localStorage.getItem(LEGACY_CONTENT_STORAGE_KEY) ?? ''
+
     try {
       const savedWorkspace = localStorage.getItem(WORKSPACE_STORAGE_KEY)
-      const legacyContent = localStorage.getItem(LEGACY_CONTENT_STORAGE_KEY) ?? ''
+      const workspace = savedWorkspace ? parseWorkspaceData(savedWorkspace) : null
+
+      if (savedWorkspace && !workspace) {
+        localStorage.removeItem(WORKSPACE_STORAGE_KEY)
+      }
 
       return {
-        workspace: savedWorkspace ? (JSON.parse(savedWorkspace) as WorkspaceData) : null,
+        workspace,
         legacyContent,
       }
     } catch (error) {
-      console.error('Error loading workspace snapshot:', error)
-      return { workspace: null, legacyContent: '' }
+      localStorage.removeItem(WORKSPACE_STORAGE_KEY)
+      logError('persistence.loadWorkspaceSnapshot', error)
+      return { workspace: null, legacyContent }
     }
   }
 
@@ -38,7 +48,7 @@ export const useEditorPersistence = () => {
         autosave.value = savedAutosave === 'true'
       }
     } catch (error) {
-      console.error('Error loading settings:', error)
+      logError('persistence.loadSettings', error)
     }
   }
 
@@ -51,7 +61,9 @@ export const useEditorPersistence = () => {
       localStorage.setItem(AUTOSAVE_STORAGE_KEY, autosave.value.toString())
       lastSaved.value = new Date().toLocaleTimeString()
     } catch (error) {
-      console.error('Error saving workspace:', error)
+      logError('persistence.persistWorkspace', error, {
+        activeFileId: workspace.activeFileId,
+      })
     }
   }
 
@@ -70,7 +82,7 @@ export const useEditorPersistence = () => {
 
     saveTimeout = setTimeout(() => {
       onSave()
-    }, 10_000)
+    }, AUTOSAVE_INTERVAL_MS)
   }
 
   const clearWorkspaceStorage = (): void => {

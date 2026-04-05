@@ -1,9 +1,10 @@
 <template>
-  <div class="mermaid-example-container" v-html="renderedContent" />
+  <SafeHtml class="mermaid-example-container" :content="renderedContent" kind="svg" />
 </template>
 
 <script setup lang="ts">
   import { ref, onMounted, watch } from 'vue'
+  import SafeHtml from './SafeHtml.vue'
   import { useMarkdownRenderer } from '../composables/useMarkdownRenderer'
 
   interface Props {
