@@ -63,6 +63,15 @@
   line-height: 1.2;
 }
 
+.print-layout .prose p,
+.print-layout .prose ul li,
+.print-layout .prose ol li,
+.print-layout .prose figcaption,
+.print-layout .prose dl,
+.print-layout .prose dd {
+  color: #374151; /* gray-700 */
+}
+
 .print-layout .prose h1,
 .print-layout .prose h2,
 .print-layout .prose h3,

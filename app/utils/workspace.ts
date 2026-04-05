@@ -38,6 +38,12 @@ export interface WorkspaceSearchResults {
   headings: WorkspaceHeadingResult[]
 }
 
+interface WorkspaceSearchFileEntry {
+  file: WorkspaceFile
+  normalizedFileName: string
+  headings: Array<WorkspaceHeadingResult & { normalizedHeading: string }>
+}
+
 export const DEFAULT_WORKSPACE_FILE_NAME = 'untitled.md'
 export const WORKSPACE_FILE_EXTENSION = '.md'
 export const MAX_FILENAME_LENGTH = 255
@@ -230,26 +236,26 @@ export const searchWorkspace = (root: WorkspaceFolder, query: string): Workspace
     return { files: [], headings: [] }
   }
 
-  const files: WorkspaceFile[] = []
-  const headings: WorkspaceHeadingResult[] = []
+  return searchWorkspaceIndex(buildWorkspaceSearchIndex(root), normalizedQuery)
+}
+
+export const buildWorkspaceSearchIndex = (root: WorkspaceFolder): WorkspaceSearchFileEntry[] => {
+  const entries: WorkspaceSearchFileEntry[] = []
 
   const visit = (folder: WorkspaceFolder): void => {
     for (const child of folder.children) {
       if (child.type === 'file') {
-        if (child.name.toLowerCase().includes(normalizedQuery)) {
-          files.push(child)
-        }
-
-        for (const heading of extractMarkdownHeadings(child.content)) {
-          if (heading.heading.toLowerCase().includes(normalizedQuery)) {
-            headings.push({
-              fileId: child.id,
-              fileName: child.name,
-              heading: heading.heading,
-              line: heading.line,
-            })
-          }
-        }
+        entries.push({
+          file: child,
+          normalizedFileName: child.name.toLowerCase(),
+          headings: extractMarkdownHeadings(child.content).map((heading) => ({
+            fileId: child.id,
+            fileName: child.name,
+            heading: heading.heading,
+            line: heading.line,
+            normalizedHeading: heading.heading.toLowerCase(),
+          })),
+        })
       } else {
         visit(child)
       }
@@ -257,6 +263,33 @@ export const searchWorkspace = (root: WorkspaceFolder, query: string): Workspace
   }
 
   visit(root)
+
+  return entries
+}
+
+export const searchWorkspaceIndex = (
+  searchIndex: WorkspaceSearchFileEntry[],
+  query: string
+): WorkspaceSearchResults => {
+  const files: WorkspaceFile[] = []
+  const headings: WorkspaceHeadingResult[] = []
+
+  for (const entry of searchIndex) {
+    if (entry.normalizedFileName.includes(query)) {
+      files.push(entry.file)
+    }
+
+    for (const heading of entry.headings) {
+      if (heading.normalizedHeading.includes(query)) {
+        headings.push({
+          fileId: heading.fileId,
+          fileName: heading.fileName,
+          heading: heading.heading,
+          line: heading.line,
+        })
+      }
+    }
+  }
 
   return { files, headings }
 }

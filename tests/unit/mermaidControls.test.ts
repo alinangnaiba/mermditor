@@ -1,20 +1,30 @@
-import { vi } from 'vitest'
+import { beforeEach, expect, it, describe, vi } from 'vitest'
+
+const mermaidRenderMock = vi.fn(async (id: string) => ({
+  svg: `<svg id="${id}" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="5"></circle></svg>`,
+}))
 
 vi.mock('mermaid', () => ({
   default: {
     initialize: vi.fn(),
-    render: vi.fn(async (id: string) => ({
-      svg: `<svg id="${id}" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="5"></circle></svg>`,
-    })),
+    render: mermaidRenderMock,
   },
 }))
 
 import {
+  clearMermaidCache,
   cleanupMermaidControls,
+  getMermaidSourceSignature,
   setupMermaidControls,
 } from '../../app/utils/markdownItMermaid'
 
 describe('mermaid control cleanup', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+    mermaidRenderMock.mockClear()
+    clearMermaidCache()
+  })
+
   it('stops drag interactions after cleanup and closes modal listeners cleanly', async () => {
     const root = document.createElement('div')
     root.innerHTML = `
@@ -69,5 +79,40 @@ describe('mermaid control cleanup', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
 
     expect(document.querySelector('.mermaid-modal-overlay')).toBeNull()
+  })
+
+  it('creates the same mermaid signature when only non-mermaid content changes', () => {
+    const original = `# Title
+
+Before
+
+\`\`\`mermaid
+flowchart TD
+  A-->B
+\`\`\`
+`
+
+    const updated = `# Updated Title
+
+After
+
+\`\`\`mermaid
+flowchart TD
+  A-->B
+\`\`\`
+`
+
+    const changedMermaid = `# Updated Title
+
+After
+
+\`\`\`mermaid
+flowchart TD
+  A-->C
+\`\`\`
+`
+
+    expect(getMermaidSourceSignature(original)).toBe(getMermaidSourceSignature(updated))
+    expect(getMermaidSourceSignature(original)).not.toBe(getMermaidSourceSignature(changedMermaid))
   })
 })

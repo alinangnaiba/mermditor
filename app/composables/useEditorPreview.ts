@@ -2,7 +2,11 @@ import { computed, nextTick, ref } from 'vue'
 import type { Ref } from 'vue'
 import type { EditorView as EditorViewType } from '@codemirror/view'
 import { attachCodeBlockInteractions } from '../utils/codeBlockInteractions'
-import { cleanupMermaidControls, getMermaidThemeConfig } from '../utils/markdownItMermaid'
+import {
+  canHydrateMermaidDiagramsFromCache,
+  cleanupMermaidControls,
+  getMermaidThemeConfig,
+} from '../utils/markdownItMermaid'
 import { logError } from '../../utils/logging'
 import { useMarkdownRenderer } from './useMarkdownRenderer'
 import type { EditorTheme } from './editorTypes'
@@ -56,6 +60,7 @@ export const useEditorPreview = ({
 
   const refreshPreview = async (nextContent: string): Promise<void> => {
     const requestId = ++renderRequestId
+    const mermaidConfig = getMermaidThemeConfig(editorTheme.value)
 
     try {
       if (previewContainer.value) {
@@ -69,10 +74,17 @@ export const useEditorPreview = ({
       await nextTick()
       if (requestId !== renderRequestId) return
 
-      await debouncedMermaidRender(requestId)
-      if (requestId !== renderRequestId) return
+      const mermaidRoot = previewContainer.value ?? document
+      if (mermaidRoot.querySelector('.mermaid')) {
+        if (canHydrateMermaidDiagramsFromCache(mermaidConfig, mermaidRoot)) {
+          await renderMermaidDiagrams(mermaidConfig, mermaidRoot)
+        } else {
+          await debouncedMermaidRender(requestId)
+          if (requestId !== renderRequestId) return
+        }
+      }
 
-      await highlightSyntax(previewContainer.value ?? document)
+      await highlightSyntax(mermaidRoot)
     } catch (error) {
       logError('editor.refreshPreview', error)
       renderedContent.value = '<p class="render-error">Failed to render preview.</p>'

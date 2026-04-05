@@ -32,6 +32,7 @@ const MERMAID_ZOOM_STEP = 0.2
 const MERMAID_ZOOM_MIN = 0.5
 const MERMAID_ZOOM_MAX = 3
 const MERMAID_CACHE_MAX_SIZE = 50
+const MERMAID_FENCE_REGEX = /```mermaid[^\S\r\n]*\r?\n([\s\S]*?)```/g
 
 const escapeHtml = (text: string): string =>
   text
@@ -136,17 +137,70 @@ export const initMermaid = async (config?: MermaidConfig): Promise<void> => {
   }
 }
 
+const decodeMermaidCode = (code: string): string =>
+  code
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+
+const cloneCachedMermaidSvg = (svg: string): string => {
+  if (typeof DOMParser === 'undefined' || typeof XMLSerializer === 'undefined') {
+    return svg
+  }
+
+  const parser = new DOMParser()
+  const documentElement = parser.parseFromString(svg, 'image/svg+xml').documentElement
+  const idMap = new Map<string, string>()
+
+  documentElement.querySelectorAll('[id]').forEach((element) => {
+    const currentId = element.getAttribute('id')
+    if (!currentId) return
+
+    const nextId = `${currentId}-${crypto.randomUUID()}`
+    idMap.set(currentId, nextId)
+    element.setAttribute('id', nextId)
+  })
+
+  if (idMap.size === 0) {
+    return svg
+  }
+
+  documentElement.querySelectorAll('*').forEach((element) => {
+    for (const attributeName of element.getAttributeNames()) {
+      const attributeValue = element.getAttribute(attributeName)
+      if (!attributeValue) continue
+
+      let nextValue = attributeValue
+      for (const [currentId, nextId] of idMap) {
+        nextValue = nextValue.replaceAll(`url(#${currentId})`, `url(#${nextId})`)
+        nextValue = nextValue.replaceAll(`href="#${currentId}"`, `href="#${nextId}"`)
+        nextValue = nextValue.replaceAll(`xlink:href="#${currentId}"`, `xlink:href="#${nextId}"`)
+
+        if (attributeName === 'aria-labelledby' || attributeName === 'aria-describedby') {
+          nextValue = nextValue
+            .split(/\s+/)
+            .map((token) => idMap.get(token) || token)
+            .join(' ')
+        }
+      }
+
+      if (nextValue !== attributeValue) {
+        element.setAttribute(attributeName, nextValue)
+      }
+    }
+  })
+
+  return new XMLSerializer().serializeToString(documentElement)
+}
+
 export const processMermaidInMarkdown = (html: string): string => {
   return html.replace(
     /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
     (match: string, code: string) => {
+      const decodedCode = decodeMermaidCode(code)
       const id = `mermaid-${crypto.randomUUID()}`
-      const decodedCode = code
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
 
       return `<div class="mermaid-container">
         <div class="mermaid-controls">
@@ -173,6 +227,16 @@ export const processMermaidInMarkdown = (html: string): string => {
   )
 }
 
+export const getMermaidSourceSignature = (markdown: string): string => {
+  if (!markdown) return ''
+
+  const blocks = Array.from(markdown.matchAll(MERMAID_FENCE_REGEX), (match) =>
+    match[1]?.trim().replace(/\r\n?/g, '\n') || ''
+  )
+
+  return blocks.join('\n\n@@mermaid-block@@\n\n')
+}
+
 const cleanupMermaidElementControls = (mermaidElement: Element): void => {
   const cleanup = mermaidControlCleanups.get(mermaidElement)
   if (!cleanup) return
@@ -185,6 +249,72 @@ export const cleanupMermaidControls = (root: ParentNode = document): void => {
   root.querySelectorAll('.mermaid').forEach((element) => {
     cleanupMermaidElementControls(element)
   })
+}
+
+const getMermaidElementContent = (element: Element): string =>
+  element.getAttribute('data-content')?.trim() || element.textContent?.trim() || ''
+
+export const canHydrateMermaidDiagramsFromCache = (
+  config?: MermaidConfig,
+  root: ParentNode = document
+): boolean => {
+  const themeKey = config?.cacheKey || 'dark'
+  const mermaidElements = root.querySelectorAll('.mermaid')
+
+  if (mermaidElements.length === 0) {
+    return false
+  }
+
+  for (const element of mermaidElements) {
+    const content = getMermaidElementContent(element)
+    if (!mermaidCache.has(`${themeKey}:${content}`)) {
+      return false
+    }
+  }
+
+  return true
+}
+
+const applyCachedMermaidRender = (element: Element, themeKey: MermaidRenderTheme): boolean => {
+  const content = getMermaidElementContent(element)
+  const cacheKey = `${themeKey}:${content}`
+  const cached = mermaidCache.get(cacheKey)
+
+  if (!cached) {
+    return false
+  }
+
+  element.innerHTML = cloneCachedMermaidSvg(cached.svg)
+  element.id = element.id || `mermaid-${crypto.randomUUID()}`
+  element.setAttribute('data-processed', 'true')
+  element.setAttribute('data-content', content)
+  element.setAttribute('data-theme-key', themeKey)
+  setupMermaidControls(element)
+  return true
+}
+
+export const hydrateMermaidDiagramsFromCache = (
+  config?: MermaidConfig,
+  root: ParentNode = document
+): boolean => {
+  const themeKey = config?.cacheKey || 'dark'
+  const mermaidElements = root.querySelectorAll('.mermaid:not([data-processed])')
+
+  if (mermaidElements.length === 0) {
+    return true
+  }
+
+  let allHydrated = true
+
+  for (const element of mermaidElements) {
+    cleanupMermaidElementControls(element)
+
+    if (!applyCachedMermaidRender(element, themeKey)) {
+      allHydrated = false
+    }
+  }
+
+  return allHydrated
 }
 
 export const renderMermaidDiagrams = async (
@@ -200,38 +330,41 @@ export const renderMermaidDiagrams = async (
   // Early exit if no diagrams to render - don't load Mermaid at all
   if (mermaidElements.length === 0) return
 
+  const uncachedElements: Array<{ element: Element; content: string; cacheKey: string }> = []
+
+  for (const element of mermaidElements) {
+    cleanupMermaidElementControls(element)
+
+    if (applyCachedMermaidRender(element, themeKey)) {
+      continue
+    }
+
+    const content = getMermaidElementContent(element)
+    uncachedElements.push({
+      element,
+      content,
+      cacheKey: `${themeKey}:${content}`,
+    })
+  }
+
+  if (uncachedElements.length === 0) return
+
   // Only load and initialize Mermaid when we have diagrams
   await initMermaid(config)
   const mermaid = await loadMermaid()
 
-  for (const element of mermaidElements) {
-    const content = element.textContent?.trim() || ''
-    const currentContent = element.getAttribute('data-content')
-    if (currentContent === content && element.hasAttribute('data-processed')) {
-      continue
-    }
-
+  for (const { element, content, cacheKey } of uncachedElements) {
     try {
-      cleanupMermaidElementControls(element)
+      const id = element.id || `mermaid-${crypto.randomUUID()}`
+      element.id = id
 
-      const cacheKey = `${themeKey}:${content}`
-      let cached = mermaidCache.get(cacheKey)
-
-      if (cached) {
-        element.innerHTML = sanitizeSvg(cached.svg)
-        element.id = cached.id
-      } else {
-        const id = element.id || `mermaid-${crypto.randomUUID()}`
-        element.id = id
-
-        const { svg } = await mermaid.render(id + '-svg', content)
-        const sanitizedSvg = sanitizeSvg(svg)
-        element.innerHTML = sanitizedSvg
-        mermaidCache.set(cacheKey, { svg: sanitizedSvg, id })
-        if (mermaidCache.size > MERMAID_CACHE_MAX_SIZE) {
-          const firstKey = mermaidCache.keys().next().value
-          if (firstKey !== undefined) mermaidCache.delete(firstKey)
-        }
+      const { svg } = await mermaid.render(id + '-svg', content)
+      const sanitizedSvg = sanitizeSvg(svg)
+      element.innerHTML = sanitizedSvg
+      mermaidCache.set(cacheKey, { svg: sanitizedSvg, id })
+      if (mermaidCache.size > MERMAID_CACHE_MAX_SIZE) {
+        const firstKey = mermaidCache.keys().next().value
+        if (firstKey !== undefined) mermaidCache.delete(firstKey)
       }
 
       element.setAttribute('data-processed', 'true')
@@ -245,7 +378,9 @@ export const renderMermaidDiagrams = async (
         themeKey,
       })
       const errorMessage = error instanceof Error ? error.message : String(error)
-      const errorHTML = `<div class="render-error p-4 border rounded">Mermaid Error: ${escapeHtml(errorMessage)}</div>`
+      const errorHTML = sanitizeSvg(
+        `<div class="render-error p-4 border rounded">Mermaid Error: ${escapeHtml(errorMessage)}</div>`
+      )
 
       element.innerHTML = errorHTML
       element.setAttribute('data-processed', 'true')
@@ -254,7 +389,8 @@ export const renderMermaidDiagrams = async (
 
       mermaidCache.set(`${themeKey}:${content}`, { svg: errorHTML, id: element.id })
       if (mermaidCache.size > MERMAID_CACHE_MAX_SIZE) {
-        mermaidCache.delete(mermaidCache.keys().next().value!)
+        const firstKey = mermaidCache.keys().next().value
+        if (firstKey !== undefined) mermaidCache.delete(firstKey)
       }
     }
   }

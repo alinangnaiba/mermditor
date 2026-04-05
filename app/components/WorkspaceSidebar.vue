@@ -268,7 +268,6 @@
     WorkspaceTreeRow,
   } from '../utils/workspace'
 
-  /* eslint-disable no-unused-vars */
   interface Props {
     isMobile: boolean
     customWorkspaceWidth: number
@@ -282,39 +281,44 @@
     contextMenuActions: Array<{ id: ContextMenuActionId; label: string }>
     dragState: DragState
     inlineEdit: InlineEditState
-    setSearchQuery: (value: string) => void
-    updateInlineEditValue: (value: string) => void
-    startInlineNewItem: (type: 'new-file' | 'new-folder', parentFolderId: string) => void
-    openFile: (fileId: string, lineNumber?: number) => void
-    handleWorkspaceRowClick: (item: WorkspaceItem) => void
-    startInlineRename: (item: WorkspaceItem) => void
-    openContextMenu: (
-      targetType: 'root' | 'folder' | 'file' | null,
-      targetId: string,
-      x: number,
-      y: number
-    ) => void
-    handleRootDragOver: (event: DragEvent) => void
-    handleRootDrop: () => void
-    handleDragStart: (event: DragEvent, item: WorkspaceItem) => void
-    handleItemDragOver: (event: DragEvent, item: WorkspaceItem) => void
-    handleItemDrop: (event: DragEvent, item: WorkspaceItem) => void
-    handleDragEnd: () => void
-    runContextMenuAction: (actionId: ContextMenuActionId) => void
-    commitInlineEdit: () => void
-    cancelInlineEdit: () => void
   }
-  /* eslint-enable no-unused-vars */
 
   const props = defineProps<Props>()
+  const emit = defineEmits<{
+    'update:search-query': [value: string]
+    'update:inline-edit-value': [value: string]
+    'start-inline-new-item': [payload: { type: 'new-file' | 'new-folder'; parentFolderId: string }]
+    'open-file': [payload: { fileId: string; lineNumber?: number }]
+    'workspace-row-click': [item: WorkspaceItem]
+    'start-inline-rename': [item: WorkspaceItem]
+    'open-context-menu': [
+      payload: { targetType: 'root' | 'folder' | 'file' | null; targetId: string; x: number; y: number }
+    ]
+    'root-drag-over': [event: DragEvent]
+    'root-drop': []
+    'drag-start': [payload: { event: DragEvent; item: WorkspaceItem }]
+    'item-drag-over': [payload: { event: DragEvent; item: WorkspaceItem }]
+    'item-drop': [payload: { event: DragEvent; item: WorkspaceItem }]
+    'drag-end': []
+    'run-context-menu-action': [actionId: ContextMenuActionId]
+    'commit-inline-edit': []
+    'cancel-inline-edit': []
+  }>()
+
+  type TemplateRefValue<T extends Element> = T | T[] | null
 
   const workspacePaneRef = ref<HTMLElement | null>(null)
-  const inlineInputRef = ref<HTMLInputElement | null>(null)
-  const inlineEditRowRef = ref<HTMLElement | null>(null)
+  const inlineInputRef = ref<TemplateRefValue<HTMLInputElement>>(null)
+  const inlineEditRowRef = ref<TemplateRefValue<HTMLElement>>(null)
+
+  const getTemplateRefElement = <T extends Element>(value: TemplateRefValue<T>): T | null => {
+    return Array.isArray(value) ? value[0] ?? null : value
+  }
 
   const isInlineEditTarget = (target: EventTarget | null): boolean => {
     const node = target instanceof Node ? target : null
-    return !!node && !!inlineEditRowRef.value?.contains(node)
+    const rowElement = getTemplateRefElement(inlineEditRowRef.value)
+    return !!node && !!rowElement?.contains(node)
   }
 
   const dismissInlineEdit = ({
@@ -332,7 +336,7 @@
       return
     }
 
-    props.cancelInlineEdit()
+    emit('cancel-inline-edit')
   }
 
   const handleInlineBlur = (event: FocusEvent): void => {
@@ -371,9 +375,10 @@
       if (!itemId) return
 
       await nextTick()
-      inlineInputRef.value?.focus()
+      const inlineInputElement = getTemplateRefElement(inlineInputRef.value)
+      inlineInputElement?.focus()
       if (props.inlineEdit.type === 'rename') {
-        inlineInputRef.value?.select()
+        inlineInputElement?.select()
       }
 
       attachInlineEditGuards()
@@ -413,67 +418,85 @@
     const position = resolveContextMenuPosition(event, 'root')
     if (!position) return
 
-    props.openContextMenu('root', props.workspace.root.id, position.x, position.y)
+    emit('open-context-menu', {
+      targetType: 'root',
+      targetId: props.workspace.root.id,
+      x: position.x,
+      y: position.y,
+    })
   }
 
   const openItemContextMenu = (event: MouseEvent, item: WorkspaceItem): void => {
     const position = resolveContextMenuPosition(event, item.type)
     if (!position) return
 
-    props.openContextMenu(item.type, item.id, position.x, position.y)
+    emit('open-context-menu', {
+      targetType: item.type,
+      targetId: item.id,
+      x: position.x,
+      y: position.y,
+    })
   }
 
   const onSearchQueryInput = (event: Event): void => {
-    props.setSearchQuery((event.target as HTMLInputElement).value)
+    emit('update:search-query', (event.target as HTMLInputElement).value)
   }
 
   const onInlineInput = (event: Event): void => {
-    props.updateInlineEditValue((event.target as HTMLInputElement).value)
+    emit('update:inline-edit-value', (event.target as HTMLInputElement).value)
+  }
+
+  const startInlineNewItem = (type: 'new-file' | 'new-folder', parentFolderId: string): void => {
+    emit('start-inline-new-item', { type, parentFolderId })
+  }
+
+  const openFile = (fileId: string, lineNumber?: number): void => {
+    emit('open-file', { fileId, lineNumber })
   }
 
   const handleRootDragOver = (event: DragEvent): void => {
-    props.handleRootDragOver(event)
+    emit('root-drag-over', event)
   }
 
   const handleRootDrop = (): void => {
-    props.handleRootDrop()
+    emit('root-drop')
   }
 
   const handleWorkspaceRowClick = (item: WorkspaceItem): void => {
     dismissInlineEdit({ nextItemId: item.id })
 
-    props.handleWorkspaceRowClick(item)
+    emit('workspace-row-click', item)
   }
 
   const startInlineRename = (item: WorkspaceItem): void => {
-    props.startInlineRename(item)
+    emit('start-inline-rename', item)
   }
 
   const handleDragStart = (event: DragEvent, item: WorkspaceItem): void => {
-    props.handleDragStart(event, item)
+    emit('drag-start', { event, item })
   }
 
   const handleItemDragOver = (event: DragEvent, item: WorkspaceItem): void => {
-    props.handleItemDragOver(event, item)
+    emit('item-drag-over', { event, item })
   }
 
   const handleItemDrop = (event: DragEvent, item: WorkspaceItem): void => {
-    props.handleItemDrop(event, item)
+    emit('item-drop', { event, item })
   }
 
   const handleDragEnd = (): void => {
-    props.handleDragEnd()
+    emit('drag-end')
   }
 
   const runContextMenuAction = (actionId: ContextMenuActionId): void => {
-    props.runContextMenuAction(actionId)
+    emit('run-context-menu-action', actionId)
   }
 
   const commitInlineEdit = (): void => {
-    props.commitInlineEdit()
+    emit('commit-inline-edit')
   }
 
   const cancelInlineEdit = (): void => {
-    props.cancelInlineEdit()
+    emit('cancel-inline-edit')
   }
 </script>

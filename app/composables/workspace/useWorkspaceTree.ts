@@ -2,10 +2,11 @@ import { computed } from 'vue'
 import type { Ref } from 'vue'
 import type { InlineEditState } from '../editorTypes'
 import {
+  buildWorkspaceSearchIndex,
   findWorkspaceFile,
   flattenWorkspaceTree,
   getWorkspaceItemPath,
-  searchWorkspace,
+  searchWorkspaceIndex,
 } from '../../utils/workspace'
 import type { WorkspaceData, WorkspaceFile, WorkspaceTreeRow } from '../../utils/workspace'
 
@@ -35,6 +36,8 @@ export const useWorkspaceTree = ({
   const workspaceTreeRows = computed(() => {
     return flattenWorkspaceTree(workspace.value.root, new Set(expandedFolderIds.value))
   })
+
+  const workspaceSearchIndex = computed(() => buildWorkspaceSearchIndex(workspace.value.root))
 
   const displayTreeRows = computed((): WorkspaceTreeRow[] => {
     const rows = workspaceTreeRows.value
@@ -69,7 +72,12 @@ export const useWorkspaceTree = ({
   })
 
   const workspaceSearchResults = computed(() => {
-    return searchWorkspace(workspace.value.root, searchQuery.value)
+    const normalizedQuery = searchQuery.value.trim().toLowerCase()
+    if (!normalizedQuery) {
+      return { files: [], headings: [] }
+    }
+
+    return searchWorkspaceIndex(workspaceSearchIndex.value, normalizedQuery)
   })
 
   const setSearchQuery = (value: string): void => {

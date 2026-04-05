@@ -37,22 +37,22 @@
         :context-menu-actions="contextMenuActions"
         :drag-state="dragState"
         :inline-edit="inlineEdit"
-        :set-search-query="setSearchQuery"
-        :update-inline-edit-value="updateInlineEditValue"
-        :start-inline-new-item="startInlineNewItem"
-        :open-file="openFile"
-        :handle-workspace-row-click="handleWorkspaceRowClick"
-        :start-inline-rename="startInlineRename"
-        :open-context-menu="openContextMenu"
-        :handle-root-drag-over="handleRootDragOver"
-        :handle-root-drop="handleRootDrop"
-        :handle-drag-start="handleDragStart"
-        :handle-item-drag-over="handleItemDragOver"
-        :handle-item-drop="handleItemDrop"
-        :handle-drag-end="handleDragEnd"
-        :run-context-menu-action="runContextMenuAction"
-        :commit-inline-edit="commitInlineEdit"
-        :cancel-inline-edit="cancelInlineEdit"
+        @update:search-query="setSearchQuery"
+        @update:inline-edit-value="updateInlineEditValue"
+        @start-inline-new-item="startInlineNewItem($event.type, $event.parentFolderId)"
+        @open-file="openFile($event.fileId, $event.lineNumber)"
+        @workspace-row-click="handleWorkspaceRowClick"
+        @start-inline-rename="startInlineRename"
+        @open-context-menu="openContextMenu($event.targetType, $event.targetId, $event.x, $event.y)"
+        @root-drag-over="handleRootDragOver"
+        @root-drop="handleRootDrop"
+        @drag-start="handleDragStart($event.event, $event.item)"
+        @item-drag-over="handleItemDragOver($event.event, $event.item)"
+        @item-drop="handleItemDrop($event.event, $event.item)"
+        @drag-end="handleDragEnd"
+        @run-context-menu-action="runContextMenuAction"
+        @commit-inline-edit="commitInlineEdit"
+        @cancel-inline-edit="cancelInlineEdit"
       />
 
       <div v-if="!isMobile" class="workspace-resize-handle" @mousedown="startWorkspaceResize" />
@@ -179,6 +179,7 @@
     startWorkspaceResize,
     clearStoredLayout,
     resetLayoutState,
+    cleanup: cleanupLayout,
   } = useEditorLayout()
 
   const {
@@ -447,6 +448,7 @@
     window.removeEventListener('resize', checkMobile)
     document.removeEventListener('click', handleDocumentClick)
     clearDocumentTheme()
+    cleanupLayout()
     cleanupPersistence()
     cleanupPreview()
   })

@@ -25,16 +25,35 @@ export const getPageStylesForPagedJS = (
       margin: ${marginValues[margins]};
     }
 
+    body, .prose {
+      font-family: 'Georgia', 'Times New Roman', serif;
+    }
+
     .prose {
       color: #374151;
       max-width: none;
       font-size: 11pt;
-      line-height: 1.2;
+      line-height: 1.6;
+    }
+
+    .prose p,
+    .prose ul li,
+    .prose ol li,
+    .prose figcaption,
+    .prose dl,
+    .prose dd {
+      color: #374151;
     }
 
     .prose h1, .prose h2, .prose h3, .prose h4, .prose strong, .prose b {
-      color: #111827;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      color: #1a202c;
     }
+
+    .prose h1 { font-size: 22pt; line-height: 1.25; margin-bottom: 0.5em; }
+    .prose h2 { font-size: 16pt; line-height: 1.3; margin-bottom: 0.4em; }
+    .prose h3 { font-size: 13pt; line-height: 1.35; margin-bottom: 0.35em; }
+    .prose h4 { font-size: 11.5pt; line-height: 1.4; }
 
     .prose a {
       color: #2563eb;
@@ -46,20 +65,28 @@ export const getPageStylesForPagedJS = (
       border-left-color: #e5e7eb;
     }
 
+    .prose p {
+      margin-bottom: 0.75em;
+    }
+
     .prose code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
       color: #111827;
       background-color: #f3f4f6;
       border: 1px solid #e5e7eb;
-      font-size: 9pt;
+      font-size: 8.5pt;
+      padding: 0.1em 0.35em;
+      border-radius: 3px;
     }
 
     .prose pre {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
       background-color: #f9fafb;
       border: 1px solid #e5e7eb;
       color: #1f2937;
       box-shadow: none;
-      font-size: 9pt;
-      line-height: 1.2;
+      font-size: 8.5pt;
+      line-height: 1.5;
     }
 
     .prose pre code {

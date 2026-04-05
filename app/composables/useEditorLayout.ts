@@ -12,9 +12,34 @@ const WORKSPACE_WIDTH_MAX = 480
 const PANE_WIDTH_MIN_PERCENT = 20
 const PANE_WIDTH_MAX_PERCENT = 80
 
-const parseStoredNumber = (value: string, fallback: number): number => {
-  const n = parseFloat(value)
-  return isNaN(n) ? fallback : n
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(Math.max(value, min), max)
+
+const parseFiniteNumber = (value: string | null): number | null => {
+  if (!value) return null
+
+  const parsedValue = Number.parseFloat(value)
+  return Number.isFinite(parsedValue) ? parsedValue : null
+}
+
+const normalizeStoredPaneWidths = (
+  editorWidth: string | null,
+  previewWidth: string | null
+): { editor: number; preview: number } | null => {
+  const storedEditor = parseFiniteNumber(editorWidth)
+  const storedPreview = parseFiniteNumber(previewWidth)
+
+  if (storedEditor !== null) {
+    const editor = clamp(storedEditor, PANE_WIDTH_MIN_PERCENT, PANE_WIDTH_MAX_PERCENT)
+    return { editor, preview: 100 - editor }
+  }
+
+  if (storedPreview !== null) {
+    const preview = clamp(storedPreview, PANE_WIDTH_MIN_PERCENT, PANE_WIDTH_MAX_PERCENT)
+    return { editor: 100 - preview, preview }
+  }
+
+  return null
 }
 
 export const useEditorLayout = () => {
@@ -24,6 +49,8 @@ export const useEditorLayout = () => {
   const customEditorWidth = ref<number | null>(null)
   const customPreviewWidth = ref<number | null>(null)
   const customWorkspaceWidth = ref(DEFAULT_WORKSPACE_WIDTH)
+  let cleanupPaneResize: (() => void) | null = null
+  let cleanupWorkspaceResize: (() => void) | null = null
 
   const checkMobile = (): void => {
     if (!import.meta.client) return
@@ -75,10 +102,11 @@ export const useEditorLayout = () => {
     try {
       const savedEditorWidth = localStorage.getItem(EDITOR_WIDTH_STORAGE_KEY)
       const savedPreviewWidth = localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY)
+      const storedPaneWidths = normalizeStoredPaneWidths(savedEditorWidth, savedPreviewWidth)
 
-      if (savedEditorWidth && savedPreviewWidth) {
-        customEditorWidth.value = parseStoredNumber(savedEditorWidth, 50)
-        customPreviewWidth.value = parseStoredNumber(savedPreviewWidth, 50)
+      if (storedPaneWidths) {
+        customEditorWidth.value = storedPaneWidths.editor
+        customPreviewWidth.value = storedPaneWidths.preview
       }
     } catch (error) {
       logError('layout.loadPaneWidths', error)
@@ -88,8 +116,14 @@ export const useEditorLayout = () => {
   const loadWorkspaceWidth = (): void => {
     try {
       const savedWorkspaceWidth = localStorage.getItem(WORKSPACE_WIDTH_STORAGE_KEY)
-      if (savedWorkspaceWidth) {
-        customWorkspaceWidth.value = parseStoredNumber(savedWorkspaceWidth, DEFAULT_WORKSPACE_WIDTH)
+      const storedWidth = parseFiniteNumber(savedWorkspaceWidth)
+
+      if (storedWidth !== null) {
+        customWorkspaceWidth.value = clamp(
+          storedWidth,
+          WORKSPACE_WIDTH_MIN,
+          WORKSPACE_WIDTH_MAX
+        )
       }
     } catch (error) {
       logError('layout.loadWorkspaceWidth', error)
@@ -116,6 +150,7 @@ export const useEditorLayout = () => {
 
   const startResize = (event: MouseEvent): void => {
     event.preventDefault()
+    cleanupPaneResize?.()
 
     const startX = event.clientX
     const editorPane = document.querySelector('.editor-pane') as HTMLElement | null
@@ -138,21 +173,25 @@ export const useEditorLayout = () => {
     }
 
     const handleMouseUp = (): void => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-
+      cleanupPaneResize?.()
       const editorPercent = (editorPane.offsetWidth / containerWidth) * 100
-      customEditorWidth.value = editorPercent
-      customPreviewWidth.value = 100 - editorPercent
+      customEditorWidth.value = clamp(editorPercent, PANE_WIDTH_MIN_PERCENT, PANE_WIDTH_MAX_PERCENT)
+      customPreviewWidth.value = 100 - customEditorWidth.value
       savePaneWidths()
     }
 
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
+    cleanupPaneResize = () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      cleanupPaneResize = null
+    }
   }
 
   const startWorkspaceResize = (event: MouseEvent): void => {
     event.preventDefault()
+    cleanupWorkspaceResize?.()
 
     const startX = event.clientX
     const startWidth = customWorkspaceWidth.value
@@ -165,9 +204,7 @@ export const useEditorLayout = () => {
     }
 
     const handleMouseUp = (): void => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-
+      cleanupWorkspaceResize?.()
       try {
         localStorage.setItem(WORKSPACE_WIDTH_STORAGE_KEY, customWorkspaceWidth.value.toString())
       } catch (error) {
@@ -177,6 +214,11 @@ export const useEditorLayout = () => {
 
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
+    cleanupWorkspaceResize = () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      cleanupWorkspaceResize = null
+    }
   }
 
   const clearStoredLayout = (): void => {
@@ -198,6 +240,11 @@ export const useEditorLayout = () => {
     nextTick(() => applyPaneWidths())
   }
 
+  const cleanup = (): void => {
+    cleanupPaneResize?.()
+    cleanupWorkspaceResize?.()
+  }
+
   return {
     isMobile,
     showEditor,
@@ -215,5 +262,6 @@ export const useEditorLayout = () => {
     startWorkspaceResize,
     clearStoredLayout,
     resetLayoutState,
+    cleanup,
   }
 }
