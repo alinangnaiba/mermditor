@@ -24,6 +24,14 @@ interface UseWorkspaceInlineEditOptions {
   renameWorkspaceItem: (itemId: string, nextName: string) => boolean
 }
 
+const createInactiveInlineEditState = (): InlineEditState => ({
+  type: null,
+  itemId: null,
+  parentFolderId: null,
+  depth: 0,
+  value: '',
+})
+
 export const useWorkspaceInlineEdit = ({
   inlineEdit,
   workspace,
@@ -39,14 +47,12 @@ export const useWorkspaceInlineEdit = ({
   }
 
   const cancelInlineEdit = (): void => {
-    inlineEdit.value = { type: null, itemId: null, parentFolderId: null, depth: 0, value: '' }
+    inlineEdit.value = createInactiveInlineEditState()
   }
 
   const commitInlineEdit = (): void => {
     const { type, itemId, parentFolderId, value } = inlineEdit.value
     if (!type) return
-
-    cancelInlineEdit()
 
     if (!value.trim()) return
 
@@ -57,9 +63,10 @@ export const useWorkspaceInlineEdit = ({
       const normalizedName =
         target.item.type === 'file' ? normalizeFileName(value) : normalizeFolderName(value)
 
-      if (!hasSiblingWithName(target.parentFolder, normalizedName, itemId)) {
-        renameWorkspaceItem(itemId, normalizedName)
-      }
+      if (hasSiblingWithName(target.parentFolder, normalizedName, itemId)) return
+
+      cancelInlineEdit()
+      renameWorkspaceItem(itemId, normalizedName)
       return
     }
 
@@ -74,19 +81,22 @@ export const useWorkspaceInlineEdit = ({
 
     if (type === 'new-file') {
       const normalizedName = normalizeFileName(value)
-      if (!hasSiblingWithName(folder, normalizedName)) {
-        createFileInFolder(folder.id, normalizedName)
-      }
+      if (hasSiblingWithName(folder, normalizedName)) return
+
+      cancelInlineEdit()
+      createFileInFolder(folder.id, normalizedName)
       return
     }
 
     const normalizedName = normalizeFolderName(value)
-    if (!hasSiblingWithName(folder, normalizedName)) {
-      createFolderInFolder(folder.id, normalizedName)
-    }
+    if (hasSiblingWithName(folder, normalizedName)) return
+
+    cancelInlineEdit()
+    createFolderInFolder(folder.id, normalizedName)
   }
 
   const startInlineRename = (item: WorkspaceItem): void => {
+    closeContextMenu()
     inlineEdit.value = {
       type: 'rename',
       itemId: item.id,

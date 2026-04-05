@@ -78,6 +78,13 @@ test.describe('merMDitor smoke coverage', () => {
 
     await expect(page.locator('.workspace-inline-input')).toHaveCount(0)
     await expect(betaRow).toHaveClass(/active/)
+
+    await alphaRow.dblclick()
+    await expect(page.locator('.workspace-inline-input')).toHaveValue('alpha.md')
+
+    await page.getByPlaceholder('Search files and headings').click()
+
+    await expect(page.locator('.workspace-inline-input')).toHaveCount(0)
   })
 
   test('print preview renders stored content', async ({ page }) => {

@@ -60,6 +60,7 @@
         type="text"
         class="workspace-search-input"
         placeholder="Search files and headings"
+        @click="cancelInlineEdit"
         @input="onSearchQueryInput"
       />
       <div class="workspace-search-meta">Search is limited to this workspace.</div>
@@ -146,7 +147,7 @@
               @input="onInlineInput"
               @keydown.enter.prevent="commitInlineEdit"
               @keydown.escape.prevent="cancelInlineEdit"
-              @blur="cancelInlineEdit"
+              @blur="handleInlineBlur"
               @click.stop
               @mousedown.stop
               @dblclick.stop
@@ -316,20 +317,34 @@
     return !!node && !!inlineEditRowRef.value?.contains(node)
   }
 
-  const cancelInlineEditIfOutside = (target: EventTarget | null): void => {
-    if (!props.inlineEdit.itemId || isInlineEditTarget(target)) {
+  const dismissInlineEdit = ({
+    target = null,
+    nextItemId = null,
+  }: {
+    target?: EventTarget | null
+    nextItemId?: string | null
+  } = {}): void => {
+    if (!props.inlineEdit.itemId) {
+      return
+    }
+
+    if (nextItemId === props.inlineEdit.itemId || isInlineEditTarget(target)) {
       return
     }
 
     props.cancelInlineEdit()
   }
 
+  const handleInlineBlur = (event: FocusEvent): void => {
+    dismissInlineEdit({ target: event.relatedTarget })
+  }
+
   const handleOutsideDocumentClick = (event: MouseEvent): void => {
-    cancelInlineEditIfOutside(event.target)
+    dismissInlineEdit({ target: event.target })
   }
 
   const handleOutsideFocusIn = (event: FocusEvent): void => {
-    cancelInlineEditIfOutside(event.target)
+    dismissInlineEdit({ target: event.target })
   }
 
   const attachInlineEditGuards = (): void => {
@@ -419,9 +434,7 @@
   }
 
   const handleWorkspaceRowClick = (item: WorkspaceItem): void => {
-    if (props.inlineEdit.itemId && props.inlineEdit.itemId !== item.id) {
-      props.cancelInlineEdit()
-    }
+    dismissInlineEdit({ nextItemId: item.id })
 
     props.handleWorkspaceRowClick(item)
   }
