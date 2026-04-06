@@ -50,6 +50,12 @@ const mermaidCache = new Map<string, MermaidCache>()
 interface MermaidConfig {
   theme?: 'default' | 'base' | 'dark' | 'forest' | 'neutral' | 'null'
   themeVariables?: Partial<MermaidThemeVariables>
+  securityLevel?: 'strict' | 'loose' | 'antiscript' | 'sandbox'
+  secure?: string[]
+  flowchart?: {
+    htmlLabels?: boolean
+    [key: string]: unknown
+  }
   cacheKey?: MermaidRenderTheme
   [key: string]: unknown
 }
@@ -57,6 +63,19 @@ interface MermaidConfig {
 export type MermaidRenderTheme = 'dark' | 'light'
 
 const mermaidControlCleanups = new WeakMap<Element, () => void>()
+const MERMAID_INIT_DIRECTIVE_REGEX = /%%\{[\s\S]*?\}%%/g
+const MERMAID_SECURE_CONFIG_KEYS = [
+  'secure',
+  'securityLevel',
+  'startOnLoad',
+  'maxTextSize',
+  'suppressErrorRendering',
+  'maxEdges',
+  'flowchart',
+] as const
+
+export const normalizeMermaidSource = (source: string): string =>
+  source.replace(/\r\n?/g, '\n').replace(MERMAID_INIT_DIRECTIVE_REGEX, '').trim()
 
 export const getMermaidThemeConfig = (theme: MermaidRenderTheme): MermaidConfig => {
   if (theme === 'light') {
@@ -114,23 +133,38 @@ const loadMermaid = async (): Promise<typeof import('mermaid').default> => {
 
 export const initMermaid = async (config?: MermaidConfig): Promise<void> => {
   // If config is provided, we re-initialize to apply new theme
-  if ((!mermaidInitialized || config) && import.meta.client) {
+  if ((!mermaidInitialized || config) && typeof window !== 'undefined') {
     const mermaid = await loadMermaid()
 
     const defaultThemeConfig = getMermaidThemeConfig('dark')
     const defaultThemeVariables = defaultThemeConfig.themeVariables as MermaidThemeVariables
 
-    const { theme, themeVariables: configThemeVariables, cacheKey: _cacheKey, ...otherConfig } =
-      config || {}
+    const {
+      theme,
+      themeVariables: configThemeVariables,
+      cacheKey: _cacheKey,
+      flowchart: flowchartConfig,
+      securityLevel: _securityLevel,
+      secure: _secure,
+      startOnLoad: _startOnLoad,
+      ...otherConfig
+    } = config || {}
 
     const themeVariables = configThemeVariables
       ? { ...defaultThemeVariables, ...configThemeVariables }
       : defaultThemeVariables
+    const flowchart = {
+      ...(flowchartConfig || {}),
+      htmlLabels: false,
+    }
 
     mermaid.initialize({
       startOnLoad: false,
       theme: theme || 'dark',
       themeVariables,
+      securityLevel: 'strict',
+      secure: [...MERMAID_SECURE_CONFIG_KEYS],
+      flowchart,
       ...otherConfig,
     })
     mermaidInitialized = true
@@ -205,13 +239,16 @@ export const cloneCachedMermaidSvg = (svg: string): string => {
 }
 
 export const processMermaidInMarkdown = (html: string): string => {
+  let mermaidBlockIndex = 0
+
   return html.replace(
     /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
     (match: string, code: string) => {
-      const decodedCode = decodeMermaidCode(code)
+      const decodedCode = normalizeMermaidSource(decodeMermaidCode(code))
       const id = `mermaid-${crypto.randomUUID()}`
+      const slot = String(mermaidBlockIndex++)
 
-      return `<div class="mermaid-container">
+      return `<div class="mermaid-container" data-mermaid-slot="${slot}">
         <div class="mermaid-controls">
           <button class="mermaid-zoom-in" title="Zoom In">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><line x1="80" y1="112" x2="144" y2="112" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="112" cy="112" r="80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="168.57" y1="168.57" x2="224" y2="224" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="112" y1="80" x2="112" y2="144" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
@@ -228,7 +265,7 @@ export const processMermaidInMarkdown = (html: string): string => {
         </div>
         <div class="mermaid-viewport">
           <div class="mermaid-diagram" style="transform-origin: top left;">
-            <div class="mermaid" id="${id}" data-content="${escapeHtml(decodedCode)}"></div>
+            <div class="mermaid" id="${id}" data-mermaid-slot="${slot}" data-content="${escapeHtml(decodedCode)}"></div>
           </div>
         </div>
       </div>`
@@ -240,7 +277,7 @@ export const getMermaidSourceSignature = (markdown: string): string => {
   if (!markdown) return ''
 
   const blocks = Array.from(markdown.matchAll(MERMAID_FENCE_REGEX), (match) =>
-    match[1]?.trim().replace(/\r\n?/g, '\n') || ''
+    normalizeMermaidSource(match[1] || '')
   )
 
   return blocks.join('\n\n@@mermaid-block@@\n\n')
@@ -261,7 +298,9 @@ export const cleanupMermaidControls = (root: ParentNode = document): void => {
 }
 
 const getMermaidElementContent = (element: Element): string =>
-  element.getAttribute('data-content')?.trim() || element.textContent?.trim() || ''
+  normalizeMermaidSource(
+    element.getAttribute('data-content')?.trim() || element.textContent?.trim() || ''
+  )
 
 export const canHydrateMermaidDiagramsFromCache = (
   config?: MermaidConfig,
@@ -330,7 +369,7 @@ export const renderMermaidDiagrams = async (
   config?: MermaidConfig,
   root: ParentNode = document
 ): Promise<void> => {
-  if (!import.meta.client) return
+  if (typeof window === 'undefined') return
 
   const themeKey = config?.cacheKey || 'dark'
 
@@ -606,7 +645,7 @@ const createMermaidModal = (containerNode: Node): void => {
 }
 
 export const renderMermaidExample = async (mermaidCode: string): Promise<string> => {
-  if (!import.meta.client) return '<div>Mermaid diagram would render here</div>'
+  if (typeof window === 'undefined') return '<div>Mermaid diagram would render here</div>'
 
   try {
     await initMermaid()

@@ -1,28 +1,29 @@
-import { computed, nextTick, ref } from 'vue'
+import { computed } from 'vue'
 import type { Ref } from 'vue'
 import type { EditorView as EditorViewType } from '@codemirror/view'
 import { attachCodeBlockInteractions } from '../utils/codeBlockInteractions'
 import {
-  canHydrateMermaidDiagramsFromCache,
   cleanupMermaidControls,
   getMermaidThemeConfig,
 } from '../utils/markdownItMermaid'
 import { logError } from '../../utils/logging'
+import { patchPreviewContent } from '../utils/previewDomPatcher'
 import { useMarkdownRenderer } from './useMarkdownRenderer'
 import type { EditorTheme } from './editorTypes'
 
 interface UseEditorPreviewOptions {
   editorViewRef: Ref<EditorViewType | null>
   previewContainer: Ref<HTMLElement | null>
+  previewContentRoot: Ref<HTMLElement | null>
   editorTheme: Ref<EditorTheme>
 }
 
 export const useEditorPreview = ({
   editorViewRef,
   previewContainer,
+  previewContentRoot,
   editorTheme,
 }: UseEditorPreviewOptions) => {
-  const renderedContent = ref('')
   const previewProseClass = computed(() =>
     editorTheme.value === 'light' ? 'prose max-w-none' : 'prose prose-invert max-w-none'
   )
@@ -61,7 +62,7 @@ export const useEditorPreview = ({
 
         await renderMermaidDiagrams(
           getMermaidThemeConfig(editorTheme.value),
-          previewContainer.value ?? document
+          previewContentRoot.value ?? document
         )
         resolve()
       }, MERMAID_RENDER_DEBOUNCE_MS)
@@ -74,34 +75,36 @@ export const useEditorPreview = ({
     options?: { deferMermaidHydration?: boolean }
   ): Promise<void> => {
     const mermaidConfig = getMermaidThemeConfig(editorTheme.value)
+    const previewRoot = previewContentRoot.value
     const deferMermaidHydration = options?.deferMermaidHydration ?? false
 
     try {
-      if (previewContainer.value) {
-        cleanupMermaidControls(previewContainer.value)
-      }
+      if (!previewRoot) return
 
       const nextRenderedContent = await renderMarkdown(nextContent)
       if (requestId !== renderRequestId) return
 
-      const mermaidRoot = previewContainer.value ?? document
-      renderedContent.value = nextRenderedContent
-      await nextTick()
-      if (requestId !== renderRequestId) return
+      patchPreviewContent(previewRoot, nextRenderedContent, mermaidConfig.cacheKey ?? 'dark')
 
-      if (mermaidRoot.querySelector('.mermaid')) {
-        if (!deferMermaidHydration && canHydrateMermaidDiagramsFromCache(mermaidConfig, mermaidRoot)) {
-          await renderMermaidDiagrams(mermaidConfig, mermaidRoot)
-        } else {
+      if (previewRoot.querySelector('.mermaid:not([data-processed])')) {
+        if (deferMermaidHydration) {
           await debouncedMermaidRender(requestId)
           if (requestId !== renderRequestId) return
+        } else {
+          await renderMermaidDiagrams(mermaidConfig, previewRoot)
         }
       }
 
-      await highlightSyntax(mermaidRoot)
+      await highlightSyntax(previewRoot)
     } catch (error) {
       logError('editor.refreshPreview', error)
-      renderedContent.value = '<p class="render-error">Failed to render preview.</p>'
+      if (previewRoot) {
+        patchPreviewContent(
+          previewRoot,
+          '<p class="render-error">Failed to render preview.</p>',
+          mermaidConfig.cacheKey ?? 'dark'
+        )
+      }
     }
   }
 
@@ -239,7 +242,6 @@ export const useEditorPreview = ({
   }
 
   return {
-    renderedContent,
     previewProseClass,
     refreshPreview,
     schedulePreviewRefresh,
