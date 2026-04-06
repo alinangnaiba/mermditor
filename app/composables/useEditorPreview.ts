@@ -68,8 +68,13 @@ export const useEditorPreview = ({
     })
   }
 
-  const runPreviewRefresh = async (nextContent: string, requestId: number): Promise<void> => {
+  const runPreviewRefresh = async (
+    nextContent: string,
+    requestId: number,
+    options?: { deferMermaidHydration?: boolean }
+  ): Promise<void> => {
     const mermaidConfig = getMermaidThemeConfig(editorTheme.value)
+    const deferMermaidHydration = options?.deferMermaidHydration ?? false
 
     try {
       if (previewContainer.value) {
@@ -85,7 +90,7 @@ export const useEditorPreview = ({
       if (requestId !== renderRequestId) return
 
       if (mermaidRoot.querySelector('.mermaid')) {
-        if (canHydrateMermaidDiagramsFromCache(mermaidConfig, mermaidRoot)) {
+        if (!deferMermaidHydration && canHydrateMermaidDiagramsFromCache(mermaidConfig, mermaidRoot)) {
           await renderMermaidDiagrams(mermaidConfig, mermaidRoot)
         } else {
           await debouncedMermaidRender(requestId)
@@ -119,7 +124,9 @@ export const useEditorPreview = ({
     const requestId = ++renderRequestId
     previewTimeout = setTimeout(() => {
       previewTimeout = null
-      void runPreviewRefresh(nextContent, requestId)
+      void runPreviewRefresh(nextContent, requestId, {
+        deferMermaidHydration: true,
+      })
     }, PREVIEW_RENDER_DEBOUNCE_MS)
   }
 
