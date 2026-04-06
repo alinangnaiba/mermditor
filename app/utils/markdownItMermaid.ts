@@ -145,7 +145,25 @@ const decodeMermaidCode = (code: string): string =>
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
 
-const cloneCachedMermaidSvg = (svg: string): string => {
+const replaceSvgStyleSelectors = (svg: string, idMap: Map<string, string>): string => {
+  if (!svg.includes('<style') || idMap.size === 0) {
+    return svg
+  }
+
+  const replacements = Array.from(idMap.entries()).sort((a, b) => b[0].length - a[0].length)
+
+  return svg.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/g, (styleBlock, css: string) => {
+    let nextCss = css
+
+    for (const [originalId, nextId] of replacements) {
+      nextCss = nextCss.replaceAll(`#${originalId}`, `#${nextId}`)
+    }
+
+    return styleBlock.replace(css, nextCss)
+  })
+}
+
+export const cloneCachedMermaidSvg = (svg: string): string => {
   const idMap = new Map<string, string>()
   const suffix = `-${crypto.randomUUID()}`
   const idPattern = /\bid="([^"]*)"/g
@@ -160,7 +178,7 @@ const cloneCachedMermaidSvg = (svg: string): string => {
 
   if (idMap.size === 0) return svg
 
-  return svg
+  return replaceSvgStyleSelectors(svg, idMap)
     .replace(/\bid="([^"]*)"/g, (_, id: string) => {
       const newId = idMap.get(id)
       return newId ? `id="${newId}"` : `id="${id}"`

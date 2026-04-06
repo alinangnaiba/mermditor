@@ -3,10 +3,9 @@ import type { Ref } from 'vue'
 import type { EditorView as EditorViewType } from '@codemirror/view'
 import { attachCodeBlockInteractions } from '../utils/codeBlockInteractions'
 import {
+  canHydrateMermaidDiagramsFromCache,
   cleanupMermaidControls,
   getMermaidThemeConfig,
-  injectCachedMermaidSvgsIntoHtml,
-  reattachMermaidControlsForProcessed,
 } from '../utils/markdownItMermaid'
 import { logError } from '../../utils/logging'
 import { useMarkdownRenderer } from './useMarkdownRenderer'
@@ -31,8 +30,10 @@ export const useEditorPreview = ({
   const { renderMarkdown, renderMermaidDiagrams, highlightSyntax, clearMermaidCache } =
     useMarkdownRenderer()
 
+  const PREVIEW_RENDER_DEBOUNCE_MS = 50
   const MERMAID_RENDER_DEBOUNCE_MS = 300
 
+  let previewTimeout: ReturnType<typeof setTimeout> | null = null
   let mermaidTimeout: ReturnType<typeof setTimeout> | null = null
   let mermaidResolve: (() => void) | null = null
   let cleanupCodeBlockInteractions: (() => void) | null = null
@@ -67,8 +68,7 @@ export const useEditorPreview = ({
     })
   }
 
-  const refreshPreview = async (nextContent: string): Promise<void> => {
-    const requestId = ++renderRequestId
+  const runPreviewRefresh = async (nextContent: string, requestId: number): Promise<void> => {
     const mermaidConfig = getMermaidThemeConfig(editorTheme.value)
 
     try {
@@ -80,27 +80,17 @@ export const useEditorPreview = ({
       if (requestId !== renderRequestId) return
 
       const mermaidRoot = previewContainer.value ?? document
+      renderedContent.value = nextRenderedContent
+      await nextTick()
+      if (requestId !== renderRequestId) return
 
-      // Try to pre-inject cached SVGs into the HTML string before the v-html DOM update.
-      // This keeps diagrams visible without flickering and avoids per-keystroke DOM parsing.
-      // Returns null if any diagram is not yet in cache — fall back to debounced render.
-      const htmlWithCachedSvgs = injectCachedMermaidSvgsIntoHtml(nextRenderedContent, mermaidConfig)
-
-      if (htmlWithCachedSvgs !== null) {
-        // All diagrams (if any) are already cached — set pre-filled HTML and reattach controls
-        renderedContent.value = htmlWithCachedSvgs
-        await nextTick()
-        if (requestId !== renderRequestId) return
-
-        reattachMermaidControlsForProcessed(mermaidRoot)
-      } else {
-        // Some diagrams not yet in cache — show placeholders and debounce the render
-        renderedContent.value = nextRenderedContent
-        await nextTick()
-        if (requestId !== renderRequestId) return
-
-        await debouncedMermaidRender(requestId)
-        if (requestId !== renderRequestId) return
+      if (mermaidRoot.querySelector('.mermaid')) {
+        if (canHydrateMermaidDiagramsFromCache(mermaidConfig, mermaidRoot)) {
+          await renderMermaidDiagrams(mermaidConfig, mermaidRoot)
+        } else {
+          await debouncedMermaidRender(requestId)
+          if (requestId !== renderRequestId) return
+        }
       }
 
       await highlightSyntax(mermaidRoot)
@@ -108,6 +98,29 @@ export const useEditorPreview = ({
       logError('editor.refreshPreview', error)
       renderedContent.value = '<p class="render-error">Failed to render preview.</p>'
     }
+  }
+
+  const refreshPreview = async (nextContent: string): Promise<void> => {
+    if (previewTimeout) {
+      clearTimeout(previewTimeout)
+      previewTimeout = null
+    }
+
+    const requestId = ++renderRequestId
+    await runPreviewRefresh(nextContent, requestId)
+  }
+
+  const schedulePreviewRefresh = (nextContent: string): void => {
+    if (previewTimeout) {
+      clearTimeout(previewTimeout)
+      previewTimeout = null
+    }
+
+    const requestId = ++renderRequestId
+    previewTimeout = setTimeout(() => {
+      previewTimeout = null
+      void runPreviewRefresh(nextContent, requestId)
+    }, PREVIEW_RENDER_DEBOUNCE_MS)
   }
 
   const setupScrollSync = (): void => {
@@ -205,6 +218,9 @@ export const useEditorPreview = ({
   }
 
   const cleanup = (): void => {
+    if (previewTimeout) {
+      clearTimeout(previewTimeout)
+    }
     if (mermaidTimeout) {
       clearTimeout(mermaidTimeout)
     }
@@ -219,6 +235,7 @@ export const useEditorPreview = ({
     renderedContent,
     previewProseClass,
     refreshPreview,
+    schedulePreviewRefresh,
     setupScrollSync,
     attachPreviewInteractions,
     handleThemeChange,

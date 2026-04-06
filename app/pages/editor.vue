@@ -277,6 +277,7 @@
     renderedContent,
     previewProseClass,
     refreshPreview,
+    schedulePreviewRefresh,
     setupScrollSync,
     attachPreviewInteractions,
     handleThemeChange,
@@ -302,11 +303,15 @@
     applyDocumentTheme(editorTheme.value)
   }
 
-  watch(content, async (newContent) => {
+  watch(
+    content,
+    (newContent) => {
     syncActiveFileContent(newContent)
     scheduleAutosave(actions.saveContent)
-    await refreshPreview(newContent)
-  })
+      schedulePreviewRefresh(newContent)
+    },
+    { flush: 'post' }
+  )
 
   watch(editorTheme, async (theme) => {
     applyDocumentTheme(theme)

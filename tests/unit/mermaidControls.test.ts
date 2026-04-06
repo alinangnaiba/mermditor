@@ -13,6 +13,7 @@ vi.mock('mermaid', () => ({
 
 import {
   clearMermaidCache,
+  cloneCachedMermaidSvg,
   cleanupMermaidControls,
   getMermaidSourceSignature,
   setupMermaidControls,
@@ -114,5 +115,27 @@ flowchart TD
 
     expect(getMermaidSourceSignature(original)).toBe(getMermaidSourceSignature(updated))
     expect(getMermaidSourceSignature(original)).not.toBe(getMermaidSourceSignature(changedMermaid))
+  })
+
+  it('rewrites cached svg style selectors when cloning a mermaid diagram', () => {
+    const clonedSvg = cloneCachedMermaidSvg(
+      '<svg id="mermaid-source-svg" xmlns="http://www.w3.org/2000/svg"><style>#mermaid-source-svg #edge-path{stroke:#123456;} #edge-path{fill:#abcdef;}</style><g id="edge-path"></g></svg>'
+    )
+
+    const wrapper = document.createElement('div')
+    wrapper.innerHTML = clonedSvg
+
+    const cachedSvg = wrapper.querySelector('svg')
+    const cachedEdge = wrapper.querySelector('g')
+    const cachedStyle = wrapper.querySelector('style')
+
+    expect(cachedSvg).not.toBeNull()
+    expect(cachedEdge).not.toBeNull()
+    expect(cachedStyle).not.toBeNull()
+    expect(cachedSvg?.id).not.toBe('mermaid-source-svg')
+    expect(cachedEdge?.id).not.toBe('edge-path')
+    expect(cachedStyle?.textContent).toContain(`#${cachedSvg?.id} #${cachedEdge?.id}`)
+    expect(cachedStyle?.textContent).toContain(`#${cachedEdge?.id}{fill:#abcdef;}`)
+    expect(cachedStyle?.textContent).not.toContain('#mermaid-source-svg #edge-path')
   })
 })
