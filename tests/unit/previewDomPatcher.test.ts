@@ -14,14 +14,12 @@ vi.mock('mermaid', () => ({
 
 import {
   clearMermaidCache,
+  createMermaidPreviewHtml,
   getMermaidThemeConfig,
-  processMermaidInMarkdown,
   renderMermaidDiagrams,
+  splitMarkdownIntoPreviewSections,
 } from '../../app/utils/markdownItMermaid'
-import { patchPreviewContent } from '../../app/utils/previewDomPatcher'
-
-const createPreviewHtml = (markdownBody: string): string =>
-  processMermaidInMarkdown(markdownBody)
+import { updatePreviewSections } from '../../app/utils/previewSectionRenderer'
 
 describe('previewDomPatcher', () => {
   beforeEach(() => {
@@ -34,44 +32,76 @@ describe('previewDomPatcher', () => {
   it('preserves an unchanged mermaid container across non-mermaid edits', async () => {
     const root = document.createElement('div')
     document.body.appendChild(root)
+    const renderMarkdownSection = vi.fn(async (source: string) => `<p>${source}</p>`)
 
-    patchPreviewContent(
-      root,
-      createPreviewHtml(`<p>Before</p><pre><code class="language-mermaid">flowchart TD
-  A-->B</code></pre><p>After</p>`),
-      'dark'
-    )
+    let previousSections = await updatePreviewSections({
+      contentRoot: root,
+      nextSections: splitMarkdownIntoPreviewSections(`Before
+
+\`\`\`mermaid
+flowchart TD
+  A-->B
+\`\`\`
+
+After`),
+      previousSections: [],
+      themeKey: 'dark',
+      renderMarkdownSection,
+      renderMermaidSection: createMermaidPreviewHtml,
+    })
     await renderMermaidDiagrams(getMermaidThemeConfig('dark'), root)
 
     const originalContainer = root.querySelector(
       '.mermaid-container[data-mermaid-slot="0"]'
     ) as HTMLElement
 
-    patchPreviewContent(
-      root,
-      createPreviewHtml(`<p>Updated before</p><pre><code class="language-mermaid">flowchart TD
-  A-->B</code></pre><p>After</p>`),
-      'dark'
-    )
+    previousSections = await updatePreviewSections({
+      contentRoot: root,
+      nextSections: splitMarkdownIntoPreviewSections(`Updated before
+
+\`\`\`mermaid
+flowchart TD
+  A-->B
+\`\`\`
+
+After`),
+      previousSections,
+      themeKey: 'dark',
+      renderMarkdownSection,
+      renderMermaidSection: createMermaidPreviewHtml,
+    })
 
     expect(root.querySelector('.mermaid-container[data-mermaid-slot="0"]')).toBe(originalContainer)
 
     await renderMermaidDiagrams(getMermaidThemeConfig('dark'), root)
 
     expect(mermaidRenderMock).toHaveBeenCalledTimes(1)
+    expect(renderMarkdownSection).toHaveBeenCalledTimes(3)
   })
 
   it('rerenders only the changed mermaid block when multiple diagrams exist', async () => {
     const root = document.createElement('div')
     document.body.appendChild(root)
+    const renderMarkdownSection = vi.fn(async (source: string) => `<p>${source}</p>`)
 
-    patchPreviewContent(
-      root,
-      createPreviewHtml(`<pre><code class="language-mermaid">flowchart TD
-  A-->B</code></pre><p>Between</p><pre><code class="language-mermaid">flowchart TD
-  X-->Y</code></pre>`),
-      'dark'
-    )
+    let previousSections = await updatePreviewSections({
+      contentRoot: root,
+      nextSections: splitMarkdownIntoPreviewSections(`\`\`\`mermaid
+flowchart TD
+  A-->B
+\`\`\`
+
+Between
+
+\`\`\`mermaid
+flowchart TD
+  X-->Y
+\`\`\``),
+      previousSections: [],
+      themeKey: 'dark',
+      renderMarkdownSection,
+      renderMermaidSection: createMermaidPreviewHtml,
+    })
     await renderMermaidDiagrams(getMermaidThemeConfig('dark'), root)
 
     const originalFirst = root.querySelector(
@@ -81,13 +111,24 @@ describe('previewDomPatcher', () => {
       '.mermaid-container[data-mermaid-slot="1"]'
     ) as HTMLElement
 
-    patchPreviewContent(
-      root,
-      createPreviewHtml(`<pre><code class="language-mermaid">flowchart TD
-  A-->B</code></pre><p>Between updated</p><pre><code class="language-mermaid">flowchart TD
-  X-->Z</code></pre>`),
-      'dark'
-    )
+    previousSections = await updatePreviewSections({
+      contentRoot: root,
+      nextSections: splitMarkdownIntoPreviewSections(`\`\`\`mermaid
+flowchart TD
+  A-->B
+\`\`\`
+
+Between updated
+
+\`\`\`mermaid
+flowchart TD
+  X-->Z
+\`\`\``),
+      previousSections,
+      themeKey: 'dark',
+      renderMarkdownSection,
+      renderMermaidSection: createMermaidPreviewHtml,
+    })
 
     expect(root.querySelector('.mermaid-container[data-mermaid-slot="0"]')).toBe(originalFirst)
     expect(root.querySelector('.mermaid-container[data-mermaid-slot="1"]')).not.toBe(originalSecond)
@@ -95,5 +136,6 @@ describe('previewDomPatcher', () => {
     await renderMermaidDiagrams(getMermaidThemeConfig('dark'), root)
 
     expect(mermaidRenderMock).toHaveBeenCalledTimes(3)
+    expect(renderMarkdownSection).toHaveBeenCalledTimes(2)
   })
 })

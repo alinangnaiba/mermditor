@@ -62,6 +62,13 @@ interface MermaidConfig {
 
 export type MermaidRenderTheme = 'dark' | 'light'
 
+export interface PreviewSectionDescriptor {
+  kind: 'markdown' | 'mermaid'
+  key: string
+  source: string
+  mermaidSlot?: string
+}
+
 const mermaidControlCleanups = new WeakMap<Element, () => void>()
 const MERMAID_INIT_DIRECTIVE_REGEX = /%%\{[\s\S]*?\}%%/g
 const MERMAID_SECURE_CONFIG_KEYS = [
@@ -76,6 +83,75 @@ const MERMAID_SECURE_CONFIG_KEYS = [
 
 export const normalizeMermaidSource = (source: string): string =>
   source.replace(/\r\n?/g, '\n').replace(MERMAID_INIT_DIRECTIVE_REGEX, '').trim()
+
+export const createMermaidPreviewHtml = (source: string, slot: string): string => {
+  const id = `mermaid-${crypto.randomUUID()}`
+
+  return `<div class="mermaid-container" data-mermaid-slot="${slot}">
+    <div class="mermaid-controls">
+      <button class="mermaid-zoom-in" title="Zoom In">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><line x1="80" y1="112" x2="144" y2="112" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="112" cy="112" r="80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="168.57" y1="168.57" x2="224" y2="224" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="112" y1="80" x2="112" y2="144" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+      </button>
+      <button class="mermaid-zoom-out" title="Zoom Out">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><line x1="80" y1="112" x2="144" y2="112" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="112" cy="112" r="80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="168.57" y1="168.57" x2="224" y2="224" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+      </button>
+      <button class="mermaid-reset" title="Reset Zoom">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><polyline points="200 88 224 64 200 40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M32,128A64,64,0,0,1,96,64H224" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><polyline points="56 168 32 192 56 216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M224,128a64,64,0,0,1-64,64H32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+      </button>
+      <button class="mermaid-modal" title="View in Modal">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><polyline points="160 48 208 48 208 96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="144" y1="112" x2="208" y2="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><polyline points="96 208 48 208 48 160" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="112" y1="144" x2="48" y2="208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+      </button>
+    </div>
+    <div class="mermaid-viewport">
+      <div class="mermaid-diagram" style="transform-origin: top left;">
+        <div class="mermaid" id="${id}" data-mermaid-slot="${slot}" data-content="${escapeHtml(source)}"></div>
+      </div>
+    </div>
+  </div>`
+}
+
+export const splitMarkdownIntoPreviewSections = (markdown: string): PreviewSectionDescriptor[] => {
+  if (!markdown) return []
+
+  const sections: PreviewSectionDescriptor[] = []
+  let lastIndex = 0
+  let markdownIndex = 0
+  let mermaidIndex = 0
+
+  for (const match of markdown.matchAll(MERMAID_FENCE_REGEX)) {
+    const matchIndex = match.index ?? 0
+    const markdownSource = markdown.slice(lastIndex, matchIndex)
+
+    if (markdownSource) {
+      sections.push({
+        kind: 'markdown',
+        key: `markdown:${markdownIndex++}`,
+        source: markdownSource,
+      })
+    }
+
+    const mermaidSlot = String(mermaidIndex++)
+    sections.push({
+      kind: 'mermaid',
+      key: `mermaid:${mermaidSlot}`,
+      source: normalizeMermaidSource(match[1] || ''),
+      mermaidSlot,
+    })
+
+    lastIndex = matchIndex + match[0].length
+  }
+
+  const trailingMarkdown = markdown.slice(lastIndex)
+  if (trailingMarkdown) {
+    sections.push({
+      kind: 'markdown',
+      key: `markdown:${markdownIndex}`,
+      source: trailingMarkdown,
+    })
+  }
+
+  return sections
+}
 
 export const getMermaidThemeConfig = (theme: MermaidRenderTheme): MermaidConfig => {
   if (theme === 'light') {
@@ -245,30 +321,9 @@ export const processMermaidInMarkdown = (html: string): string => {
     /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
     (match: string, code: string) => {
       const decodedCode = normalizeMermaidSource(decodeMermaidCode(code))
-      const id = `mermaid-${crypto.randomUUID()}`
       const slot = String(mermaidBlockIndex++)
 
-      return `<div class="mermaid-container" data-mermaid-slot="${slot}">
-        <div class="mermaid-controls">
-          <button class="mermaid-zoom-in" title="Zoom In">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><line x1="80" y1="112" x2="144" y2="112" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="112" cy="112" r="80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="168.57" y1="168.57" x2="224" y2="224" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="112" y1="80" x2="112" y2="144" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-          </button>
-          <button class="mermaid-zoom-out" title="Zoom Out">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><line x1="80" y1="112" x2="144" y2="112" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="112" cy="112" r="80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="168.57" y1="168.57" x2="224" y2="224" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-          </button>
-          <button class="mermaid-reset" title="Reset Zoom">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><polyline points="200 88 224 64 200 40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M32,128A64,64,0,0,1,96,64H224" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><polyline points="56 168 32 192 56 216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M224,128a64,64,0,0,1-64,64H32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-          </button>
-          <button class="mermaid-modal" title="View in Modal">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><polyline points="160 48 208 48 208 96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="144" y1="112" x2="208" y2="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><polyline points="96 208 48 208 48 160" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="112" y1="144" x2="48" y2="208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-          </button>
-        </div>
-        <div class="mermaid-viewport">
-          <div class="mermaid-diagram" style="transform-origin: top left;">
-            <div class="mermaid" id="${id}" data-mermaid-slot="${slot}" data-content="${escapeHtml(decodedCode)}"></div>
-          </div>
-        </div>
-      </div>`
+      return createMermaidPreviewHtml(decodedCode, slot)
     }
   )
 }
