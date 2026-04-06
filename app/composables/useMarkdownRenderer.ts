@@ -1,5 +1,6 @@
 import { renderMarkdown } from '../utils/markdownItRenderer'
 import {
+  createMermaidPreviewHtml,
   processMermaidInMarkdown,
   renderMermaidDiagrams,
   renderMermaidExample,
@@ -12,6 +13,21 @@ import { sanitizeHtml } from '../utils/sanitizer'
 import { logError } from '../../utils/logging'
 
 export const useMarkdownRenderer = () => {
+  const renderMarkdownFragment = async (content: string): Promise<string> => {
+    if (!content) return ''
+
+    try {
+      let html = await renderMarkdown(content)
+      html = await processLatex(html)
+      return sanitizeHtml(html)
+    } catch (error) {
+      logError('markdown.renderFragment', error, {
+        contentPreview: content.slice(0, 160),
+      })
+      return '<p class="render-error">Error rendering markdown</p>'
+    }
+  }
+
   const renderMarkdownContent = async (content: string): Promise<string> => {
     if (!content) return ''
 
@@ -52,6 +68,8 @@ export const useMarkdownRenderer = () => {
 
   return {
     renderMarkdown: renderMarkdownContent,
+    renderMarkdownFragment,
+    createMermaidPreviewHtml,
     renderMermaidDiagrams,
     initMermaid,
     clearMermaidCache,

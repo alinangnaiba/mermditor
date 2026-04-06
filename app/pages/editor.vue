@@ -72,7 +72,6 @@
           :show-editor="showEditor"
           :show-preview="showPreview"
           :preview-prose-class="previewProseClass"
-          :rendered-content="renderedContent"
           :on-start-resize="startResize"
           :on-open-help="openHelp"
           @mount="handleSplitPaneMount"
@@ -145,6 +144,7 @@
   const editorViewRef: Ref<EditorViewType | null> = ref(null)
   const editorContainer = ref<HTMLElement | null>(null)
   const previewContainer = ref<HTMLElement | null>(null)
+  const previewContentRoot = ref<HTMLElement | null>(null)
   const showHelpModal = ref(false)
   const cursorLine = ref(1)
   const cursorCol = ref(1)
@@ -274,7 +274,6 @@
   })
 
   const {
-    renderedContent,
     previewProseClass,
     refreshPreview,
     schedulePreviewRefresh,
@@ -285,6 +284,7 @@
   } = useEditorPreview({
     editorViewRef,
     previewContainer,
+    previewContentRoot,
     editorTheme,
   })
 
@@ -329,12 +329,15 @@
   const handleSplitPaneMount = ({
     editorContainer: nextEditorContainer,
     previewContainer: nextPreviewContainer,
+    previewContentRoot: nextPreviewContentRoot,
   }: {
     editorContainer: HTMLElement | null
     previewContainer: HTMLElement | null
+    previewContentRoot: HTMLElement | null
   }): void => {
     editorContainer.value = nextEditorContainer
     previewContainer.value = nextPreviewContainer
+    previewContentRoot.value = nextPreviewContentRoot
   }
 
   const initEditor = async (): Promise<void> => {

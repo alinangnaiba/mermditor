@@ -1,12 +1,13 @@
 import { beforeEach, expect, it, describe, vi } from 'vitest'
 
-const mermaidRenderMock = vi.fn(async (id: string) => ({
+const mermaidInitializeMock = vi.fn()
+const mermaidRenderMock = vi.fn(async (id: string, content: string) => ({
   svg: `<svg id="${id}" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="5"></circle></svg>`,
 }))
 
 vi.mock('mermaid', () => ({
   default: {
-    initialize: vi.fn(),
+    initialize: mermaidInitializeMock,
     render: mermaidRenderMock,
   },
 }))
@@ -15,7 +16,11 @@ import {
   clearMermaidCache,
   cloneCachedMermaidSvg,
   cleanupMermaidControls,
+  getMermaidThemeConfig,
   getMermaidSourceSignature,
+  normalizeMermaidSource,
+  processMermaidInMarkdown,
+  renderMermaidDiagrams,
   setupMermaidControls,
 } from '../../app/utils/markdownItMermaid'
 
@@ -23,6 +28,7 @@ describe('mermaid control cleanup', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     mermaidRenderMock.mockClear()
+    mermaidInitializeMock.mockClear()
     clearMermaidCache()
   })
 
@@ -137,5 +143,52 @@ flowchart TD
     expect(cachedStyle?.textContent).toContain(`#${cachedSvg?.id} #${cachedEdge?.id}`)
     expect(cachedStyle?.textContent).toContain(`#${cachedEdge?.id}{fill:#abcdef;}`)
     expect(cachedStyle?.textContent).not.toContain('#mermaid-source-svg #edge-path')
+  })
+
+  it('locks mermaid security settings and strips init directives before rendering', async () => {
+    const mermaidSource = `%%{init: {"securityLevel":"loose","flowchart":{"htmlLabels":true}}}%%
+flowchart TD
+  A-->B`
+
+    const root = document.createElement('div')
+    root.innerHTML = processMermaidInMarkdown(
+      `<pre><code class="language-mermaid">${mermaidSource}</code></pre>`
+    )
+
+    document.body.appendChild(root)
+
+    await renderMermaidDiagrams(getMermaidThemeConfig('dark'), root)
+
+    const initConfig = mermaidInitializeMock.mock.calls[0]?.[0] as {
+      securityLevel?: string
+      secure?: string[]
+      flowchart?: { htmlLabels?: boolean }
+    }
+
+    expect(initConfig.securityLevel).toBe('strict')
+    expect(initConfig.secure).toContain('flowchart')
+    expect(initConfig.flowchart?.htmlLabels).toBe(false)
+    expect(mermaidRenderMock.mock.calls[0]?.[1]).toBe(normalizeMermaidSource(mermaidSource))
+    expect(mermaidRenderMock.mock.calls[0]?.[1]).not.toContain('%%{init:')
+  })
+
+  it('sanitizes unsafe svg content returned from mermaid rendering', async () => {
+    mermaidRenderMock.mockImplementationOnce(async (id: string) => ({
+      svg: `<svg id="${id}" xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><foreignObject><div onclick="alert(1)">unsafe</div></foreignObject><circle cx="10" cy="10" r="5"></circle></svg>`,
+    }))
+
+    const root = document.createElement('div')
+    root.innerHTML = processMermaidInMarkdown(
+      `<pre><code class="language-mermaid">flowchart TD
+  A["unsafe"]-->B</code></pre>`
+    )
+
+    document.body.appendChild(root)
+
+    await renderMermaidDiagrams(getMermaidThemeConfig('dark'), root)
+
+    expect(root.querySelector('script')).toBeNull()
+    expect(root.querySelector('[onclick]')).toBeNull()
+    expect(root.querySelector('circle')).not.toBeNull()
   })
 })

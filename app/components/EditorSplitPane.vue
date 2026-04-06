@@ -30,7 +30,7 @@
       </button>
 
       <div ref="previewContainer" class="editor-preview-inner flex-1 overflow-auto p-4">
-        <SafeHtml :content="renderedContent" :class="previewProseClass" />
+        <div ref="previewContentRoot" :class="previewProseClass" />
       </div>
     </div>
   </div>
@@ -38,7 +38,6 @@
 
 <script setup lang="ts">
   import { nextTick, onMounted, ref } from 'vue'
-  import SafeHtml from './SafeHtml.vue'
 
   /* eslint-disable no-unused-vars */
   const props = defineProps<{
@@ -46,24 +45,31 @@
     showEditor: boolean
     showPreview: boolean
     previewProseClass: string
-    renderedContent: string
     onStartResize: (event: MouseEvent) => void
     onOpenHelp: () => void
   }>()
   /* eslint-enable no-unused-vars */
 
   const emit = defineEmits<{
-    mount: [payload: { editorContainer: HTMLElement | null; previewContainer: HTMLElement | null }]
+    mount: [
+      payload: {
+        editorContainer: HTMLElement | null
+        previewContainer: HTMLElement | null
+        previewContentRoot: HTMLElement | null
+      },
+    ]
   }>()
 
   const editorContainer = ref<HTMLElement | null>(null)
   const previewContainer = ref<HTMLElement | null>(null)
+  const previewContentRoot = ref<HTMLElement | null>(null)
 
   onMounted(async () => {
     await nextTick()
     emit('mount', {
       editorContainer: editorContainer.value,
       previewContainer: previewContainer.value,
+      previewContentRoot: previewContentRoot.value,
     })
   })
 

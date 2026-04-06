@@ -1,44 +1,110 @@
-import { computed, nextTick, ref } from 'vue'
+import { computed } from 'vue'
 import type { Ref } from 'vue'
 import type { EditorView as EditorViewType } from '@codemirror/view'
 import { attachCodeBlockInteractions } from '../utils/codeBlockInteractions'
 import {
-  canHydrateMermaidDiagramsFromCache,
   cleanupMermaidControls,
+  getMermaidSourceSignature,
   getMermaidThemeConfig,
+  splitMarkdownIntoPreviewSections,
 } from '../utils/markdownItMermaid'
 import { logError } from '../../utils/logging'
+import {
+  updatePreviewSections,
+  type PreviewSectionState,
+} from '../utils/previewSectionRenderer'
 import { useMarkdownRenderer } from './useMarkdownRenderer'
 import type { EditorTheme } from './editorTypes'
 
 interface UseEditorPreviewOptions {
   editorViewRef: Ref<EditorViewType | null>
   previewContainer: Ref<HTMLElement | null>
+  previewContentRoot: Ref<HTMLElement | null>
   editorTheme: Ref<EditorTheme>
 }
 
 export const useEditorPreview = ({
   editorViewRef,
   previewContainer,
+  previewContentRoot,
   editorTheme,
 }: UseEditorPreviewOptions) => {
-  const renderedContent = ref('')
   const previewProseClass = computed(() =>
     editorTheme.value === 'light' ? 'prose max-w-none' : 'prose prose-invert max-w-none'
   )
 
-  const { renderMarkdown, renderMermaidDiagrams, highlightSyntax, clearMermaidCache } =
+  const {
+    renderMarkdownFragment,
+    createMermaidPreviewHtml,
+    renderMermaidDiagrams,
+    highlightSyntax,
+    clearMermaidCache,
+  } =
     useMarkdownRenderer()
 
   const PREVIEW_RENDER_DEBOUNCE_MS = 50
   const MERMAID_RENDER_DEBOUNCE_MS = 300
 
   let previewTimeout: ReturnType<typeof setTimeout> | null = null
+  let previewAnimationFrame: number | null = null
+  let previewIdleCallback: number | null = null
   let mermaidTimeout: ReturnType<typeof setTimeout> | null = null
   let mermaidResolve: (() => void) | null = null
   let cleanupCodeBlockInteractions: (() => void) | null = null
   let cleanupScrollSync: (() => void) | null = null
   let renderRequestId = 0
+  let lastMermaidSourceSignature = ''
+  let previewSections: PreviewSectionState[] = []
+
+  const cancelScheduledPreviewWork = (): void => {
+    if (previewTimeout) {
+      clearTimeout(previewTimeout)
+      previewTimeout = null
+    }
+
+    if (previewAnimationFrame !== null) {
+      cancelAnimationFrame(previewAnimationFrame)
+      previewAnimationFrame = null
+    }
+
+    if (previewIdleCallback !== null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+      window.cancelIdleCallback(previewIdleCallback)
+      previewIdleCallback = null
+    }
+  }
+
+  const scheduleDeferredPreviewRun = (nextContent: string, requestId: number): void => {
+    const runOnNextFrame = () => {
+      previewAnimationFrame = requestAnimationFrame(() => {
+        previewAnimationFrame = null
+        void runPreviewRefresh(nextContent, requestId, {
+          deferMermaidHydration: true,
+        })
+      })
+    }
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      previewIdleCallback = window.requestIdleCallback(
+        () => {
+          previewIdleCallback = null
+          runOnNextFrame()
+        },
+        { timeout: 180 }
+      )
+      return
+    }
+
+    runOnNextFrame()
+  }
+
+  const scheduleNextFramePreviewRun = (nextContent: string, requestId: number): void => {
+    previewAnimationFrame = requestAnimationFrame(() => {
+      previewAnimationFrame = null
+      void runPreviewRefresh(nextContent, requestId, {
+        deferMermaidHydration: true,
+      })
+    })
+  }
 
   const debouncedMermaidRender = (requestId: number): Promise<void> => {
     if (mermaidTimeout) {
@@ -61,7 +127,7 @@ export const useEditorPreview = ({
 
         await renderMermaidDiagrams(
           getMermaidThemeConfig(editorTheme.value),
-          previewContainer.value ?? document
+          previewContentRoot.value ?? document
         )
         resolve()
       }, MERMAID_RENDER_DEBOUNCE_MS)
@@ -74,59 +140,66 @@ export const useEditorPreview = ({
     options?: { deferMermaidHydration?: boolean }
   ): Promise<void> => {
     const mermaidConfig = getMermaidThemeConfig(editorTheme.value)
+    const previewRoot = previewContentRoot.value
     const deferMermaidHydration = options?.deferMermaidHydration ?? false
 
     try {
-      if (previewContainer.value) {
-        cleanupMermaidControls(previewContainer.value)
-      }
+      if (!previewRoot) return
 
-      const nextRenderedContent = await renderMarkdown(nextContent)
+      const nextSections = splitMarkdownIntoPreviewSections(nextContent)
       if (requestId !== renderRequestId) return
 
-      const mermaidRoot = previewContainer.value ?? document
-      renderedContent.value = nextRenderedContent
-      await nextTick()
+      previewSections = await updatePreviewSections({
+        contentRoot: previewRoot,
+        nextSections,
+        previousSections: previewSections,
+        themeKey: mermaidConfig.cacheKey ?? 'dark',
+        renderMarkdownSection: renderMarkdownFragment,
+        renderMermaidSection: createMermaidPreviewHtml,
+      })
       if (requestId !== renderRequestId) return
+      lastMermaidSourceSignature = getMermaidSourceSignature(nextContent)
 
-      if (mermaidRoot.querySelector('.mermaid')) {
-        if (!deferMermaidHydration && canHydrateMermaidDiagramsFromCache(mermaidConfig, mermaidRoot)) {
-          await renderMermaidDiagrams(mermaidConfig, mermaidRoot)
-        } else {
+      if (previewRoot.querySelector('.mermaid:not([data-processed])')) {
+        if (deferMermaidHydration) {
           await debouncedMermaidRender(requestId)
           if (requestId !== renderRequestId) return
+        } else {
+          await renderMermaidDiagrams(mermaidConfig, previewRoot)
         }
       }
 
-      await highlightSyntax(mermaidRoot)
+      await highlightSyntax(previewRoot)
     } catch (error) {
       logError('editor.refreshPreview', error)
-      renderedContent.value = '<p class="render-error">Failed to render preview.</p>'
+      if (previewRoot) {
+        previewRoot.innerHTML = '<p class="render-error">Failed to render preview.</p>'
+        previewSections = []
+      }
     }
   }
 
   const refreshPreview = async (nextContent: string): Promise<void> => {
-    if (previewTimeout) {
-      clearTimeout(previewTimeout)
-      previewTimeout = null
-    }
+    cancelScheduledPreviewWork()
 
     const requestId = ++renderRequestId
     await runPreviewRefresh(nextContent, requestId)
   }
 
   const schedulePreviewRefresh = (nextContent: string): void => {
-    if (previewTimeout) {
-      clearTimeout(previewTimeout)
-      previewTimeout = null
-    }
+    cancelScheduledPreviewWork()
 
     const requestId = ++renderRequestId
+    const nextMermaidSourceSignature = getMermaidSourceSignature(nextContent)
+
+    if (nextMermaidSourceSignature === lastMermaidSourceSignature) {
+      scheduleNextFramePreviewRun(nextContent, requestId)
+      return
+    }
+
     previewTimeout = setTimeout(() => {
       previewTimeout = null
-      void runPreviewRefresh(nextContent, requestId, {
-        deferMermaidHydration: true,
-      })
+      scheduleDeferredPreviewRun(nextContent, requestId)
     }, PREVIEW_RENDER_DEBOUNCE_MS)
   }
 
@@ -221,25 +294,26 @@ export const useEditorPreview = ({
 
   const handleThemeChange = async (content: string): Promise<void> => {
     clearMermaidCache()
+    lastMermaidSourceSignature = ''
+    previewSections = []
     await refreshPreview(content)
   }
 
   const cleanup = (): void => {
-    if (previewTimeout) {
-      clearTimeout(previewTimeout)
-    }
+    cancelScheduledPreviewWork()
     if (mermaidTimeout) {
       clearTimeout(mermaidTimeout)
     }
     if (previewContainer.value) {
       cleanupMermaidControls(previewContainer.value)
     }
+    lastMermaidSourceSignature = ''
+    previewSections = []
     cleanupScrollSync?.()
     cleanupCodeBlockInteractions?.()
   }
 
   return {
-    renderedContent,
     previewProseClass,
     refreshPreview,
     schedulePreviewRefresh,
