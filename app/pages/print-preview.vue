@@ -12,7 +12,7 @@
     <div ref="previewContainer" class="preview-container print:hidden" />
 
     <div id="print-content" class="print-content-source">
-      <div class="prose max-w-none" v-html="content" />
+      <SafeHtml class="prose max-w-none" :content="content" />
     </div>
 
     <div v-if="loading" class="loading-overlay print:hidden">
@@ -25,6 +25,7 @@
 </template>
 
 <script setup lang="ts">
+  import SafeHtml from '../components/SafeHtml.vue'
   import PrintPreviewToolbar from '../components/PrintPreviewToolbar.vue'
   import { usePrintPreview } from '../composables/usePrintPreview'
   import type { MarginSize, PageSize } from '../utils/printStyles'

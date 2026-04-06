@@ -1,3 +1,5 @@
+import { logError } from '../../utils/logging'
+
 // Lazy-loaded Prism module
 let prismLoaded = false
 let prismLoadPromise: Promise<void> | null = null
@@ -64,11 +66,11 @@ declare global {
  * Highlights code blocks using Prism.js.
  * Loads Prism on demand only when code blocks are present.
  */
-export const highlightSyntax = async (): Promise<void> => {
+export const highlightSyntax = async (root: ParentNode = document): Promise<void> => {
   if (!import.meta.client) return
 
   try {
-    const codeBlocks = document.querySelectorAll('pre code:not(.prism-highlighted)')
+    const codeBlocks = root.querySelectorAll('pre code:not(.prism-highlighted)')
 
     // Early exit if no code blocks to highlight
     if (codeBlocks.length === 0) return
@@ -83,6 +85,6 @@ export const highlightSyntax = async (): Promise<void> => {
       window.Prism.highlightElement(block)
     })
   } catch (error) {
-    console.error('Syntax highlighting error:', error)
+    logError('syntax.highlight', error)
   }
 }

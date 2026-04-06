@@ -2,9 +2,9 @@
   <div v-if="isOpen" class="modal-overlay" @click="emit('cancel')">
     <div class="modal-box" @click.stop>
       <div class="modal-header">
-        <h3 class="modal-title">{{ title }}</h3>
+        <span class="modal-title">{{ title }}</span>
         <button class="modal-close" aria-label="Close" @click="emit('cancel')">
-          <PhX :size="16" />
+          <PhX :size="14" />
         </button>
       </div>
       <div class="modal-body">
@@ -89,19 +89,19 @@
   inset: 0;
   z-index: 60;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.6);
+  padding-top: 15vh;
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .modal-box {
   width: 100%;
-  max-width: 440px;
+  max-width: 360px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   overflow: hidden;
 }
 
@@ -109,22 +109,22 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px 14px;
-  border-bottom: 1px solid var(--border);
+  padding: 10px 12px 0;
 }
 
 .modal-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--dim);
+  letter-spacing: 0.01em;
 }
 
 .modal-close {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border: none;
   background: transparent;
   color: var(--muted);
@@ -139,28 +139,31 @@
 }
 
 .modal-body {
-  padding: 18px;
+  padding: 10px 12px 12px;
 }
 
 .modal-label {
   display: block;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--dim);
-  margin-bottom: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
 }
 
 .modal-input {
   width: 100%;
   background: var(--raised);
   border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 9px 12px;
-  font-size: 0.9rem;
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 0.8125rem;
   color: var(--text);
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.12s;
+  height: 28px;
+  box-sizing: border-box;
 }
 
 .modal-input:focus {
@@ -172,34 +175,32 @@
 }
 
 .modal-helper {
-  margin-top: 8px;
-  font-size: 0.76rem;
+  margin-top: 6px;
+  font-size: 0.75rem;
   color: var(--muted);
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .modal-error {
-  margin-top: 8px;
-  font-size: 0.76rem;
+  margin-top: 6px;
+  font-size: 0.75rem;
   color: #ff8d8d;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  padding: 12px 18px;
-  border-top: 1px solid var(--border);
-  background: var(--raised);
+  gap: 6px;
+  padding: 0 12px 12px;
 }
 
 .modal-btn {
-  height: 34px;
-  padding: 0 16px;
-  border-radius: 5px;
-  font-size: 0.875rem;
-  font-weight: 600;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-weight: 500;
   font-family: inherit;
   cursor: pointer;
   border: 1px solid var(--border);
@@ -207,7 +208,7 @@
 }
 
 .modal-btn-cancel {
-  background: var(--surface);
+  background: transparent;
   color: var(--dim);
 }
 

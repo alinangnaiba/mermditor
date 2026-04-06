@@ -14,7 +14,7 @@ export default withNuxt(
     rules: {
       // Vue rules
       'vue/multi-word-component-names': 'off',
-      'vue/no-v-html': 'off',
+      'vue/no-v-html': 'warn',
       'vue/html-self-closing': 'off',
       'vue/no-parsing-error': 'off', // Temporarily disable for HTML entity issues
 

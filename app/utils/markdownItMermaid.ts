@@ -1,3 +1,4 @@
+import { logError } from '../../utils/logging'
 import { sanitizeSvg } from './sanitizer'
 
 interface MermaidThemeVariables {
@@ -27,6 +28,20 @@ interface MermaidCache {
   }
 }
 
+const MERMAID_ZOOM_STEP = 0.2
+const MERMAID_ZOOM_MIN = 0.5
+const MERMAID_ZOOM_MAX = 3
+const MERMAID_CACHE_MAX_SIZE = 50
+const MERMAID_FENCE_REGEX = /```mermaid[^\S\r\n]*\r?\n([\s\S]*?)```/g
+
+const escapeHtml = (text: string): string =>
+  text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
 // Lazy-loaded Mermaid module
 let mermaidModule: typeof import('mermaid').default | null = null
 let mermaidInitialized: boolean = false
@@ -36,10 +51,12 @@ interface MermaidConfig {
   theme?: 'default' | 'base' | 'dark' | 'forest' | 'neutral' | 'null'
   themeVariables?: Partial<MermaidThemeVariables>
   cacheKey?: MermaidRenderTheme
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export type MermaidRenderTheme = 'dark' | 'light'
+
+const mermaidControlCleanups = new WeakMap<Element, () => void>()
 
 export const getMermaidThemeConfig = (theme: MermaidRenderTheme): MermaidConfig => {
   if (theme === 'light') {
@@ -120,17 +137,79 @@ export const initMermaid = async (config?: MermaidConfig): Promise<void> => {
   }
 }
 
+const decodeMermaidCode = (code: string): string =>
+  code
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+
+const replaceSvgStyleSelectors = (svg: string, idMap: Map<string, string>): string => {
+  if (!svg.includes('<style') || idMap.size === 0) {
+    return svg
+  }
+
+  const replacements = Array.from(idMap.entries()).sort((a, b) => b[0].length - a[0].length)
+
+  return svg.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/g, (styleBlock, css: string) => {
+    let nextCss = css
+
+    for (const [originalId, nextId] of replacements) {
+      nextCss = nextCss.replaceAll(`#${originalId}`, `#${nextId}`)
+    }
+
+    return styleBlock.replace(css, nextCss)
+  })
+}
+
+export const cloneCachedMermaidSvg = (svg: string): string => {
+  const idMap = new Map<string, string>()
+  const suffix = `-${crypto.randomUUID()}`
+  const idPattern = /\bid="([^"]*)"/g
+  let m: RegExpExecArray | null
+
+  while ((m = idPattern.exec(svg)) !== null) {
+    const originalId = m[1]
+    if (originalId && !idMap.has(originalId)) {
+      idMap.set(originalId, `${originalId}${suffix}`)
+    }
+  }
+
+  if (idMap.size === 0) return svg
+
+  return replaceSvgStyleSelectors(svg, idMap)
+    .replace(/\bid="([^"]*)"/g, (_, id: string) => {
+      const newId = idMap.get(id)
+      return newId ? `id="${newId}"` : `id="${id}"`
+    })
+    .replace(/\burl\(#([^)]*)\)/g, (_, id: string) => {
+      const newId = idMap.get(id)
+      return newId ? `url(#${newId})` : `url(#${id})`
+    })
+    .replace(/\bhref="#([^"]*)"/g, (_, id: string) => {
+      const newId = idMap.get(id)
+      return newId ? `href="#${newId}"` : `href="#${id}"`
+    })
+    .replace(/\bxlink:href="#([^"]*)"/g, (_, id: string) => {
+      const newId = idMap.get(id)
+      return newId ? `xlink:href="#${newId}"` : `xlink:href="#${id}"`
+    })
+    .replace(/\b(aria-labelledby|aria-describedby)="([^"]*)"/g, (_, attrName: string, attrValue: string) => {
+      const newValue = attrValue
+        .split(/\s+/)
+        .map((token: string) => idMap.get(token) ?? token)
+        .join(' ')
+      return `${attrName}="${newValue}"`
+    })
+}
+
 export const processMermaidInMarkdown = (html: string): string => {
   return html.replace(
     /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
     (match: string, code: string) => {
-      const id = 'mermaid-' + Math.random().toString(36).substring(2, 11)
-      const decodedCode = code
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
+      const decodedCode = decodeMermaidCode(code)
+      const id = `mermaid-${crypto.randomUUID()}`
 
       return `<div class="mermaid-container">
         <div class="mermaid-controls">
@@ -149,7 +228,7 @@ export const processMermaidInMarkdown = (html: string): string => {
         </div>
         <div class="mermaid-viewport">
           <div class="mermaid-diagram" style="transform-origin: top left;">
-            <div class="mermaid" id="${id}">${decodedCode}</div>
+            <div class="mermaid" id="${id}" data-content="${escapeHtml(decodedCode)}"></div>
           </div>
         </div>
       </div>`
@@ -157,42 +236,144 @@ export const processMermaidInMarkdown = (html: string): string => {
   )
 }
 
-export const renderMermaidDiagrams = async (config?: MermaidConfig): Promise<void> => {
+export const getMermaidSourceSignature = (markdown: string): string => {
+  if (!markdown) return ''
+
+  const blocks = Array.from(markdown.matchAll(MERMAID_FENCE_REGEX), (match) =>
+    match[1]?.trim().replace(/\r\n?/g, '\n') || ''
+  )
+
+  return blocks.join('\n\n@@mermaid-block@@\n\n')
+}
+
+const cleanupMermaidElementControls = (mermaidElement: Element): void => {
+  const cleanup = mermaidControlCleanups.get(mermaidElement)
+  if (!cleanup) return
+
+  cleanup()
+  mermaidControlCleanups.delete(mermaidElement)
+}
+
+export const cleanupMermaidControls = (root: ParentNode = document): void => {
+  root.querySelectorAll('.mermaid').forEach((element) => {
+    cleanupMermaidElementControls(element)
+  })
+}
+
+const getMermaidElementContent = (element: Element): string =>
+  element.getAttribute('data-content')?.trim() || element.textContent?.trim() || ''
+
+export const canHydrateMermaidDiagramsFromCache = (
+  config?: MermaidConfig,
+  root: ParentNode = document
+): boolean => {
+  const themeKey = config?.cacheKey || 'dark'
+  const mermaidElements = root.querySelectorAll('.mermaid')
+
+  if (mermaidElements.length === 0) {
+    return false
+  }
+
+  for (const element of mermaidElements) {
+    const content = getMermaidElementContent(element)
+    if (!mermaidCache.has(`${themeKey}:${content}`)) {
+      return false
+    }
+  }
+
+  return true
+}
+
+const applyCachedMermaidRender = (element: Element, themeKey: MermaidRenderTheme): boolean => {
+  const content = getMermaidElementContent(element)
+  const cacheKey = `${themeKey}:${content}`
+  const cached = mermaidCache.get(cacheKey)
+
+  if (!cached) {
+    return false
+  }
+
+  element.innerHTML = cloneCachedMermaidSvg(cached.svg)
+  element.id = element.id || `mermaid-${crypto.randomUUID()}`
+  element.setAttribute('data-processed', 'true')
+  element.setAttribute('data-content', content)
+  element.setAttribute('data-theme-key', themeKey)
+  setupMermaidControls(element)
+  return true
+}
+
+export const hydrateMermaidDiagramsFromCache = (
+  config?: MermaidConfig,
+  root: ParentNode = document
+): boolean => {
+  const themeKey = config?.cacheKey || 'dark'
+  const mermaidElements = root.querySelectorAll('.mermaid:not([data-processed])')
+
+  if (mermaidElements.length === 0) {
+    return true
+  }
+
+  let allHydrated = true
+
+  for (const element of mermaidElements) {
+    cleanupMermaidElementControls(element)
+
+    if (!applyCachedMermaidRender(element, themeKey)) {
+      allHydrated = false
+    }
+  }
+
+  return allHydrated
+}
+
+export const renderMermaidDiagrams = async (
+  config?: MermaidConfig,
+  root: ParentNode = document
+): Promise<void> => {
   if (!import.meta.client) return
 
   const themeKey = config?.cacheKey || 'dark'
 
-  const mermaidElements = document.querySelectorAll('.mermaid:not([data-processed])')
+  const mermaidElements = root.querySelectorAll('.mermaid:not([data-processed])')
 
   // Early exit if no diagrams to render - don't load Mermaid at all
   if (mermaidElements.length === 0) return
+
+  const uncachedElements: Array<{ element: Element; content: string; cacheKey: string }> = []
+
+  for (const element of mermaidElements) {
+    cleanupMermaidElementControls(element)
+
+    if (applyCachedMermaidRender(element, themeKey)) {
+      continue
+    }
+
+    const content = getMermaidElementContent(element)
+    uncachedElements.push({
+      element,
+      content,
+      cacheKey: `${themeKey}:${content}`,
+    })
+  }
+
+  if (uncachedElements.length === 0) return
 
   // Only load and initialize Mermaid when we have diagrams
   await initMermaid(config)
   const mermaid = await loadMermaid()
 
-  for (const element of mermaidElements) {
-    const content = element.textContent?.trim() || ''
-    const currentContent = element.getAttribute('data-content')
-    if (currentContent === content && element.hasAttribute('data-processed')) {
-      continue
-    }
-
+  for (const { element, content, cacheKey } of uncachedElements) {
     try {
-      const cacheKey = `${themeKey}:${content}`
-      let cached = mermaidCache.get(cacheKey)
+      const id = element.id || `mermaid-${crypto.randomUUID()}`
+      element.id = id
 
-      if (cached) {
-        element.innerHTML = sanitizeSvg(cached.svg)
-        element.id = cached.id
-      } else {
-        const id = element.id || 'mermaid-' + Math.random().toString(36).substring(2, 11)
-        element.id = id
-
-        const { svg } = await mermaid.render(id + '-svg', content)
-        const sanitizedSvg = sanitizeSvg(svg)
-        element.innerHTML = sanitizedSvg
-        mermaidCache.set(cacheKey, { svg: sanitizedSvg, id })
+      const { svg } = await mermaid.render(id + '-svg', content)
+      const sanitizedSvg = sanitizeSvg(svg)
+      element.innerHTML = sanitizedSvg
+      mermaidCache.set(cacheKey, { svg: sanitizedSvg, id })
+      if (mermaidCache.size > MERMAID_CACHE_MAX_SIZE) {
+        const firstKey = mermaidCache.keys().next().value
+        if (firstKey !== undefined) mermaidCache.delete(firstKey)
       }
 
       element.setAttribute('data-processed', 'true')
@@ -201,9 +382,14 @@ export const renderMermaidDiagrams = async (config?: MermaidConfig): Promise<voi
 
       setupMermaidControls(element)
     } catch (error) {
-      console.error('Mermaid rendering error:', error)
+      logError('mermaid.render', error, {
+        contentPreview: content.slice(0, 160),
+        themeKey,
+      })
       const errorMessage = error instanceof Error ? error.message : String(error)
-      const errorHTML = `<div class="render-error p-4 border rounded">Mermaid Error: ${errorMessage}</div>`
+      const errorHTML = sanitizeSvg(
+        `<div class="render-error p-4 border rounded">Mermaid Error: ${escapeHtml(errorMessage)}</div>`
+      )
 
       element.innerHTML = errorHTML
       element.setAttribute('data-processed', 'true')
@@ -211,6 +397,10 @@ export const renderMermaidDiagrams = async (config?: MermaidConfig): Promise<voi
       element.setAttribute('data-theme-key', themeKey)
 
       mermaidCache.set(`${themeKey}:${content}`, { svg: errorHTML, id: element.id })
+      if (mermaidCache.size > MERMAID_CACHE_MAX_SIZE) {
+        const firstKey = mermaidCache.keys().next().value
+        if (firstKey !== undefined) mermaidCache.delete(firstKey)
+      }
     }
   }
 }
@@ -223,9 +413,11 @@ const getMermaidCacheKey = (mermaidElement: Element): string => {
   return `${themeKey}:${content}`
 }
 
-const setupMermaidControls = (mermaidElement: Element): void => {
+export const setupMermaidControls = (mermaidElement: Element): (() => void) => {
+  cleanupMermaidElementControls(mermaidElement)
+
   const container = mermaidElement.closest('.mermaid-container')
-  if (!container) return
+  if (!container) return () => {}
 
   const diagram = container.querySelector('.mermaid-diagram')
   const viewport = container.querySelector('.mermaid-viewport')
@@ -240,9 +432,6 @@ const setupMermaidControls = (mermaidElement: Element): void => {
   let currentZoom = cached?.controls?.zoom || 1
   let panX = cached?.controls?.panX || 0
   let panY = cached?.controls?.panY || 0
-  const zoomStep = 0.2
-  const minZoom = 0.5
-  const maxZoom = 3
 
   const updateTransform = () => {
     if (diagram && diagram instanceof HTMLElement) {
@@ -260,30 +449,48 @@ const setupMermaidControls = (mermaidElement: Element): void => {
 
   updateTransform()
 
+  const cleanupCallbacks: Array<() => void> = []
+
   // Zoom controls
-  zoomInBtn?.addEventListener('click', () => {
-    currentZoom = Math.min(currentZoom + zoomStep, maxZoom)
+  const handleZoomIn = () => {
+    currentZoom = Math.min(currentZoom + MERMAID_ZOOM_STEP, MERMAID_ZOOM_MAX)
     updateTransform()
     saveControlState()
-  })
+  }
+  zoomInBtn?.addEventListener('click', handleZoomIn)
+  if (zoomInBtn) {
+    cleanupCallbacks.push(() => zoomInBtn.removeEventListener('click', handleZoomIn))
+  }
 
-  zoomOutBtn?.addEventListener('click', () => {
-    currentZoom = Math.max(currentZoom - zoomStep, minZoom)
+  const handleZoomOut = () => {
+    currentZoom = Math.max(currentZoom - MERMAID_ZOOM_STEP, MERMAID_ZOOM_MIN)
     updateTransform()
     saveControlState()
-  })
+  }
+  zoomOutBtn?.addEventListener('click', handleZoomOut)
+  if (zoomOutBtn) {
+    cleanupCallbacks.push(() => zoomOutBtn.removeEventListener('click', handleZoomOut))
+  }
 
-  resetBtn?.addEventListener('click', () => {
+  const handleReset = () => {
     currentZoom = 1
     panX = 0
     panY = 0
     updateTransform()
     saveControlState()
-  })
+  }
+  resetBtn?.addEventListener('click', handleReset)
+  if (resetBtn) {
+    cleanupCallbacks.push(() => resetBtn.removeEventListener('click', handleReset))
+  }
 
-  modalBtn?.addEventListener('click', () => {
+  const handleOpenModal = () => {
     createMermaidModal(container.cloneNode(true))
-  })
+  }
+  modalBtn?.addEventListener('click', handleOpenModal)
+  if (modalBtn) {
+    cleanupCallbacks.push(() => modalBtn.removeEventListener('click', handleOpenModal))
+  }
 
   // Drag/pan functionality
   let isDragging = false
@@ -292,7 +499,7 @@ const setupMermaidControls = (mermaidElement: Element): void => {
   let startPanX = 0
   let startPanY = 0
 
-  viewport?.addEventListener('mousedown', (e: Event) => {
+  const handleMouseDown = (e: Event) => {
     const mouseEvent = e as MouseEvent
     if (currentZoom <= 1) return // Only allow panning when zoomed
     isDragging = true
@@ -304,9 +511,13 @@ const setupMermaidControls = (mermaidElement: Element): void => {
       viewport.classList.add('dragging')
     }
     e.preventDefault()
-  })
+  }
+  viewport?.addEventListener('mousedown', handleMouseDown)
+  if (viewport) {
+    cleanupCallbacks.push(() => viewport.removeEventListener('mousedown', handleMouseDown))
+  }
 
-  document.addEventListener('mousemove', (e: Event) => {
+  const handleMouseMove = (e: Event) => {
     if (!isDragging) return
 
     const mouseEvent = e as MouseEvent
@@ -315,9 +526,11 @@ const setupMermaidControls = (mermaidElement: Element): void => {
     panX = startPanX + deltaX
     panY = startPanY + deltaY
     updateTransform()
-  })
+  }
+  document.addEventListener('mousemove', handleMouseMove)
+  cleanupCallbacks.push(() => document.removeEventListener('mousemove', handleMouseMove))
 
-  document.addEventListener('mouseup', () => {
+  const handleMouseUp = () => {
     if (isDragging) {
       isDragging = false
       if (viewport) {
@@ -325,7 +538,20 @@ const setupMermaidControls = (mermaidElement: Element): void => {
       }
       saveControlState()
     }
-  })
+  }
+  document.addEventListener('mouseup', handleMouseUp)
+  cleanupCallbacks.push(() => document.removeEventListener('mouseup', handleMouseUp))
+
+  const cleanup = () => {
+    isDragging = false
+    if (viewport) {
+      viewport.classList.remove('dragging')
+    }
+    cleanupCallbacks.splice(0).forEach((callback) => callback())
+  }
+
+  mermaidControlCleanups.set(mermaidElement, cleanup)
+  return cleanup
 }
 
 const createMermaidModal = (containerNode: Node): void => {
@@ -338,7 +564,6 @@ const createMermaidModal = (containerNode: Node): void => {
   const closeBtn = document.createElement('button')
   closeBtn.className = 'mermaid-modal-close'
   closeBtn.innerHTML = '×'
-  closeBtn.onclick = () => overlay.remove()
   const modalContainer = containerNode
   modalContainer.classList.add('mermaid-container--modal')
   modalContainer.querySelector('.mermaid-modal')?.remove()
@@ -347,24 +572,37 @@ const createMermaidModal = (containerNode: Node): void => {
   content.appendChild(modalContainer)
   overlay.appendChild(content)
 
-  overlay.onclick = (e) => {
-    if (e.target === overlay) overlay.remove()
+  const modalMermaidElement = modalContainer.querySelector('.mermaid')
+  let cleanupModalControls: (() => void) | null = null
+
+  const closeModal = (): void => {
+    cleanupModalControls?.()
+    if (modalMermaidElement) {
+      cleanupMermaidElementControls(modalMermaidElement)
+    }
+    document.removeEventListener('keydown', handleEscape)
+    overlay.remove()
   }
 
   const handleEscape = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
-      overlay.remove()
-      document.removeEventListener('keydown', handleEscape)
+      closeModal()
     }
   }
-  document.addEventListener('keydown', handleEscape)
 
-  document.body.appendChild(overlay)
-
-  const modalMermaidElement = modalContainer.querySelector('.mermaid')
-  if (modalMermaidElement) {
-    setupMermaidControls(modalMermaidElement)
+  closeBtn.onclick = closeModal
+  overlay.onclick = (e) => {
+    if (e.target === overlay) {
+      closeModal()
+    }
   }
+
+  if (modalMermaidElement) {
+    cleanupModalControls = setupMermaidControls(modalMermaidElement)
+  }
+
+  document.addEventListener('keydown', handleEscape)
+  document.body.appendChild(overlay)
 }
 
 export const renderMermaidExample = async (mermaidCode: string): Promise<string> => {
@@ -373,16 +611,69 @@ export const renderMermaidExample = async (mermaidCode: string): Promise<string>
   try {
     await initMermaid()
     const mermaid = await loadMermaid()
-    const id = 'mermaid-example-' + Math.random().toString(36).substring(2, 11)
+    const id = `mermaid-example-${crypto.randomUUID()}`
     const { svg } = await mermaid.render(id, mermaidCode)
     const sanitizedSvg = sanitizeSvg(svg)
     return `<div class="mermaid-example">${sanitizedSvg}</div>`
   } catch (error) {
-    console.warn('Mermaid example rendering error:', error)
+    logError('mermaid.renderExample', error, {
+      contentPreview: mermaidCode.slice(0, 160),
+    })
     return '<div class="render-placeholder">Diagram would render here</div>'
   }
 }
 
 export const clearMermaidCache = (): void => {
   mermaidCache.clear()
+}
+
+/**
+ * Injects cached mermaid SVGs into the HTML string before the v-html DOM update.
+ * This avoids the DOMParser/XMLSerializer overhead on every keystroke by pre-filling
+ * diagram placeholders with cached SVGs at the string level.
+ *
+ * Returns the modified HTML with all placeholders filled, or null if any diagram
+ * is not yet in cache (caller should fall back to debounced render).
+ */
+export const injectCachedMermaidSvgsIntoHtml = (
+  html: string,
+  config?: MermaidConfig
+): string | null => {
+  if (!html.includes('class="mermaid"')) return html
+
+  const themeKey = (config?.cacheKey ?? 'dark') as MermaidRenderTheme
+  let allCached = true
+
+  const result = html.replace(
+    /<div class="mermaid"([^>]*)><\/div>/g,
+    (match, attrs: string) => {
+      const idMatch = attrs.match(/\bid="([^"]*)"/)
+      const contentMatch = attrs.match(/\bdata-content="([^"]*)"/)
+      if (!idMatch || !contentMatch) return match
+
+      const id = idMatch[1] ?? ''
+      const content = decodeMermaidCode(contentMatch[1] ?? '')
+      const cached = mermaidCache.get(`${themeKey}:${content}`)
+
+      if (!cached) {
+        allCached = false
+        return match
+      }
+
+      const clonedSvg = cloneCachedMermaidSvg(cached.svg)
+      return `<div class="mermaid" id="${id}" data-processed="true" data-content="${contentMatch[1]}" data-theme-key="${themeKey}">${clonedSvg}</div>`
+    }
+  )
+
+  return allCached ? result : null
+}
+
+/**
+ * Re-attaches interactive controls to already-processed mermaid elements after a DOM
+ * update caused by v-html. Call this when SVGs were pre-injected via injectCachedMermaidSvgsIntoHtml.
+ */
+export const reattachMermaidControlsForProcessed = (root: ParentNode = document): void => {
+  root.querySelectorAll('.mermaid[data-processed]').forEach((element) => {
+    setupMermaidControls(element)
+  })
 }

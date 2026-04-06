@@ -30,7 +30,7 @@
       </button>
 
       <div ref="previewContainer" class="editor-preview-inner flex-1 overflow-auto p-4">
-        <div :class="previewProseClass" v-html="renderedContent" />
+        <SafeHtml :content="renderedContent" :class="previewProseClass" />
       </div>
     </div>
   </div>
@@ -38,6 +38,7 @@
 
 <script setup lang="ts">
   import { nextTick, onMounted, ref } from 'vue'
+  import SafeHtml from './SafeHtml.vue'
 
   /* eslint-disable no-unused-vars */
   const props = defineProps<{

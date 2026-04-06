@@ -1,5 +1,6 @@
 import { EditorView } from '@codemirror/view'
 import type { Ref } from 'vue'
+import { logError } from '../../utils/logging'
 import { usePdfExport } from './usePdfExport'
 
 export interface EditorActions {
@@ -138,7 +139,7 @@ export const useEditorActions = (
     const { from, to } = state.selection.main
     const selectedText = state.doc.sliceString(from, to) || 'footnote'
 
-    const footnoteId = Math.random().toString(36).substring(2, 8)
+    const footnoteId = crypto.randomUUID().replace(/-/g, '').substring(0, 8)
     const footnoteRef = `[^${footnoteId}]`
     const footnoteDefinition = `\n\n[^${footnoteId}]: ${selectedText}`
 
@@ -246,6 +247,10 @@ export const useEditorActions = (
         }
       }
 
+      reader.onerror = () => {
+        logError('editor.importMarkdownFile', reader.error, { filename: file.name })
+      }
+
       reader.readAsText(file, 'utf-8')
     }
 
@@ -291,7 +296,7 @@ export const useEditorActions = (
         lastSaved.value = new Date().toLocaleTimeString()
       }
     } catch (error) {
-      console.error('Error saving content:', error)
+      logError('editor.saveContent', error)
     }
   }
 

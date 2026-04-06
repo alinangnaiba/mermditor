@@ -38,14 +38,50 @@ export interface WorkspaceSearchResults {
   headings: WorkspaceHeadingResult[]
 }
 
-const createId = (): string => {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+interface WorkspaceSearchFileEntry {
+  file: WorkspaceFile
+  normalizedFileName: string
+  headings: Array<WorkspaceHeadingResult & { normalizedHeading: string }>
+}
+
+export const DEFAULT_WORKSPACE_FILE_NAME = 'untitled.md'
+export const WORKSPACE_FILE_EXTENSION = '.md'
+export const MAX_FILENAME_LENGTH = 255
+
+const INVALID_FILE_CHARACTERS = /[<>:"/\\|?*\x00-\x1f]/g
+const TRAILING_FILE_CHARACTERS = /[.\s]+$/g
+const RESERVED_WINDOWS_FILE_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i
+
+const createId = (): string => crypto.randomUUID()
+
+const trimWindowsFileName = (value: string): string => {
+  return value.trim().replace(TRAILING_FILE_CHARACTERS, '')
 }
 
 export const normalizeFileName = (name: string): string => {
-  const trimmed = name.trim()
-  if (!trimmed) return 'untitled.md'
-  return trimmed.endsWith('.md') ? trimmed : `${trimmed}.md`
+  const sanitizedName = trimWindowsFileName(name).replace(INVALID_FILE_CHARACTERS, '_')
+  const hasMarkdownExtension = sanitizedName.toLowerCase().endsWith(WORKSPACE_FILE_EXTENSION)
+
+  let baseName = hasMarkdownExtension
+    ? sanitizedName.slice(0, -WORKSPACE_FILE_EXTENSION.length)
+    : sanitizedName
+
+  baseName = trimWindowsFileName(baseName)
+
+  if (!baseName) {
+    return DEFAULT_WORKSPACE_FILE_NAME
+  }
+
+  if (RESERVED_WINDOWS_FILE_NAMES.test(baseName)) {
+    baseName = `_${baseName}`
+  }
+
+  const maxBaseLength = MAX_FILENAME_LENGTH - WORKSPACE_FILE_EXTENSION.length
+  if (baseName.length > maxBaseLength) {
+    baseName = baseName.slice(0, maxBaseLength)
+  }
+
+  return `${baseName}${WORKSPACE_FILE_EXTENSION}`
 }
 
 export const normalizeFolderName = (name: string): string => {
@@ -200,26 +236,26 @@ export const searchWorkspace = (root: WorkspaceFolder, query: string): Workspace
     return { files: [], headings: [] }
   }
 
-  const files: WorkspaceFile[] = []
-  const headings: WorkspaceHeadingResult[] = []
+  return searchWorkspaceIndex(buildWorkspaceSearchIndex(root), normalizedQuery)
+}
+
+export const buildWorkspaceSearchIndex = (root: WorkspaceFolder): WorkspaceSearchFileEntry[] => {
+  const entries: WorkspaceSearchFileEntry[] = []
 
   const visit = (folder: WorkspaceFolder): void => {
     for (const child of folder.children) {
       if (child.type === 'file') {
-        if (child.name.toLowerCase().includes(normalizedQuery)) {
-          files.push(child)
-        }
-
-        for (const heading of extractMarkdownHeadings(child.content)) {
-          if (heading.heading.toLowerCase().includes(normalizedQuery)) {
-            headings.push({
-              fileId: child.id,
-              fileName: child.name,
-              heading: heading.heading,
-              line: heading.line,
-            })
-          }
-        }
+        entries.push({
+          file: child,
+          normalizedFileName: child.name.toLowerCase(),
+          headings: extractMarkdownHeadings(child.content).map((heading) => ({
+            fileId: child.id,
+            fileName: child.name,
+            heading: heading.heading,
+            line: heading.line,
+            normalizedHeading: heading.heading.toLowerCase(),
+          })),
+        })
       } else {
         visit(child)
       }
@@ -227,6 +263,33 @@ export const searchWorkspace = (root: WorkspaceFolder, query: string): Workspace
   }
 
   visit(root)
+
+  return entries
+}
+
+export const searchWorkspaceIndex = (
+  searchIndex: WorkspaceSearchFileEntry[],
+  query: string
+): WorkspaceSearchResults => {
+  const files: WorkspaceFile[] = []
+  const headings: WorkspaceHeadingResult[] = []
+
+  for (const entry of searchIndex) {
+    if (entry.normalizedFileName.includes(query)) {
+      files.push(entry.file)
+    }
+
+    for (const heading of entry.headings) {
+      if (heading.normalizedHeading.includes(query)) {
+        headings.push({
+          fileId: heading.fileId,
+          fileName: heading.fileName,
+          heading: heading.heading,
+          line: heading.line,
+        })
+      }
+    }
+  }
 
   return { files, headings }
 }

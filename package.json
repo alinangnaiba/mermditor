@@ -12,6 +12,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test:unit": "vitest run",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -54,10 +55,15 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/dompurify": "^3.2.0",
     "@types/prismjs": "^1.26.5",
     "@typescript-eslint/eslint-plugin": "^8.44.1",
     "@typescript-eslint/parser": "^8.44.1",
-    "baseline-browser-mapping": "^2.10.13"
+    "@vitejs/plugin-vue": "^6.0.5",
+    "@vue/test-utils": "^2.4.6",
+    "baseline-browser-mapping": "^2.10.13",
+    "jsdom": "^29.0.1",
+    "vitest": "^4.1.2"
   }
 }

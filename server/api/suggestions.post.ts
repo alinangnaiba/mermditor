@@ -1,5 +1,6 @@
 import { validateFeedback, sanitizeInput, validateGitHubToken } from '../utils/validator'
 import rateLimit from '../middleware/rateLimit'
+import { logError } from '../../utils/logging'
 
 export default defineEventHandler(async (event) => {
   await rateLimit(event)
@@ -28,7 +29,7 @@ export default defineEventHandler(async (event) => {
 
     // Validate GitHub configuration
     if (!GITHUB_TOKEN || !validateGitHubToken(GITHUB_TOKEN)) {
-      console.error('Invalid GitHub token configuration')
+      logError('suggestions.invalidTokenConfig', new Error('Invalid GitHub token configuration'))
       throw createError({
         statusCode: 500,
         statusMessage: 'Service temporarily unavailable',
@@ -36,7 +37,7 @@ export default defineEventHandler(async (event) => {
     }
 
     if (!GITHUB_OWNER || !GITHUB_REPO) {
-      console.error('Missing GitHub owner or repo configuration')
+      logError('suggestions.missingRepoConfig', new Error('Missing GitHub owner or repo configuration'))
       throw createError({
         statusCode: 500,
         statusMessage: 'Service temporarily unavailable',
@@ -67,7 +68,10 @@ export default defineEventHandler(async (event) => {
     // Handle GitHub API response
     if (!response.ok) {
       const errorData = await response.json()
-      console.error('GitHub API error:', errorData)
+      logError('suggestions.githubApi', new Error('GitHub API error'), {
+        status: response.status,
+        errorData,
+      })
       throw createError({
         statusCode: response.status,
         statusMessage: 'Failed to submit suggestion. Please try again later.',
@@ -87,7 +91,7 @@ export default defineEventHandler(async (event) => {
       throw error
     }
 
-    console.error('Internal server error:', error)
+    logError('suggestions.internal', error)
     throw createError({
       statusCode: 500,
       statusMessage: 'An unexpected error occurred. Please try again later.',

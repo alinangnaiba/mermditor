@@ -37,22 +37,22 @@
         :context-menu-actions="contextMenuActions"
         :drag-state="dragState"
         :inline-edit="inlineEdit"
-        :set-search-query="setSearchQuery"
-        :update-inline-edit-value="updateInlineEditValue"
-        :start-inline-new-item="startInlineNewItem"
-        :open-file="openFile"
-        :handle-workspace-row-click="handleWorkspaceRowClick"
-        :start-inline-rename="startInlineRename"
-        :open-context-menu="openContextMenu"
-        :handle-root-drag-over="handleRootDragOver"
-        :handle-root-drop="handleRootDrop"
-        :handle-drag-start="handleDragStart"
-        :handle-item-drag-over="handleItemDragOver"
-        :handle-item-drop="handleItemDrop"
-        :handle-drag-end="handleDragEnd"
-        :run-context-menu-action="runContextMenuAction"
-        :commit-inline-edit="commitInlineEdit"
-        :cancel-inline-edit="cancelInlineEdit"
+        @update:search-query="setSearchQuery"
+        @update:inline-edit-value="updateInlineEditValue"
+        @start-inline-new-item="startInlineNewItem($event.type, $event.parentFolderId)"
+        @open-file="openFile($event.fileId, $event.lineNumber)"
+        @workspace-row-click="handleWorkspaceRowClick"
+        @start-inline-rename="startInlineRename"
+        @open-context-menu="openContextMenu($event.targetType, $event.targetId, $event.x, $event.y)"
+        @root-drag-over="handleRootDragOver"
+        @root-drop="handleRootDrop"
+        @drag-start="handleDragStart($event.event, $event.item)"
+        @item-drag-over="handleItemDragOver($event.event, $event.item)"
+        @item-drop="handleItemDrop($event.event, $event.item)"
+        @drag-end="handleDragEnd"
+        @run-context-menu-action="runContextMenuAction"
+        @commit-inline-edit="commitInlineEdit"
+        @cancel-inline-edit="cancelInlineEdit"
       />
 
       <div v-if="!isMobile" class="workspace-resize-handle" @mousedown="startWorkspaceResize" />
@@ -149,7 +149,8 @@
   const cursorLine = ref(1)
   const cursorCol = ref(1)
   const cursorInfo = computed(() => `Ln ${cursorLine.value}, Col ${cursorCol.value}`)
-  const wordCount = computed(() => (content.value.trim() ? content.value.trim().split(/\s+/).length : 0))
+  const trimmedContent = computed(() => content.value.trim())
+  const wordCount = computed(() => (trimmedContent.value ? trimmedContent.value.split(/\s+/).length : 0))
   const charCount = computed(() => content.value.length)
 
   const {
@@ -178,6 +179,7 @@
     startWorkspaceResize,
     clearStoredLayout,
     resetLayoutState,
+    cleanup: cleanupLayout,
   } = useEditorLayout()
 
   const {
@@ -275,6 +277,7 @@
     renderedContent,
     previewProseClass,
     refreshPreview,
+    schedulePreviewRefresh,
     setupScrollSync,
     attachPreviewInteractions,
     handleThemeChange,
@@ -300,11 +303,15 @@
     applyDocumentTheme(editorTheme.value)
   }
 
-  watch(content, async (newContent) => {
+  watch(
+    content,
+    (newContent) => {
     syncActiveFileContent(newContent)
     scheduleAutosave(actions.saveContent)
-    await refreshPreview(newContent)
-  })
+      schedulePreviewRefresh(newContent)
+    },
+    { flush: 'post' }
+  )
 
   watch(editorTheme, async (theme) => {
     applyDocumentTheme(theme)
@@ -446,6 +453,7 @@
     window.removeEventListener('resize', checkMobile)
     document.removeEventListener('click', handleDocumentClick)
     clearDocumentTheme()
+    cleanupLayout()
     cleanupPersistence()
     cleanupPreview()
   })

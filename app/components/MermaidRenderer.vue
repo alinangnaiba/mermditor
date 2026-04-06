@@ -4,12 +4,13 @@
       Mermaid Error: {{ error }}
     </div>
     <div v-else-if="loading" class="p-4 text-gray-400">Rendering diagram...</div>
-    <div v-else v-html="renderedSvg" />
+    <SafeHtml v-else :content="renderedSvg" kind="svg" />
   </div>
 </template>
 
 <script setup lang="ts">
   import { ref, watch, onMounted } from 'vue'
+  import SafeHtml from './SafeHtml.vue'
   import { renderMermaidExample } from '../utils/markdownItMermaid'
 
   interface Props {

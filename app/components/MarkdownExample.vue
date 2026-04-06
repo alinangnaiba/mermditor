@@ -1,9 +1,14 @@
 <template>
-  <div ref="containerRef" class="prose prose-invert max-w-none" v-html="renderedContent" />
+  <SafeHtml
+    ref="containerRef"
+    class="prose prose-invert max-w-none"
+    :content="renderedContent"
+  />
 </template>
 
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+  import SafeHtml from './SafeHtml.vue'
   import { useMarkdownRenderer } from '../composables/useMarkdownRenderer'
   import { attachCodeBlockInteractions } from '../utils/codeBlockInteractions'
 
@@ -14,7 +19,7 @@
   const props = defineProps<Props>()
   const { renderMarkdownExample } = useMarkdownRenderer()
   const renderedContent = ref('')
-  const containerRef = ref<HTMLElement | null>(null)
+  const containerRef = ref<{ element: HTMLElement | null } | null>(null)
   let cleanupCodeBlockInteractions: (() => void) | null = null
 
   const renderContent = async () => {
@@ -23,8 +28,8 @@
         renderedContent.value = await renderMarkdownExample(props.content)
         await nextTick()
         cleanupCodeBlockInteractions?.()
-        if (containerRef.value) {
-          cleanupCodeBlockInteractions = attachCodeBlockInteractions(containerRef.value)
+        if (containerRef.value?.element) {
+          cleanupCodeBlockInteractions = attachCodeBlockInteractions(containerRef.value.element)
         }
       } catch (error) {
         console.warn('Failed to render markdown example:', error)

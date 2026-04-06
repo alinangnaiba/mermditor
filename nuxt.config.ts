@@ -3,6 +3,9 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss', '@nuxt/eslint'],
+  typescript: {
+    strict: true,
+  },
   css: ['~/app/assets/main.css', '~/app/assets/editor-page.css'],
   alias: {
     '@': '.',
@@ -31,7 +34,7 @@ export default defineNuxtConfig({
         headers: {
           'Content-Security-Policy': [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vercel.live",
+            "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vercel.live",
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: https: blob:",
             "font-src 'self' data:",
