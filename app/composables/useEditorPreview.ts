@@ -4,6 +4,7 @@ import type { EditorView as EditorViewType } from '@codemirror/view'
 import { attachCodeBlockInteractions } from '../utils/codeBlockInteractions'
 import {
   cleanupMermaidControls,
+  getMermaidSourceSignature,
   getMermaidThemeConfig,
   splitMarkdownIntoPreviewSections,
 } from '../utils/markdownItMermaid'
@@ -52,6 +53,7 @@ export const useEditorPreview = ({
   let cleanupCodeBlockInteractions: (() => void) | null = null
   let cleanupScrollSync: (() => void) | null = null
   let renderRequestId = 0
+  let lastMermaidSourceSignature = ''
   let previewSections: PreviewSectionState[] = []
 
   const cancelScheduledPreviewWork = (): void => {
@@ -93,6 +95,15 @@ export const useEditorPreview = ({
     }
 
     runOnNextFrame()
+  }
+
+  const scheduleNextFramePreviewRun = (nextContent: string, requestId: number): void => {
+    previewAnimationFrame = requestAnimationFrame(() => {
+      previewAnimationFrame = null
+      void runPreviewRefresh(nextContent, requestId, {
+        deferMermaidHydration: true,
+      })
+    })
   }
 
   const debouncedMermaidRender = (requestId: number): Promise<void> => {
@@ -147,6 +158,7 @@ export const useEditorPreview = ({
         renderMermaidSection: createMermaidPreviewHtml,
       })
       if (requestId !== renderRequestId) return
+      lastMermaidSourceSignature = getMermaidSourceSignature(nextContent)
 
       if (previewRoot.querySelector('.mermaid:not([data-processed])')) {
         if (deferMermaidHydration) {
@@ -178,6 +190,13 @@ export const useEditorPreview = ({
     cancelScheduledPreviewWork()
 
     const requestId = ++renderRequestId
+    const nextMermaidSourceSignature = getMermaidSourceSignature(nextContent)
+
+    if (nextMermaidSourceSignature === lastMermaidSourceSignature) {
+      scheduleNextFramePreviewRun(nextContent, requestId)
+      return
+    }
+
     previewTimeout = setTimeout(() => {
       previewTimeout = null
       scheduleDeferredPreviewRun(nextContent, requestId)
@@ -275,6 +294,7 @@ export const useEditorPreview = ({
 
   const handleThemeChange = async (content: string): Promise<void> => {
     clearMermaidCache()
+    lastMermaidSourceSignature = ''
     previewSections = []
     await refreshPreview(content)
   }
@@ -287,6 +307,7 @@ export const useEditorPreview = ({
     if (previewContainer.value) {
       cleanupMermaidControls(previewContainer.value)
     }
+    lastMermaidSourceSignature = ''
     previewSections = []
     cleanupScrollSync?.()
     cleanupCodeBlockInteractions?.()
