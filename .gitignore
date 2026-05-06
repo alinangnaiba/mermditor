@@ -28,5 +28,6 @@ test-results
 # user files
 .claude/
 CLAUDE.md
+docs/
 
 
