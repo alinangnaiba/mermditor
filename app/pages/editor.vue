@@ -37,6 +37,8 @@
         :context-menu-actions="contextMenuActions"
         :drag-state="dragState"
         :inline-edit="inlineEdit"
+        :active-headings="activeHeadings"
+        :active-file-id="workspace.activeFileId"
         @update:search-query="setSearchQuery"
         @update:inline-edit-value="updateInlineEditValue"
         @start-inline-new-item="startInlineNewItem($event.type, $event.parentFolderId)"
@@ -131,6 +133,7 @@
   import { useEditorTheme } from '../composables/useEditorTheme'
   import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
   import { useWorkspaceController } from '../composables/useWorkspaceController'
+  import { extractMarkdownHeadings } from '../utils/workspace'
 
   useHead({
     bodyAttrs: {
@@ -152,6 +155,7 @@
   const trimmedContent = computed(() => content.value.trim())
   const wordCount = computed(() => (trimmedContent.value ? trimmedContent.value.split(/\s+/).length : 0))
   const charCount = computed(() => content.value.length)
+  const activeHeadings = computed(() => extractMarkdownHeadings(content.value))
 
   const {
     editorTheme,

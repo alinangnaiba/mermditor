@@ -31,6 +31,7 @@ export interface WorkspaceHeadingResult {
   fileName: string
   heading: string
   line: number
+  level: number
 }
 
 export interface WorkspaceSearchResults {
@@ -213,8 +214,8 @@ export const getWorkspaceItemPath = (root: WorkspaceFolder, itemId: string): str
   return visit(root, []) ?? [root.name]
 }
 
-export const extractMarkdownHeadings = (content: string): Array<{ heading: string; line: number }> => {
-  const headings: Array<{ heading: string; line: number }> = []
+export const extractMarkdownHeadings = (content: string): Array<{ heading: string; line: number; level: number }> => {
+  const headings: Array<{ heading: string; line: number; level: number }> = []
   const lines = content.split('\n')
 
   lines.forEach((line, index) => {
@@ -223,6 +224,7 @@ export const extractMarkdownHeadings = (content: string): Array<{ heading: strin
       headings.push({
         heading: match[2] ?? '',
         line: index + 1,
+        level: match[1]!.length,
       })
     }
   })
@@ -253,6 +255,7 @@ export const buildWorkspaceSearchIndex = (root: WorkspaceFolder): WorkspaceSearc
             fileName: child.name,
             heading: heading.heading,
             line: heading.line,
+            level: heading.level,
             normalizedHeading: heading.heading.toLowerCase(),
           })),
         })
@@ -286,6 +289,7 @@ export const searchWorkspaceIndex = (
           fileName: heading.fileName,
           heading: heading.heading,
           line: heading.line,
+          level: heading.level,
         })
       }
     }
