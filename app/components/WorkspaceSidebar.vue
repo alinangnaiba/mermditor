@@ -54,17 +54,31 @@
       </div>
     </div>
 
-    <div class="workspace-search-wrap">
-      <input
-        :value="searchQuery"
-        type="text"
-        class="workspace-search-input"
-        placeholder="Search files and headings"
-        @click="cancelInlineEdit"
-        @input="onSearchQueryInput"
-      />
-      <div class="workspace-search-meta">Search is limited to this workspace.</div>
+    <div class="sidebar-tabs">
+      <button 
+        class="sidebar-tab" 
+        :class="{ active: activeTab === 'explorer' }"
+        @click="activeTab = 'explorer'"
+      >Files</button>
+      <button 
+        class="sidebar-tab" 
+        :class="{ active: activeTab === 'outline' }"
+        @click="activeTab = 'outline'"
+      >Outline</button>
     </div>
+
+    <template v-if="activeTab === 'explorer'">
+      <div class="workspace-search-wrap">
+        <input
+          :value="searchQuery"
+          type="text"
+          class="workspace-search-input"
+          placeholder="Search files and headings"
+          @click="cancelInlineEdit"
+          @input="onSearchQueryInput"
+        />
+        <div class="workspace-search-meta">Search is limited to this workspace.</div>
+      </div>
 
     <div
       class="workspace-scroll"
@@ -250,6 +264,31 @@
         <span>{{ action.label }}</span>
       </button>
     </div>
+    </template>
+
+    <template v-else-if="activeTab === 'outline'">
+      <div class="workspace-scroll outline-scroll">
+        <div v-if="!activeHeadings?.length" class="workspace-empty-state">
+          No headings found.
+        </div>
+        <button
+          v-for="(heading, index) in activeHeadings"
+          v-else
+          :key="`outline-${heading.line}-${index}`"
+          class="workspace-tree-row outline-item"
+          :class="{ active: activeOutlineIndex === index }"
+          :style="{ paddingLeft: `${(heading.level - 1) * 12 + 12}px` }"
+          @click="handleOutlineClick(index)"
+          @keydown.down.prevent="navigateOutline(index, 1)"
+          @keydown.up.prevent="navigateOutline(index, -1)"
+        >
+          <span class="workspace-heading-badge" style="margin-right: 6px; width: auto; min-width: 14px;">
+            {{ '#'.repeat(heading.level) }}
+          </span>
+          <span class="workspace-tree-name">{{ heading.heading }}</span>
+        </button>
+      </div>
+    </template>
   </aside>
 </template>
 
@@ -281,6 +320,8 @@
     contextMenuActions: Array<{ id: ContextMenuActionId; label: string }>
     dragState: DragState
     inlineEdit: InlineEditState
+    activeHeadings?: Array<{ heading: string; line: number; level: number }>
+    activeFileId?: string
   }
 
   const props = defineProps<Props>()
@@ -310,6 +351,12 @@
   const workspacePaneRef = ref<HTMLElement | null>(null)
   const inlineInputRef = ref<TemplateRefValue<HTMLInputElement>>(null)
   const inlineEditRowRef = ref<TemplateRefValue<HTMLElement>>(null)
+  const activeTab = ref<'explorer' | 'outline'>('explorer')
+  const activeOutlineIndex = ref<number | null>(null)
+
+  watch(() => props.activeFileId, () => {
+    activeOutlineIndex.value = null
+  })
 
   const getTemplateRefElement = <T extends Element>(value: TemplateRefValue<T>): T | null => {
     return Array.isArray(value) ? value[0] ?? null : value
@@ -468,6 +515,32 @@
     emit('workspace-row-click', item)
   }
 
+  const handleOutlineClick = (index: number): void => {
+    activeOutlineIndex.value = index
+    const heading = props.activeHeadings?.[index]
+    if (heading && props.activeFileId) {
+      openFile(props.activeFileId, heading.line)
+    }
+  }
+
+  const navigateOutline = (currentIndex: number, direction: 1 | -1): void => {
+    if (!props.activeHeadings?.length) return
+    
+    let newIndex = currentIndex + direction
+    if (newIndex < 0) newIndex = 0
+    if (newIndex >= props.activeHeadings.length) newIndex = props.activeHeadings.length - 1
+    
+    handleOutlineClick(newIndex)
+    
+    nextTick(() => {
+      const buttons = workspacePaneRef.value?.querySelectorAll('.outline-item') as NodeListOf<HTMLButtonElement> | undefined
+      const targetButton = buttons?.[newIndex]
+      if (targetButton) {
+        targetButton.focus()
+      }
+    })
+  }
+
   const startInlineRename = (item: WorkspaceItem): void => {
     emit('start-inline-rename', item)
   }
@@ -500,3 +573,43 @@
     emit('cancel-inline-edit')
   }
 </script>
+
+<style scoped>
+.sidebar-tabs {
+  display: flex;
+  height: 30px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 8px;
+}
+
+.sidebar-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.sidebar-tab:hover {
+  color: var(--text);
+}
+
+.sidebar-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.outline-scroll {
+  padding-top: 8px;
+}
+
+.outline-item {
+  min-height: 24px;
+  margin-bottom: 1px;
+}
+</style>
