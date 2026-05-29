@@ -13,6 +13,12 @@ export default defineEventHandler((event) => {
     return
   }
 
+  // Skip CSRF for QStash worker routes. These are called server-to-server by
+  // QStash (not a browser) and are authenticated via the QStash signature.
+  if (event.path.startsWith('/api/jobs/')) {
+    return
+  }
+
   // Generate token for GET requests
   if (event.method === 'GET') {
     const token = randomBytes(32).toString('hex')

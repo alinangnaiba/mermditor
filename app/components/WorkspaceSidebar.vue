@@ -533,7 +533,9 @@
     handleOutlineClick(newIndex)
     
     nextTick(() => {
-      const buttons = workspacePaneRef.value?.querySelectorAll('.outline-item') as NodeListOf<HTMLButtonElement> | undefined
+      const buttons = workspacePaneRef.value
+        ? Array.from(workspacePaneRef.value.querySelectorAll<HTMLButtonElement>('.outline-item'))
+        : []
       const targetButton = buttons?.[newIndex]
       if (targetButton) {
         targetButton.focus()

@@ -64,7 +64,7 @@
       <span v-else>Submitting…</span>
     </button>
 
-    <p class="ff-privacy">We don't share your data with anyone.</p>
+    <p class="ff-privacy">If you include your email, it'll only be used to follow up about this feedback — never shared or published.</p>
 
     <!-- Success -->
     <div v-if="submitted" class="ff-notice ff-success">
@@ -95,7 +95,6 @@
   const isSubmitting = ref(false)
   const submitted = ref(false)
   const error = ref('')
-  const issueUrl = ref('')
 
   // Fetch CSRF token on mount so the csrf-token cookie is set before submission
   onMounted(async () => {
@@ -111,7 +110,6 @@
     }
     submitted.value = false
     error.value = ''
-    issueUrl.value = ''
   }
 
   // Get CSRF token from cookie
@@ -126,16 +124,15 @@
     error.value = ''
     try {
       const csrfToken = getCsrfToken()
-      const data = (await $fetch('/api/suggestions', {
+      await $fetch('/api/suggestions', {
         method: 'POST',
         body: form.value,
         headers: csrfToken ? {
           'x-csrf-token': csrfToken
         } : {}
-      })) as { success: boolean; issueUrl: string; issueNumber: number }
+      })
 
       submitted.value = true
-      issueUrl.value = data.issueUrl
 
       // Reset form after successful submission
       setTimeout(() => {

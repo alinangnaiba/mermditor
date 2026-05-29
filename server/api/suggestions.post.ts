@@ -1,8 +1,12 @@
-import { validateFeedback, sanitizeInput, validateGitHubToken } from '../utils/validator'
+import { randomUUID } from 'crypto'
+import { validateFeedback, sanitizeInput } from '../utils/validator'
 import rateLimit from '../middleware/rateLimit'
+import { enqueueFeedbackJob } from '../utils/queue'
 import { logError } from '../../utils/logging'
 
-export default defineEventHandler(async (event) => {
+type SuggestionsEvent = Parameters<typeof readBody>[0]
+
+export default defineEventHandler(async (event: SuggestionsEvent) => {
   await rateLimit(event)
   try {
     const body = await readBody(event)
@@ -22,69 +26,26 @@ export default defineEventHandler(async (event) => {
     const sanitizedType = sanitizeInput(body.type)
     const sanitizedEmail = body.email ? sanitizeInput(body.email) : undefined
 
-    const GITHUB_OWNER = process.env.GITHUB_OWNER
-    const GITHUB_REPO = process.env.GITHUB_REPO
-    const GITHUB_TOKEN = process.env.GITHUB_TOKEN
-    const GITHUB_BASE_URL = process.env.GITHUB_BASE_URL
+    const feedbackId = randomUUID()
 
-    // Validate GitHub configuration
-    if (!GITHUB_TOKEN || !validateGitHubToken(GITHUB_TOKEN)) {
-      logError('suggestions.invalidTokenConfig', new Error('Invalid GitHub token configuration'))
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Service temporarily unavailable',
-      })
-    }
-
-    if (!GITHUB_OWNER || !GITHUB_REPO) {
-      logError('suggestions.missingRepoConfig', new Error('Missing GitHub owner or repo configuration'))
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Service temporarily unavailable',
-      })
-    }
-
-    const issueTitle = `[${sanitizedType.toUpperCase()}] ${sanitizedTitle}`
-    const issueBody = formatIssueBody(sanitizedType, sanitizedDescription, sanitizedEmail)
-    const issueLabels = [sanitizedType.toLowerCase(), 'user-feedback']
-
-    const githubUrl = `${GITHUB_BASE_URL}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/issues`
-
-    const response = await fetch(githubUrl, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        Accept: 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json',
-        'User-Agent': 'merMDitor-App/1.0',
-      },
-      body: JSON.stringify({
-        title: issueTitle,
-        body: issueBody,
-        labels: issueLabels,
-      }),
+    // Hand the slow work (GitHub issue + private email) off to the queue so the
+    // user gets an instant response. The user's email is carried only inside the
+    // job payload and is never exposed publicly.
+    await enqueueFeedbackJob({
+      feedbackId,
+      type: sanitizedType,
+      title: sanitizedTitle,
+      description: sanitizedDescription,
+      email: sanitizedEmail,
+      submittedAt: new Date().toISOString(),
     })
 
-    // Handle GitHub API response
-    if (!response.ok) {
-      const errorData = await response.json()
-      logError('suggestions.githubApi', new Error('GitHub API error'), {
-        status: response.status,
-        errorData,
-      })
-      throw createError({
-        statusCode: response.status,
-        statusMessage: 'Failed to submit suggestion. Please try again later.',
-      })
-    }
-
-    const issue = await response.json()
+    setResponseStatus(event, 202)
 
     return {
       success: true,
-      issueUrl: issue.html_url,
-      issueNumber: issue.number,
-      message: 'Suggestion submitted successfully!',
+      feedbackId,
+      message: 'Feedback received. Thanks for helping improve merMDitor!',
     }
   } catch (error) {
     if (typeof error === 'object' && error !== null && 'statusCode' in error) {
@@ -98,26 +59,3 @@ export default defineEventHandler(async (event) => {
     })
   }
 })
-
-/**
- * Format the GitHub issue body with user submission details
- */
-function formatIssueBody(type: string, description: string, email?: string): string {
-  const timestamp = new Date().toISOString()
-
-  return `## ${type.charAt(0).toUpperCase() + type.slice(1)}
-
-**Description:**
-${description}
-
-${email ? `**Contact Email:** ${email}\n` : ''}
-
----
-
-**Submission Details:**
-- **Submitted:** ${timestamp}
-- **Source:** merMDitor Feedback Form
-- **Type:** ${type}
-
-*This issue was automatically created from the merMDitor suggestion form.*`
-}
