@@ -1,8 +1,24 @@
-import { defineEventHandler } from 'h3'
-
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
 
-export default defineEventHandler((event) => {
+type RateLimitEvent = {
+  path?: string
+  node: {
+    req: {
+      headers: Record<string, string | string[] | undefined>
+      socket: {
+        remoteAddress?: string | null
+      }
+    }
+  }
+}
+
+export default defineEventHandler((event: RateLimitEvent) => {
+  // QStash worker routes are authenticated by signature and may legitimately
+  // burst on retries; don't apply IP-based rate limiting to them.
+  if (event.path?.startsWith('/api/jobs/')) {
+    return
+  }
+
   const xForwardedFor = event.node.req.headers['x-forwarded-for']
   const ip = typeof xForwardedFor === 'string' 
     ? xForwardedFor.split(',')[0]?.trim() || 'unknown'

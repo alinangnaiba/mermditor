@@ -164,7 +164,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
   import type { EditorActions } from '../composables/useEditorActions'
   import EmojiPicker from './EmojiPicker.vue'
   import FilenameModal from './FilenameModal.vue'

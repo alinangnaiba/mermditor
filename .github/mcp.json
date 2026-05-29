@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "lean-ctx": {
+      "args": [],
+      "command": "lean-ctx",
+      "env": {
+        "LEAN_CTX_DATA_DIR": "C:\\Users\\alyn2\\.lean-ctx"
+      }
+    }
+  }
+}
