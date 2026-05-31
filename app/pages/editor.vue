@@ -21,6 +21,7 @@
       @toggle-theme="toggleTheme"
       @update:autosave="onAutosaveToggle($event)"
       @clear-storage="onClearStorageClick"
+      @share="showShareModal = true"
     />
 
     <div class="editor-workspace-shell flex flex-1 overflow-hidden">
@@ -91,6 +92,8 @@
       :cursor-info="cursorInfo"
     />
 
+    <ShareModal :is-open="showShareModal" :content="content" @close="showShareModal = false" />
+
     <EditorDialogs
       :show-help-modal="showHelpModal"
       :move-modal="moveModal"
@@ -119,6 +122,7 @@
   import type { Compartment } from '@codemirror/state'
   import type { EditorView as EditorViewType } from '@codemirror/view'
   import EditorDialogs from '../components/EditorDialogs.vue'
+  import ShareModal from '../components/ShareModal.vue'
   import EditorPageHeader from '../components/EditorPageHeader.vue'
   import EditorSplitPane from '../components/EditorSplitPane.vue'
   import EditorStatusBar from '../components/EditorStatusBar.vue'
@@ -149,6 +153,7 @@
   const previewContainer = ref<HTMLElement | null>(null)
   const previewContentRoot = ref<HTMLElement | null>(null)
   const showHelpModal = ref(false)
+  const showShareModal = ref(false)
   const cursorLine = ref(1)
   const cursorCol = ref(1)
   const cursorInfo = computed(() => `Ln ${cursorLine.value}, Col ${cursorCol.value}`)
