@@ -2,6 +2,7 @@ import { EditorView } from '@codemirror/view'
 import type { Ref } from 'vue'
 import { logError } from '../../utils/logging'
 import { usePdfExport } from './usePdfExport'
+import { useHtmlExport } from './useHtmlExport'
 
 export interface EditorActions {
   insertFormat: (before: string, after: string) => void
@@ -19,6 +20,7 @@ export interface EditorActions {
   importMarkdownFile: () => void
   exportMarkdownFile: () => void
   exportPdf: () => void
+  exportHtml: () => void
   saveAsMarkdownFile: (filename: string) => void
   saveContent: () => void
 }
@@ -42,6 +44,7 @@ export const useEditorActions = (
   options: EditorActionOptions = {}
 ): EditorActions => {
   const { exportToPdf } = usePdfExport()
+  const { exportToHtml } = useHtmlExport()
 
   const insertFormat = (before: string, after: string): void => {
     if (!editorView.value) return
@@ -304,6 +307,11 @@ export const useEditorActions = (
     exportToPdf(content.value)
   }
 
+  const exportHtml = (): void => {
+    const filename = options.getFilename?.()?.replace(/\.md$/i, '') ?? `document-${new Date().toISOString().split('T')[0]}`
+    void exportToHtml(content.value, filename)
+  }
+
   return {
     insertFormat,
     insertHeading,
@@ -320,6 +328,7 @@ export const useEditorActions = (
     importMarkdownFile,
     exportMarkdownFile,
     exportPdf,
+    exportHtml,
     saveAsMarkdownFile,
     saveContent,
   }

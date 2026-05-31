@@ -14,8 +14,8 @@
       <button class="editor-toolbar-btn" title="Export to PDF" @click="actions.exportPdf()">
         <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       </button>
-      <button class="editor-toolbar-btn" title="Share document" @click="$emit('share')">
-        <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <button class="editor-toolbar-btn" title="Export as HTML" @click="actions.exportHtml()">
+        <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
       </button>
     </div>
 
@@ -188,7 +188,6 @@
     'toggle-theme': []
     'update:autosave': [value: boolean]
     'clear-storage': []
-    'share': []
   }>()
 
   const showFilenameModal = ref(false)
