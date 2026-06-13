@@ -60,6 +60,13 @@
       <div v-if="!isMobile" class="workspace-resize-handle" @mousedown="startWorkspaceResize" />
 
       <div class="editor-content-shell flex flex-1 flex-col overflow-hidden">
+        <WorkspaceRecoveryBanner
+          v-if="workspaceRecovery"
+          :recovery="workspaceRecovery"
+          @download="downloadWorkspaceRecovery"
+          @dismiss="dismissWorkspaceRecovery"
+        />
+
         <WorkspaceTabs
           :is-mobile="isMobile"
           :open-file-ids="openFileIds"
@@ -124,11 +131,13 @@
   import EditorStatusBar from '../components/EditorStatusBar.vue'
   import EditorToolbar from '../components/EditorToolbar.vue'
   import LoadingScreen from '../components/LoadingScreen.vue'
+  import WorkspaceRecoveryBanner from '../components/WorkspaceRecoveryBanner.vue'
   import WorkspaceSidebar from '../components/WorkspaceSidebar.vue'
   import WorkspaceTabs from '../components/WorkspaceTabs.vue'
   import { useEditorActions } from '../composables/useEditorActions'
   import { useEditorLayout } from '../composables/useEditorLayout'
   import { useEditorPersistence } from '../composables/useEditorPersistence'
+  import type { WorkspaceRecovery } from '../composables/useEditorPersistence'
   import { useEditorPreview } from '../composables/useEditorPreview'
   import { useEditorTheme } from '../composables/useEditorTheme'
   import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
@@ -149,6 +158,7 @@
   const previewContainer = ref<HTMLElement | null>(null)
   const previewContentRoot = ref<HTMLElement | null>(null)
   const showHelpModal = ref(false)
+  const workspaceRecovery = ref<WorkspaceRecovery | null>(null)
   const cursorLine = ref(1)
   const cursorCol = ref(1)
   const cursorInfo = computed(() => `Ln ${cursorLine.value}, Col ${cursorCol.value}`)
@@ -193,6 +203,7 @@
     confirmAutosaveOff,
     confirmClearData,
     loadWorkspaceSnapshot,
+    downloadWorkspaceBackup,
     loadSettings,
     persistWorkspace,
     persistWorkspaceIfEnabled,
@@ -425,6 +436,15 @@
     closeContextMenu()
   }
 
+  const downloadWorkspaceRecovery = (): void => {
+    if (!workspaceRecovery.value?.backupKey) return
+    downloadWorkspaceBackup(workspaceRecovery.value.backupKey)
+  }
+
+  const dismissWorkspaceRecovery = (): void => {
+    workspaceRecovery.value = null
+  }
+
   onMounted(async () => {
     checkMobile()
     window.addEventListener('resize', checkMobile)
@@ -432,6 +452,7 @@
 
     loadingStep.value = 'Loading saved content...'
     const snapshot = loadWorkspaceSnapshot()
+    workspaceRecovery.value = snapshot.recovery
     hydrateWorkspace(snapshot.workspace, snapshot.legacyContent)
     loadSettings()
     loadPaneWidths()

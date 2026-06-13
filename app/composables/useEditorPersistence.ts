@@ -1,13 +1,26 @@
 import { ref } from 'vue'
 import type { WorkspaceData } from '../utils/workspace'
-import { parseWorkspaceData } from '../utils/storageParsers'
+import { salvageWorkspaceData } from '../utils/storageParsers'
 import { logError } from '../../utils/logging'
 
 export const WORKSPACE_STORAGE_KEY = 'mermditor-workspace'
+export const WORKSPACE_BACKUP_PREFIX = 'mermditor-workspace-corrupt-'
 export const LEGACY_CONTENT_STORAGE_KEY = 'mermditor-content'
 export const AUTOSAVE_STORAGE_KEY = 'mermditor-autosave'
 export const RECENT_EMOJIS_STORAGE_KEY = 'mermditor-recent-emojis'
 export const AUTOSAVE_INTERVAL_MS = 10_000
+
+export interface WorkspaceRecovery {
+  status: 'salvaged' | 'unrecoverable'
+  droppedItems: string[]
+  backupKey: string | null
+}
+
+interface WorkspaceSnapshot {
+  workspace: WorkspaceData | null
+  legacyContent: string
+  recovery: WorkspaceRecovery | null
+}
 
 export const useEditorPersistence = () => {
   const autosave = ref(false)
@@ -19,25 +32,111 @@ export const useEditorPersistence = () => {
 
   let saveTimeout: ReturnType<typeof setTimeout> | null = null
 
-  const loadWorkspaceSnapshot = (): { workspace: WorkspaceData | null; legacyContent: string } => {
+  const listWorkspaceBackups = (): string[] => {
+    try {
+      return Object.keys(localStorage)
+        .filter((key) => key.startsWith(WORKSPACE_BACKUP_PREFIX))
+        .sort()
+        .reverse()
+    } catch (error) {
+      logError('persistence.listWorkspaceBackups', error)
+      return []
+    }
+  }
+
+  const pruneWorkspaceBackups = (): void => {
+    try {
+      listWorkspaceBackups()
+        .slice(3)
+        .forEach((key) => localStorage.removeItem(key))
+    } catch (error) {
+      logError('persistence.pruneWorkspaceBackups', error)
+    }
+  }
+
+  const backupCorruptWorkspace = (rawValue: string): string | null => {
+    const backupKey = `${WORKSPACE_BACKUP_PREFIX}${Date.now()}`
+
+    try {
+      localStorage.setItem(backupKey, rawValue)
+    } catch (error) {
+      logError('persistence.backupCorruptWorkspace', error)
+      return null
+    }
+
+    pruneWorkspaceBackups()
+    return backupKey
+  }
+
+  const downloadWorkspaceBackup = (key: string): void => {
+    try {
+      const backup = localStorage.getItem(key)
+      if (backup === null) return
+
+      const timestamp = key.replace(WORKSPACE_BACKUP_PREFIX, '') || Date.now().toString()
+      const blob = new Blob([backup], { type: 'application/json;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `mermditor-workspace-backup-${timestamp}.json`
+      link.click()
+
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      logError('persistence.downloadWorkspaceBackup', error, { key })
+    }
+  }
+
+  const loadWorkspaceSnapshot = (): WorkspaceSnapshot => {
     const legacyContent = localStorage.getItem(LEGACY_CONTENT_STORAGE_KEY) ?? ''
 
     try {
       const savedWorkspace = localStorage.getItem(WORKSPACE_STORAGE_KEY)
-      const workspace = savedWorkspace ? parseWorkspaceData(savedWorkspace) : null
+      if (!savedWorkspace) {
+        return {
+          workspace: null,
+          legacyContent,
+          recovery: null,
+        }
+      }
 
-      if (savedWorkspace && !workspace) {
+      const salvageResult = salvageWorkspaceData(savedWorkspace)
+
+      if (salvageResult.status === 'ok') {
+        return {
+          workspace: salvageResult.workspace,
+          legacyContent,
+          recovery: null,
+        }
+      }
+
+      const backupKey = backupCorruptWorkspace(savedWorkspace)
+
+      if (salvageResult.status === 'unrecoverable' && backupKey !== null) {
         localStorage.removeItem(WORKSPACE_STORAGE_KEY)
       }
 
+      if (salvageResult.status === 'salvaged' && backupKey !== null && salvageResult.workspace) {
+        try {
+          localStorage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(salvageResult.workspace))
+        } catch (error) {
+          logError('persistence.writeSalvagedWorkspace', error)
+        }
+      }
+
       return {
-        workspace,
+        workspace: salvageResult.workspace,
         legacyContent,
+        recovery: {
+          status: salvageResult.status,
+          droppedItems: salvageResult.droppedItems,
+          backupKey,
+        },
       }
     } catch (error) {
-      localStorage.removeItem(WORKSPACE_STORAGE_KEY)
       logError('persistence.loadWorkspaceSnapshot', error)
-      return { workspace: null, legacyContent }
+      return { workspace: null, legacyContent, recovery: null }
     }
   }
 
@@ -165,6 +264,8 @@ export const useEditorPersistence = () => {
     confirmAutosaveOff,
     confirmClearData,
     loadWorkspaceSnapshot,
+    listWorkspaceBackups,
+    downloadWorkspaceBackup,
     loadSettings,
     persistWorkspace,
     persistWorkspaceIfEnabled,
