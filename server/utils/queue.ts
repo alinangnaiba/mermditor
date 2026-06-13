@@ -1,5 +1,6 @@
 import { Client } from '@upstash/qstash'
 import { logError } from '../../utils/logging'
+import type { FeedbackAttachment, FeedbackAttachmentUploadFailure } from './feedbackAttachments'
 
 export interface FeedbackJob {
   feedbackId: string
@@ -8,6 +9,8 @@ export interface FeedbackJob {
   description: string
   email?: string
   submittedAt: string
+  attachments?: FeedbackAttachment[]
+  attachmentUploadFailures?: FeedbackAttachmentUploadFailure[]
 }
 
 const WORKER_PATH = '/api/jobs/process-feedback'

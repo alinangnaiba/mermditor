@@ -1,5 +1,6 @@
 import { validateGitHubToken } from './validator'
 import { logError } from '../../utils/logging'
+import type { FeedbackAttachment, FeedbackAttachmentUploadFailure } from './feedbackAttachments'
 
 export interface CreateIssueInput {
   title: string
@@ -23,9 +24,21 @@ export const formatPublicIssueBody = (
   type: string,
   description: string,
   hasEmail: boolean,
-  feedbackId: string
+  feedbackId: string,
+  attachments: FeedbackAttachment[] = [],
+  attachmentUploadFailures: FeedbackAttachmentUploadFailure[] = []
 ): string => {
   const timestamp = new Date().toISOString()
+  const attachmentSection = attachments.length
+    ? `\n## Attachments\n${attachments
+        .map((attachment) => `- [${attachment.filename}](${attachment.url})`)
+        .join('\n')}\n`
+    : ''
+  const uploadFailureSection = attachmentUploadFailures.length
+    ? `\n## Attachment Upload Failures\n${attachmentUploadFailures
+        .map((failure) => `- ${failure.filename}: ${failure.error}`)
+        .join('\n')}\n`
+    : ''
 
   return `## ${type.charAt(0).toUpperCase() + type.slice(1)}
 
@@ -33,6 +46,7 @@ export const formatPublicIssueBody = (
 ${description}
 
 ${hasEmail ? '**Contact:** Provided privately\n' : ''}
+${attachmentSection}${uploadFailureSection}
 ---
 
 **Submission Details:**

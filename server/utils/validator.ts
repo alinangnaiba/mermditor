@@ -1,3 +1,9 @@
+import {
+  ALLOWED_FEEDBACK_ATTACHMENT_TYPES,
+  MAX_FEEDBACK_ATTACHMENT_BYTES,
+  MAX_FEEDBACK_ATTACHMENTS,
+} from './feedbackAttachments'
+
 export const validateFeedback = (body: any): { valid: boolean; errors: string[] } => {
   const errors: string[] = []
   
@@ -36,8 +42,77 @@ export const validateFeedback = (body: any): { valid: boolean; errors: string[] 
       errors.push('Email must be 254 characters or less')
     }
   }
+
+  if (body.attachments !== undefined) {
+    if (!Array.isArray(body.attachments)) {
+      errors.push('Attachments must be an array')
+    } else {
+      if (body.attachments.length > MAX_FEEDBACK_ATTACHMENTS) {
+        errors.push('Attachments must include 10 files or fewer')
+      }
+
+      for (const attachment of body.attachments) {
+        if (!attachment || typeof attachment !== 'object') {
+          errors.push('Each attachment must include valid metadata')
+          continue
+        }
+
+        if (typeof attachment.filename !== 'string' || !attachment.filename.trim()) {
+          errors.push('Each attachment must include a filename')
+        }
+        if (typeof attachment.url !== 'string' || !isHttpUrl(attachment.url)) {
+          errors.push('Each attachment must include a valid URL')
+        }
+        if (
+          typeof attachment.contentType !== 'string' ||
+          !ALLOWED_FEEDBACK_ATTACHMENT_TYPES.has(attachment.contentType)
+        ) {
+          errors.push('Each attachment must use an allowed file type')
+        }
+        if (
+          typeof attachment.size !== 'number' ||
+          !Number.isFinite(attachment.size) ||
+          attachment.size <= 0
+        ) {
+          errors.push('Each attachment must include a valid size')
+        } else if (attachment.size > MAX_FEEDBACK_ATTACHMENT_BYTES) {
+          errors.push('Each attachment must be 10 MB or less')
+        }
+      }
+    }
+  }
+
+  if (body.attachmentUploadFailures !== undefined) {
+    if (!Array.isArray(body.attachmentUploadFailures)) {
+      errors.push('Attachment upload failures must be an array')
+    } else if (body.attachmentUploadFailures.length > MAX_FEEDBACK_ATTACHMENTS) {
+      errors.push('Attachment upload failures must include 10 files or fewer')
+    } else {
+      for (const failure of body.attachmentUploadFailures) {
+        if (
+          !failure ||
+          typeof failure !== 'object' ||
+          typeof failure.filename !== 'string' ||
+          !failure.filename.trim() ||
+          typeof failure.error !== 'string' ||
+          !failure.error.trim()
+        ) {
+          errors.push('Each attachment upload failure must include a filename and error')
+        }
+      }
+    }
+  }
   
   return { valid: errors.length === 0, errors }
+}
+
+const isHttpUrl = (value: string): boolean => {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' || url.protocol === 'http:'
+  } catch {
+    return false
+  }
 }
 
 // Sanitize function

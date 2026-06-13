@@ -28,6 +28,28 @@ describe('formatPublicIssueBody', () => {
     expect(body).not.toContain('Provided privately')
     expect(body).toContain('Add dark mode')
   })
+
+  it('includes uploaded attachment URLs and upload failures', () => {
+    const body = formatPublicIssueBody('Bug Report', 'Screenshot attached', false, 'fb-457', [
+      {
+        filename: 'screenshot.png',
+        url: 'https://public.blob.vercel-storage.com/feedback/fb-457/screenshot.png',
+        contentType: 'image/png',
+        size: 1234,
+      },
+    ], [
+      {
+        filename: 'notes.txt',
+        error: 'Upload failed before feedback submission',
+      },
+    ])
+
+    expect(body).toContain('## Attachments')
+    expect(body).toContain('[screenshot.png](https://public.blob.vercel-storage.com/feedback/fb-457/screenshot.png)')
+    expect(body).toContain('## Attachment Upload Failures')
+    expect(body).toContain('notes.txt')
+    expect(body).toContain('Upload failed before feedback submission')
+  })
 })
 
 describe('sendFeedbackNotification', () => {
@@ -59,5 +81,40 @@ describe('sendFeedbackNotification', () => {
     expect(payload.html).toContain('reporter@example.com')
     expect(payload.html).toContain('https://github.com/o/r/issues/42')
     expect(payload.to).toBe('maintainer@example.com')
+  })
+
+  it('includes attachment URLs and failed upload attempts in the private notification', async () => {
+    const { sendFeedbackNotification } = await import('../../server/utils/email')
+
+    await sendFeedbackNotification({
+      type: 'Bug Report',
+      title: 'Render glitch',
+      description: 'The preview is wrong',
+      issueUrl: 'https://github.com/o/r/issues/43',
+      issueNumber: 43,
+      feedbackId: 'fb-790',
+      submittedAt: new Date().toISOString(),
+      attachments: [
+        {
+          filename: 'preview.png',
+          url: 'https://public.blob.vercel-storage.com/feedback/fb-790/preview.png',
+          contentType: 'image/png',
+          size: 2048,
+        },
+      ],
+      attachmentUploadFailures: [
+        {
+          filename: 'console.log',
+          error: 'Network error',
+        },
+      ],
+    })
+
+    expect(sendMock).toHaveBeenCalledTimes(1)
+    const payload = sendMock.mock.calls[0][0]
+    expect(payload.html).toContain('preview.png')
+    expect(payload.html).toContain('https://public.blob.vercel-storage.com/feedback/fb-790/preview.png')
+    expect(payload.html).toContain('console.log')
+    expect(payload.html).toContain('Network error')
   })
 })

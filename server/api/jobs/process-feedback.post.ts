@@ -47,7 +47,9 @@ export default defineEventHandler(async (event: ProcessFeedbackEvent) => {
     job.type,
     job.description,
     Boolean(job.email),
-    job.feedbackId
+    job.feedbackId,
+    job.attachments,
+    job.attachmentUploadFailures
   )
   const issueLabels = [job.type.toLowerCase(), 'user-feedback']
 
@@ -66,6 +68,8 @@ export default defineEventHandler(async (event: ProcessFeedbackEvent) => {
     issueNumber: issue.number,
     feedbackId: job.feedbackId,
     submittedAt: job.submittedAt,
+    attachments: job.attachments,
+    attachmentUploadFailures: job.attachmentUploadFailures,
   })
 
   return { success: true, issueNumber: issue.number }
