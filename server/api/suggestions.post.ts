@@ -3,7 +3,10 @@ import { validateFeedback, sanitizeInput } from '../utils/validator'
 import rateLimit from '../middleware/rateLimit'
 import { enqueueFeedbackJob } from '../utils/queue'
 import { logError } from '../../utils/logging'
-import { sanitizeAttachmentFilename } from '../utils/feedbackAttachments'
+import {
+  appendFeedbackAttachmentDetails,
+  sanitizeAttachmentFilename,
+} from '../utils/feedbackAttachments'
 import type { FeedbackAttachment, FeedbackAttachmentUploadFailure } from '../utils/feedbackAttachments'
 
 type SuggestionsEvent = Parameters<typeof readBody>[0]
@@ -42,6 +45,11 @@ export default defineEventHandler(async (event: SuggestionsEvent) => {
       }))
 
     const feedbackId = randomUUID()
+    const queuedDescription = appendFeedbackAttachmentDetails(
+      sanitizedDescription,
+      sanitizedAttachments,
+      sanitizedAttachmentUploadFailures
+    )
 
     // Hand the slow work (GitHub issue + private email) off to the queue so the
     // user gets an instant response. The user's email is carried only inside the
@@ -50,11 +58,9 @@ export default defineEventHandler(async (event: SuggestionsEvent) => {
       feedbackId,
       type: sanitizedType,
       title: sanitizedTitle,
-      description: sanitizedDescription,
+      description: queuedDescription,
       email: sanitizedEmail,
       submittedAt: new Date().toISOString(),
-      attachments: sanitizedAttachments,
-      attachmentUploadFailures: sanitizedAttachmentUploadFailures,
     })
 
     setResponseStatus(event, 202)

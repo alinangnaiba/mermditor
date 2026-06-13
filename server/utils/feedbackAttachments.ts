@@ -33,3 +33,25 @@ export const sanitizeAttachmentFilename = (filename: string): string => {
 
   return safeName || 'attachment'
 }
+
+export const appendFeedbackAttachmentDetails = (
+  description: string,
+  attachments: FeedbackAttachment[] = [],
+  attachmentUploadFailures: FeedbackAttachmentUploadFailure[] = []
+): string => {
+  const attachmentSection = attachments.length
+    ? [
+        '## Attachments',
+        ...attachments.map((attachment) => `${attachment.filename}: ${attachment.url}`),
+      ].join('\n')
+    : ''
+  const uploadFailureSection = attachmentUploadFailures.length
+    ? [
+        '## Attachment Upload Failures',
+        ...attachmentUploadFailures.map((failure) => `${failure.filename}: ${failure.error}`),
+      ].join('\n')
+    : ''
+  const sections = [description, attachmentSection, uploadFailureSection].filter(Boolean)
+
+  return sections.join('\n\n')
+}
