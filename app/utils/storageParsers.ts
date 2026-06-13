@@ -1,5 +1,6 @@
 import type { EmojiItem } from '../composables/useRecentEmojis'
 import type { WorkspaceData, WorkspaceFile, WorkspaceFolder, WorkspaceItem } from './workspace'
+import { DEFAULT_WORKSPACE_FILE_NAME } from './workspace'
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null
@@ -53,6 +54,138 @@ export const parseWorkspaceData = (rawValue: string): WorkspaceData | null => {
     return isWorkspaceData(parsedValue) ? parsedValue : null
   } catch {
     return null
+  }
+}
+
+export interface WorkspaceSalvageResult {
+  workspace: WorkspaceData | null
+  status: 'ok' | 'salvaged' | 'unrecoverable'
+  droppedItems: string[]
+}
+
+const createWorkspaceId = (): string => crypto.randomUUID()
+
+const getDroppedItemLabel = (value: unknown): string => {
+  if (!isRecord(value)) return 'Unreadable item'
+  if (typeof value.name === 'string') return value.name
+  if (typeof value.id === 'string') return value.id
+  return 'Unnamed item'
+}
+
+const getUniqueWorkspaceId = (
+  value: unknown,
+  usedIds: Set<string>,
+  fallbackId: () => string = createWorkspaceId
+): string => {
+  let id = typeof value === 'string' ? value : fallbackId()
+
+  while (usedIds.has(id)) {
+    id = createWorkspaceId()
+  }
+
+  usedIds.add(id)
+  return id
+}
+
+export const salvageWorkspaceData = (rawValue: string): WorkspaceSalvageResult => {
+  let parsedValue: unknown
+
+  try {
+    parsedValue = JSON.parse(rawValue)
+  } catch {
+    return { workspace: null, status: 'unrecoverable', droppedItems: [] }
+  }
+
+  if (isWorkspaceData(parsedValue)) {
+    return { workspace: parsedValue, status: 'ok', droppedItems: [] }
+  }
+
+  if (!isRecord(parsedValue)) {
+    return { workspace: null, status: 'unrecoverable', droppedItems: [] }
+  }
+
+  const droppedItems: string[] = []
+  const usedIds = new Set<string>(['workspace-root'])
+  const survivingFiles: WorkspaceFile[] = []
+
+  const salvageFile = (value: Record<string, unknown>, depth: number): WorkspaceFile | null => {
+    if (depth > MAX_WORKSPACE_NESTING_DEPTH || typeof value.content !== 'string') {
+      droppedItems.push(getDroppedItemLabel(value))
+      return null
+    }
+
+    const file: WorkspaceFile = {
+      id: getUniqueWorkspaceId(value.id, usedIds),
+      type: 'file',
+      name: typeof value.name === 'string' ? value.name : DEFAULT_WORKSPACE_FILE_NAME,
+      content: value.content,
+    }
+
+    survivingFiles.push(file)
+    return file
+  }
+
+  const salvageItem = (value: unknown, depth: number): WorkspaceItem | null => {
+    if (!isRecord(value)) {
+      droppedItems.push(getDroppedItemLabel(value))
+      return null
+    }
+
+    if (value.type === 'folder' || Array.isArray(value.children)) {
+      return salvageFolder(value, depth)
+    }
+
+    return salvageFile(value, depth)
+  }
+
+  const salvageFolder = (
+    value: Record<string, unknown>,
+    depth: number,
+    root = false
+  ): WorkspaceFolder | null => {
+    if (depth > MAX_WORKSPACE_NESTING_DEPTH) {
+      droppedItems.push(getDroppedItemLabel(value))
+      return null
+    }
+
+    const children = Array.isArray(value.children)
+      ? value.children
+          .map((child) => salvageItem(child, depth + 1))
+          .filter((child): child is WorkspaceItem => child !== null)
+      : []
+
+    return {
+      id: root ? 'workspace-root' : getUniqueWorkspaceId(value.id, usedIds),
+      type: 'folder',
+      name: root ? (typeof value.name === 'string' ? value.name : 'Workspace') : typeof value.name === 'string' ? value.name : 'New Folder',
+      children,
+    }
+  }
+
+  const rootRecord = isRecord(parsedValue.root) ? parsedValue.root : { children: [] }
+  const root = salvageFolder(rootRecord, 0, true)
+
+  if (!root || survivingFiles.length === 0) {
+    return { workspace: null, status: 'unrecoverable', droppedItems }
+  }
+
+  const survivingFileIds = new Set(survivingFiles.map((file) => file.id))
+  const activeFileId =
+    typeof parsedValue.activeFileId === 'string' && survivingFileIds.has(parsedValue.activeFileId)
+      ? parsedValue.activeFileId
+      : survivingFiles[0]!.id
+  const openFileIds = isStringArray(parsedValue.openFileIds)
+    ? parsedValue.openFileIds.filter((id) => survivingFileIds.has(id))
+    : []
+
+  return {
+    workspace: {
+      root,
+      activeFileId,
+      openFileIds: openFileIds.length > 0 ? openFileIds : [activeFileId],
+    },
+    status: 'salvaged',
+    droppedItems,
   }
 }
 
