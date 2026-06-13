@@ -27,13 +27,16 @@ export default defineEventHandler((event: RateLimitEvent) => {
     : (event.node.req.socket.remoteAddress || 'unknown')
   
   const now = Date.now()
-  const limit = 10 // requests
+  const isAttachmentUpload = event.path?.startsWith('/api/feedback-attachments/upload')
+  const limit = isAttachmentUpload ? 25 : 10 // requests
   const window = 60000 // 1 minute
+  const bucket = isAttachmentUpload ? 'feedback-attachments' : 'default'
+  const key = `${bucket}:${ip}`
   
-  const record = rateLimitMap.get(ip)
+  const record = rateLimitMap.get(key)
   
   if (!record || now > record.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + window })
+    rateLimitMap.set(key, { count: 1, resetTime: now + window })
   } else {
     record.count++
     if (record.count > limit) {

@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { logError } from '../../utils/logging'
+import type { FeedbackAttachment, FeedbackAttachmentUploadFailure } from './feedbackAttachments'
 
 export interface FeedbackEmailInput {
   type: string
@@ -10,6 +11,8 @@ export interface FeedbackEmailInput {
   issueNumber: number
   feedbackId: string
   submittedAt: string
+  attachments?: FeedbackAttachment[]
+  attachmentUploadFailures?: FeedbackAttachmentUploadFailure[]
 }
 
 const escapeHtml = (value: string): string =>
@@ -24,6 +27,29 @@ const buildHtml = (input: FeedbackEmailInput): string => {
   const contact = input.email
     ? `<p><strong>Reply to:</strong> ${escapeHtml(input.email)}</p>`
     : '<p><strong>Reply to:</strong> not provided</p>'
+  const attachmentList = input.attachments?.length
+    ? `
+      <p><strong>Attachments:</strong></p>
+      <ul>
+        ${input.attachments
+          .map(
+            (attachment) =>
+              `<li><a href="${escapeHtml(attachment.url)}">${escapeHtml(attachment.filename)}</a> (${escapeHtml(attachment.contentType)}, ${attachment.size} bytes)</li>`
+          )
+          .join('')}
+      </ul>
+    `
+    : ''
+  const uploadFailureList = input.attachmentUploadFailures?.length
+    ? `
+      <p><strong>Attachment upload failures:</strong></p>
+      <ul>
+        ${input.attachmentUploadFailures
+          .map((failure) => `<li>${escapeHtml(failure.filename)}: ${escapeHtml(failure.error)}</li>`)
+          .join('')}
+      </ul>
+    `
+    : ''
 
   return `
     <h2>New merMDitor feedback</h2>
@@ -32,6 +58,8 @@ const buildHtml = (input: FeedbackEmailInput): string => {
     <p><strong>Description:</strong></p>
     <pre style="white-space:pre-wrap;font-family:inherit">${escapeHtml(input.description)}</pre>
     ${contact}
+    ${attachmentList}
+    ${uploadFailureList}
     <p><strong>GitHub issue:</strong> <a href="${escapeHtml(input.issueUrl)}">#${input.issueNumber}</a></p>
     <p style="color:#666;font-size:12px">Feedback ID: ${escapeHtml(input.feedbackId)} · Submitted: ${escapeHtml(input.submittedAt)}</p>
   `

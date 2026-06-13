@@ -38,7 +38,7 @@ export default defineNuxtConfig({
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: https: blob:",
             "font-src 'self' data:",
-            "connect-src 'self' https://api.github.com https://va.vercel-scripts.com blob:",
+            "connect-src 'self' https://api.github.com https://va.vercel-scripts.com https://vercel.com https://blob.vercel-storage.com https://*.blob.vercel-storage.com https://*.public.blob.vercel-storage.com blob:",
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "form-action 'self'",

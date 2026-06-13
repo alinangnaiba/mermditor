@@ -3,6 +3,8 @@ import { validateFeedback, sanitizeInput } from '../utils/validator'
 import rateLimit from '../middleware/rateLimit'
 import { enqueueFeedbackJob } from '../utils/queue'
 import { logError } from '../../utils/logging'
+import { sanitizeAttachmentFilename } from '../utils/feedbackAttachments'
+import type { FeedbackAttachment, FeedbackAttachmentUploadFailure } from '../utils/feedbackAttachments'
 
 type SuggestionsEvent = Parameters<typeof readBody>[0]
 
@@ -25,6 +27,19 @@ export default defineEventHandler(async (event: SuggestionsEvent) => {
     const sanitizedDescription = sanitizeInput(body.description)
     const sanitizedType = sanitizeInput(body.type)
     const sanitizedEmail = body.email ? sanitizeInput(body.email) : undefined
+    const sanitizedAttachments: FeedbackAttachment[] | undefined = body.attachments?.map(
+      (attachment: FeedbackAttachment) => ({
+        filename: sanitizeAttachmentFilename(attachment.filename),
+        url: attachment.url,
+        contentType: attachment.contentType,
+        size: attachment.size,
+      })
+    )
+    const sanitizedAttachmentUploadFailures: FeedbackAttachmentUploadFailure[] | undefined =
+      body.attachmentUploadFailures?.map((failure: FeedbackAttachmentUploadFailure) => ({
+        filename: sanitizeAttachmentFilename(failure.filename),
+        error: sanitizeInput(failure.error),
+      }))
 
     const feedbackId = randomUUID()
 
@@ -38,6 +53,8 @@ export default defineEventHandler(async (event: SuggestionsEvent) => {
       description: sanitizedDescription,
       email: sanitizedEmail,
       submittedAt: new Date().toISOString(),
+      attachments: sanitizedAttachments,
+      attachmentUploadFailures: sanitizedAttachmentUploadFailures,
     })
 
     setResponseStatus(event, 202)
