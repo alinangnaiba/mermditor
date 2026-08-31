@@ -14,6 +14,23 @@ export const marginValues: Record<MarginSize, string> = {
   wide: '30mm',
 }
 
+const pageHeightsMm: Record<PageSize, number> = {
+  A4: 297,
+  Letter: 279.4,
+  Legal: 355.6,
+  A3: 420,
+}
+
+const marginsMm: Record<MarginSize, number> = {
+  narrow: 10,
+  normal: 20,
+  wide: 30,
+}
+
+// Leaves a little slack so a full-height diagram still fits after paged.js rounding.
+const getPageContentHeight = (pageSize: PageSize, margins: MarginSize): string =>
+  `${(pageHeightsMm[pageSize] - marginsMm[margins] * 2 - 6).toFixed(1)}mm`
+
 export const getPageStylesForPagedJS = (
   pageSize: PageSize,
   margins: MarginSize,
@@ -194,6 +211,8 @@ export const getPageStylesForPagedJS = (
       border: none;
       margin: 1em 0;
       box-shadow: none;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
 
     .mermaid-viewport {
@@ -208,11 +227,20 @@ export const getPageStylesForPagedJS = (
 
     .mermaid {
       display: block !important;
+      text-align: center;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
 
+    /* Diagrams are flattened to images before pagination; cap them to one page. */
+    .mermaid img.mermaid-print-image,
     .mermaid svg {
+      display: block;
+      margin: 0 auto;
       max-width: 100% !important;
+      width: auto !important;
       height: auto !important;
+      max-height: ${getPageContentHeight(pageSize, margins)} !important;
     }
 
     .mermaid-controls,

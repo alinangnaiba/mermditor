@@ -12,6 +12,7 @@ import {
 
 const PRINT_CODE_LINES_CLASS = 'print-code-lines'
 const PRINT_CODE_LINE_CLASS = 'print-code-line'
+const PRINT_DIAGRAM_CLASS = 'mermaid-print-image'
 
 export const usePrintPreview = () => {
   const router = useRouter()
@@ -62,6 +63,41 @@ export const usePrintPreview = () => {
     }
 
     router.push('/editor')
+  }
+
+  // Paged.js splits tall inline SVGs across pages and loses their contents, so each diagram
+  // is flattened into an atomic image before pagination.
+  const flattenMermaidDiagramsForPrint = (root: Element | Document): void => {
+    const diagrams = root.querySelectorAll('.mermaid svg')
+
+    for (const diagram of diagrams) {
+      const viewBox = (diagram.getAttribute('viewBox') ?? '')
+        .split(/[\s,]+/)
+        .map(Number)
+        .filter((value) => Number.isFinite(value))
+      const bounds = diagram.getBoundingClientRect()
+      const width = viewBox[2] || bounds.width
+      const height = viewBox[3] || bounds.height
+
+      if (!width || !height) continue
+
+      const clone = diagram.cloneNode(true) as SVGElement
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+      clone.setAttribute('width', String(width))
+      clone.setAttribute('height', String(height))
+      clone.removeAttribute('style')
+
+      const image = document.createElement('img')
+      image.className = PRINT_DIAGRAM_CLASS
+      image.width = Math.round(width)
+      image.height = Math.round(height)
+      image.alt = 'Mermaid diagram'
+      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+        new XMLSerializer().serializeToString(clone)
+      )}`
+
+      diagram.replaceWith(image)
+    }
   }
 
   const normalizeCodeBlocksForPrint = (root: Element | Document): void => {
@@ -127,6 +163,7 @@ export const usePrintPreview = () => {
       },
     }, printContentRoot ?? document)
 
+    flattenMermaidDiagramsForPrint(printContentRoot ?? document)
     normalizeCodeBlocksForPrint(printContentRoot ?? document)
 
     const paged = new Previewer()
