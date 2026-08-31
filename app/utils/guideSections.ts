@@ -66,7 +66,7 @@ Use \`inline code\` for short snippets`,
     id: 'lists',
     title: 'Lists',
     description:
-      'Unordered lists use <code>-</code>, <code>*</code>, or <code>+</code>. Ordered lists use a number followed by a period. Indent by two spaces to nest.',
+      'Unordered lists use <code>-</code>, <code>*</code>, or <code>+</code>. Ordered lists use a number followed by a period. Align a nested item with the parent item’s content: typically two spaces for bullets and three for numbered markers such as <code>1.</code>.'
     examples: [
       {
         source: `- Unordered item 1
