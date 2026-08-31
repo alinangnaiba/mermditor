@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { defineComponent, h, ref, toRef } from 'vue'
+  import { defineComponent, h, onMounted, ref, toRef } from 'vue'
   import { useSafeHtml, type SafeHtmlKind } from '../composables/useSafeHtml'
 
   export default defineComponent({
@@ -24,6 +24,14 @@
       const { sanitizedContent } = useSafeHtml({
         content: toRef(props, 'content'),
         kind: toRef(props, 'kind'),
+      })
+
+      // Sanitizing needs a DOM, so SSR emits nothing. Vue does not patch innerHTML while
+      // hydrating either, so the sanitized markup is applied to the element after mount.
+      onMounted(() => {
+        if (element.value && element.value.innerHTML !== sanitizedContent.value) {
+          element.value.innerHTML = sanitizedContent.value
+        }
       })
 
       expose({

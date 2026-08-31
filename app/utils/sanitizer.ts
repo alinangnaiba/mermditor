@@ -26,7 +26,7 @@ export const sanitizeHtml = (html: string): string => {
         'defs', 'marker', 'use', 'symbol', 'clipPath',
         'linearGradient', 'radialGradient', 'stop', 'pattern',
         'foreignObject', 'switch', 'desc', 'title', 'metadata',
-        'sub', 'sup', 'mark', 'del', 'ins', 'small',
+        'sub', 'sup', 'mark', 'del', 'ins', 'small', 'kbd',
         'dl', 'dt', 'dd', 'hr', 'input', 'label',
         'button', 'details', 'summary', 'figure', 'figcaption',
         // MathML elements for KaTeX rendering

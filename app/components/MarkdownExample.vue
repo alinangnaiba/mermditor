@@ -17,7 +17,7 @@
   }
 
   const props = defineProps<Props>()
-  const { renderMarkdownExample } = useMarkdownRenderer()
+  const { renderMarkdownFragment, highlightSyntax } = useMarkdownRenderer()
   const renderedContent = ref('')
   const containerRef = ref<{ element: HTMLElement | null } | null>(null)
   let cleanupCodeBlockInteractions: (() => void) | null = null
@@ -25,11 +25,12 @@
   const renderContent = async () => {
     if (props.content) {
       try {
-        renderedContent.value = await renderMarkdownExample(props.content)
+        renderedContent.value = await renderMarkdownFragment(props.content)
         await nextTick()
         cleanupCodeBlockInteractions?.()
         if (containerRef.value?.element) {
           cleanupCodeBlockInteractions = attachCodeBlockInteractions(containerRef.value.element)
+          await highlightSyntax(containerRef.value.element)
         }
       } catch (error) {
         console.warn('Failed to render markdown example:', error)
