@@ -84,6 +84,18 @@ const MERMAID_SECURE_CONFIG_KEYS = [
 export const normalizeMermaidSource = (source: string): string =>
   source.replace(/\r\n?/g, '\n').replace(MERMAID_INIT_DIRECTIVE_REGEX, '').trim()
 
+// DOMPurify's SAFE_FOR_XML rule drops any attribute whose value contains "-->", "--!>" or "]>",
+// which covers most Mermaid syntax. Percent-encoding keeps those sequences out of the attribute.
+const encodeMermaidSource = (source: string): string => encodeURIComponent(source)
+
+const decodeMermaidSource = (value: string): string => {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 export const createMermaidPreviewHtml = (source: string, slot: string): string => {
   const id = `mermaid-${crypto.randomUUID()}`
 
@@ -104,7 +116,7 @@ export const createMermaidPreviewHtml = (source: string, slot: string): string =
     </div>
     <div class="mermaid-viewport">
       <div class="mermaid-diagram" style="transform-origin: top left;">
-        <div class="mermaid" id="${id}" data-mermaid-slot="${slot}" data-content="${escapeHtml(source)}"></div>
+        <div class="mermaid" id="${id}" data-mermaid-slot="${slot}" data-content="${encodeMermaidSource(source)}"></div>
       </div>
     </div>
   </div>`
@@ -352,10 +364,13 @@ export const cleanupMermaidControls = (root: ParentNode = document): void => {
   })
 }
 
-const getMermaidElementContent = (element: Element): string =>
-  normalizeMermaidSource(
-    element.getAttribute('data-content')?.trim() || element.textContent?.trim() || ''
+const getMermaidElementContent = (element: Element): string => {
+  const encoded = element.getAttribute('data-content')?.trim()
+
+  return normalizeMermaidSource(
+    encoded ? decodeMermaidSource(encoded) : element.textContent?.trim() || ''
   )
+}
 
 export const canHydrateMermaidDiagramsFromCache = (
   config?: MermaidConfig,
@@ -390,7 +405,7 @@ const applyCachedMermaidRender = (element: Element, themeKey: MermaidRenderTheme
   element.innerHTML = cloneCachedMermaidSvg(cached.svg)
   element.id = element.id || `mermaid-${crypto.randomUUID()}`
   element.setAttribute('data-processed', 'true')
-  element.setAttribute('data-content', content)
+  element.setAttribute('data-content', encodeMermaidSource(content))
   element.setAttribute('data-theme-key', themeKey)
   setupMermaidControls(element)
   return true
@@ -471,7 +486,7 @@ export const renderMermaidDiagrams = async (
       }
 
       element.setAttribute('data-processed', 'true')
-      element.setAttribute('data-content', content)
+      element.setAttribute('data-content', encodeMermaidSource(content))
       element.setAttribute('data-theme-key', themeKey)
 
       setupMermaidControls(element)
@@ -487,7 +502,7 @@ export const renderMermaidDiagrams = async (
 
       element.innerHTML = errorHTML
       element.setAttribute('data-processed', 'true')
-      element.setAttribute('data-content', content)
+      element.setAttribute('data-content', encodeMermaidSource(content))
       element.setAttribute('data-theme-key', themeKey)
 
       mermaidCache.set(`${themeKey}:${content}`, { svg: errorHTML, id: element.id })
@@ -501,10 +516,8 @@ export const renderMermaidDiagrams = async (
 
 const getMermaidCacheKey = (mermaidElement: Element): string => {
   const themeKey = mermaidElement.getAttribute('data-theme-key') || 'dark'
-  const content =
-    mermaidElement.getAttribute('data-content')?.trim() || mermaidElement.textContent?.trim() || ''
 
-  return `${themeKey}:${content}`
+  return `${themeKey}:${getMermaidElementContent(mermaidElement)}`
 }
 
 export const setupMermaidControls = (mermaidElement: Element): (() => void) => {
@@ -746,7 +759,7 @@ export const injectCachedMermaidSvgsIntoHtml = (
       if (!idMatch || !contentMatch) return match
 
       const id = idMatch[1] ?? ''
-      const content = decodeMermaidCode(contentMatch[1] ?? '')
+      const content = decodeMermaidSource(contentMatch[1] ?? '')
       const cached = mermaidCache.get(`${themeKey}:${content}`)
 
       if (!cached) {
