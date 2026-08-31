@@ -23,6 +23,7 @@ import {
   renderMermaidDiagrams,
   setupMermaidControls,
 } from '../../app/utils/markdownItMermaid'
+import { sanitizeHtml } from '../../app/utils/sanitizer'
 
 describe('mermaid control cleanup', () => {
   beforeEach(() => {
@@ -190,5 +191,44 @@ flowchart TD
     expect(root.querySelector('script')).toBeNull()
     expect(root.querySelector('[onclick]')).toBeNull()
     expect(root.querySelector('circle')).not.toBeNull()
+  })
+
+  it('keeps the diagram source when the sanitized html passes through DOMPurify', async () => {
+    // DOMPurify's SAFE_FOR_XML rule deletes attributes whose value contains "-->".
+    const mermaidSource = `xychart-beta
+    title "Traffic"
+    y-axis "PV" 0 --> 200
+    line [185.15, 173.99, 162.53]`
+
+    const root = document.createElement('div')
+    root.innerHTML = sanitizeHtml(
+      processMermaidInMarkdown(`<pre><code class="language-mermaid">${mermaidSource}</code></pre>`)
+    )
+
+    document.body.appendChild(root)
+
+    const placeholder = root.querySelector('.mermaid')
+    expect(placeholder?.getAttribute('data-content')).toBeTruthy()
+
+    await renderMermaidDiagrams(getMermaidThemeConfig('dark'), root)
+
+    expect(mermaidRenderMock.mock.calls[0]?.[1]).toBe(normalizeMermaidSource(mermaidSource))
+    expect(root.querySelector('.render-error')).toBeNull()
+  })
+
+  it('round-trips diagram sources containing percent signs', async () => {
+    const mermaidSource = `flowchart TD
+  A["Growth 50% YoY"]-->B`
+
+    const root = document.createElement('div')
+    root.innerHTML = sanitizeHtml(
+      processMermaidInMarkdown(`<pre><code class="language-mermaid">${mermaidSource}</code></pre>`)
+    )
+
+    document.body.appendChild(root)
+
+    await renderMermaidDiagrams(getMermaidThemeConfig('dark'), root)
+
+    expect(mermaidRenderMock.mock.calls[0]?.[1]).toBe(normalizeMermaidSource(mermaidSource))
   })
 })
