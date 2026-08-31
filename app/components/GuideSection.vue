@@ -114,7 +114,7 @@
   color: var(--text);
 }
 
-.example-preview :first-child {
+.example-preview > * > :first-child {
   margin-top: 0;
 }
 
