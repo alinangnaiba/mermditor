@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+  import { ref, onUnmounted, nextTick, watch } from 'vue'
   import SafeHtml from './SafeHtml.vue'
   import { useMarkdownRenderer } from '../composables/useMarkdownRenderer'
   import { attachCodeBlockInteractions } from '../utils/codeBlockInteractions'
@@ -40,12 +40,6 @@
   }
 
   watch(() => props.content, renderContent, { immediate: true })
-
-  onMounted(() => {
-    if (import.meta.client) {
-      renderContent()
-    }
-  })
 
   onUnmounted(() => {
     cleanupCodeBlockInteractions?.()
