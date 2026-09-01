@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils'
+import { createSSRApp, h, nextTick } from 'vue'
 import SafeHtml from '../../app/components/SafeHtml.vue'
 
 describe('SafeHtml', () => {
@@ -24,5 +25,30 @@ describe('SafeHtml', () => {
 
     expect(wrapper.html()).toContain('<circle')
     expect(wrapper.html()).not.toContain('<script>')
+  })
+
+  it('sanitizes and injects content when hydrating empty server markup', async () => {
+    // SSR cannot sanitize without a DOM, so the server emits an empty element.
+    const container = document.createElement('div')
+    container.innerHTML = '<div class="content"></div>'
+    document.body.appendChild(container)
+
+    const app = createSSRApp({
+      render: () =>
+        h(SafeHtml, {
+          class: 'content',
+          content: '<div onclick="alert(1)"><script>alert(1)</script><p>Safe</p></div>',
+        }),
+    })
+
+    app.mount(container)
+    await nextTick()
+
+    expect(container.innerHTML).toContain('<p>Safe</p>')
+    expect(container.innerHTML).not.toContain('<script>')
+    expect(container.innerHTML).not.toContain('onclick=')
+
+    app.unmount()
+    container.remove()
   })
 })

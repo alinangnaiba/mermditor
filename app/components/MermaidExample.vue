@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, watch } from 'vue'
+  import { ref, watch } from 'vue'
   import SafeHtml from './SafeHtml.vue'
   import { useMarkdownRenderer } from '../composables/useMarkdownRenderer'
 
@@ -28,13 +28,6 @@
   }
 
   watch(() => props.mermaidCode, renderContent, { immediate: true })
-
-  onMounted(() => {
-    if (import.meta.client) {
-      // Small delay to ensure Mermaid is loaded
-      setTimeout(renderContent, 200)
-    }
-  })
 </script>
 
 <style scoped>
