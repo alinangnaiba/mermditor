@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import katex from 'katex'
 
 test.describe('merMDitor smoke coverage', () => {
   test.beforeEach(async ({ page }) => {
@@ -99,5 +100,22 @@ test.describe('merMDitor smoke coverage', () => {
     await expect(page.getByRole('heading', { name: /print preview/i })).toBeVisible()
     await expect(page.locator('#print-content')).toContainText('Printable Title')
     await expect(page.locator('#print-content')).toContainText('PDF body')
+  })
+
+  test('print preview applies KaTeX styles to stored math', async ({ page }) => {
+    const math = katex.renderToString(String.raw`2 \cdot \frac{3}{\pi}`, { displayMode: true })
+    await page.addInitScript((html) => {
+      localStorage.setItem('mermditor-print-content', `<div class="katex-display">${html}</div>`)
+    }, math)
+
+    await page.goto('/print-preview')
+
+    const pagedMath = page.locator('.preview-container .katex').first()
+    await expect(pagedMath).toBeAttached()
+
+    // Without katex.min.css the accessibility MathML copy renders alongside the HTML copy
+    // and fraction stacks collapse inline.
+    await expect(pagedMath.locator('.katex-mathml')).toHaveCSS('position', 'absolute')
+    await expect(pagedMath.locator('.katex-html .vlist-t').first()).toHaveCSS('display', 'inline-table')
   })
 })
