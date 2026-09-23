@@ -1,6 +1,7 @@
 import { nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Previewer } from 'pagedjs'
+import { loadKatexStyles } from '../utils/markdownItKatex'
 import { cleanupMermaidControls, renderMermaidDiagrams } from '../utils/markdownItMermaid'
 import { sanitizeHtml } from '../utils/sanitizer'
 import {
@@ -165,6 +166,12 @@ export const usePrintPreview = () => {
 
     flattenMermaidDiagramsForPrint(printContentRoot ?? document)
     normalizeCodeBlocksForPrint(printContentRoot ?? document)
+
+    // Stored content arrives with math already rendered, so this tab never ran loadKatex().
+    // The stylesheet must be in place before paged.js measures layout.
+    if (printContentRoot?.querySelector('.katex')) {
+      await loadKatexStyles()
+    }
 
     const paged = new Previewer()
     const source = printContentRoot

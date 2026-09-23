@@ -6,6 +6,17 @@ let katexModule: typeof import('katex').default | null = null
 let katexCssLoaded = false
 
 /**
+ * Loads the KaTeX stylesheet once. Needed wherever pre-rendered KaTeX markup is shown,
+ * such as the print preview, which receives already-rendered HTML.
+ */
+export const loadKatexStyles = async (): Promise<void> => {
+  if (katexCssLoaded || !import.meta.client) return
+
+  await import('katex/dist/katex.min.css')
+  katexCssLoaded = true
+}
+
+/**
  * Dynamically loads KaTeX library and CSS only when needed.
  * This eliminates the render-blocking CDN CSS and replaces polling with proper async loading.
  */
@@ -16,11 +27,7 @@ const loadKatex = async (): Promise<typeof import('katex').default> => {
   const katex = await import('katex')
   katexModule = katex.default
 
-  // Load CSS only once
-  if (!katexCssLoaded && import.meta.client) {
-    await import('katex/dist/katex.min.css')
-    katexCssLoaded = true
-  }
+  await loadKatexStyles()
 
   return katexModule
 }
