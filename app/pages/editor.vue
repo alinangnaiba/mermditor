@@ -365,6 +365,7 @@
       { indentWithTab },
       { markdown },
       { oneDark },
+      { displayMathSyntax },
     ] = await Promise.all([
       import('@codemirror/view'),
       import('codemirror'),
@@ -372,6 +373,7 @@
       import('@codemirror/commands'),
       import('@codemirror/lang-markdown'),
       import('@codemirror/theme-one-dark'),
+      import('../utils/editorMathSyntax'),
     ])
 
     const editorThemeCompartment = new Compartment() as Compartment
@@ -381,7 +383,7 @@
       doc: content.value,
       extensions: [
         basicSetup,
-        markdown(),
+        markdown({ extensions: displayMathSyntax }),
         EditorView.lineWrapping,
         editorThemeCompartment.of(buildEditorThemeExtension(editorTheme.value)),
         keymap.of([indentWithTab]),

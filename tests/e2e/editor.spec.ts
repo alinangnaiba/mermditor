@@ -39,6 +39,20 @@ test.describe('merMDitor smoke coverage', () => {
     await expect(page.locator('html')).toHaveAttribute('data-editor-theme', /light|dark/)
   })
 
+  test('display math lines are not parsed as markdown', async ({ page }) => {
+    await page.goto('/editor')
+    await expect(page.locator('.workspace-pane-title')).toBeVisible()
+
+    await page.locator('.cm-content').click()
+    await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A')
+    await page.keyboard.insertText('Some text\n\n$$\n2\n=\n1\n$$\n\nSome more text')
+
+    const preview = page.locator('.editor-preview-inner')
+    await expect(preview.locator('.katex')).toHaveCount(1)
+    await expect(preview.locator('h1, h2, h3, h4, h5, h6')).toHaveCount(0)
+    await expect(preview.locator('p', { hasText: 'Some more text' })).toBeVisible()
+  })
+
   test('workspace actions and emoji insertion work', async ({ page }) => {
     await page.goto('/editor')
 
